@@ -1,0 +1,163 @@
+#!/usr/bin/env perl 
+#===============================================================================
+#
+#         FILE: simulate_read.pl
+#
+#        USAGE: perl ./simulate-read.pl --prefix=ponga --config-dir=assets \
+#                 --expression-matrix=expression_matrix \
+#                 --quality-matrix=quality --list-of-genes=list \
+#                 --sequencing-error=0.005 --read-size=76 --number-of-reads=1000
+#
+#  DESCRIPTION: Retrives parental, non parental and retrocopy sequences from rcpedia
+#               based in a list file and makes a fastq with random reads created over
+#               that list. It also generates a gff file and a count file with the
+#               number of reads by gene raffled
+#
+#      OPTIONS: prefix=s config-dir=s quality-matrix=s list_of_genes=s
+#               expression-matrix=s sequencing_error=s read-size=i number-of-reads=i
+# REQUIREMENTS: MakeFastqGff MakeQuality MakeRandomReads MakeGeneRaffle Moose
+#         BUGS: ---
+#        NOTES: ---
+#       AUTHOR: Thiago Miller
+# ORGANIZATION: IEP - Hospital Sírio-Libanês
+#      VERSION: 1.0
+#      CREATED: 24-02-2017 18:26:51
+#     REVISION: ---
+#===============================================================================
+
+use strict;
+use warnings;
+use Carp;
+use Getopt::Long;
+#use MakeFastqGff;
+use SimulateTranscriptome::PairedEnd;
+use MakeGeneRaffle;
+use feature 'say';
+
+#------------------------------------------------------------
+# Define
+#------------------------------------------------------------
+
+my $prefix = '.';
+my $config_dir = '.';
+my $quality;
+my $expression;
+my $list_of_genes;
+my $sequencing_error = 0.005;
+my $read_size = 100;
+my $number_of_reads = 0;
+
+#------------------------------------------------------------
+# Parse
+#------------------------------------------------------------
+
+GetOptions(
+	'prefix=s'              => \$prefix,
+	'config-dir=s'          => \$config_dir,
+	'quality-matrix=s'      => \$quality,
+	'expression-matrix=s'   => \$expression,
+	'list-of-genes=s'       => \$list_of_genes,
+	'sequencing-error=s'    => \$sequencing_error,
+	'read-size=i'           => \$read_size,
+	'number-of-reads=i'     => \$number_of_reads
+) or croak 'Error in command line argumments';
+
+my $fastq_file = "${prefix}_simulation_seq.fastq.gz";
+my $gff_file = "${prefix}_simulation_info.gff.gz";
+my $count_file = "${prefix}_simulation_count.txt.gz";
+my $geneinfo = "$config_dir/config_geneinfo.gz";
+my $geneseq = "$config_dir/config_geneseq.gz";
+
+if (-d $config_dir) {
+	unless (-f "$geneinfo") {
+		croak "Not found config_geneinfo.gz inside $config_dir";
+	}
+	unless (-f "$geneseq") {
+		croak "Not found config_geneseq.gz inside $config_dir";
+	}
+} else {
+	croak "config-dir must be a existing directory";
+}
+
+unless (-f $quality) {
+	croak "$quality file does not exist";
+}
+
+unless (-f $expression) {
+	croak "$expression file does not exist";
+}
+
+unless (-f $list_of_genes) {
+	croak "$list_of_genes file does not exist";
+}
+
+#------------------------------------------------------------
+# Main
+#------------------------------------------------------------
+
+#my $mk = MakeFastqGff->new(
+#	geneseq_file     => $geneseq,
+#	geneinfo_file    => $geneinfo,
+#	quality_matrix   => $quality,
+#	read_size        => $read_size,
+#	sequencing_error => $sequencing_error
+#);
+#my $mk = SimulateTranscriptome::SingleEnd->new(
+#	geneseq_file     => $geneseq,
+#	geneinfo_file    => $geneinfo,
+#	quality_file     => $quality,
+#	read_size        => $read_size,
+#	sequencing_error => $sequencing_error
+#);
+my $mk = SimulateTranscriptome::PairedEnd->new(
+	geneseq_file     => $geneseq,
+	geneinfo_file    => $geneinfo,
+	quality_file     => $quality,
+	read_size        => $read_size,
+	sequencing_error => $sequencing_error,
+	fragment_mean => 300,
+	fragment_stdd => 50
+);
+
+my $gr = MakeGeneRaffle->new(
+	list_of_genes     => $list_of_genes,
+	expression_matrix => $expression
+);
+
+open my $fastq_fh, "|-" => "gzip > $fastq_file"
+	or croak "Not possible to open pipe to $fastq_file";
+
+open my $gff_fh, "|-" => "gzip > $gff_file"
+	or croak "Not possible to open pipe to $gff_file";
+
+open my $count_fh, "|-" => "gzip > $count_file"
+	or croak "Not possible to open pipe to $count_file";
+
+my %genes_seen;
+my %blacklist;
+
+for (1..$number_of_reads) {
+	my $gene = $gr->gene_raffle;
+	redo if $blacklist{$gene};
+
+	my $fastq = $mk->fastq($gene);
+	my $gff = $mk->gff($gene);
+
+	unless (defined $fastq and defined $gff) {
+		carp "Problem to obtain $gene data. Added to blacklist";
+		$blacklist{$gene} = 1;
+		redo;
+	}
+
+	say $fastq_fh $fastq;
+	say $gff_fh $gff unless $genes_seen{$gene};
+	$genes_seen{$gene} = 1;
+}
+
+say $count_fh $mk->get_read_count;
+
+close $fastq_fh;
+close $gff_fh;
+close $count_fh;
+
+__END__

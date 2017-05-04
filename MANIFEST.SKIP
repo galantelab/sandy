@@ -1,0 +1,13 @@
+~$
+\.exists$
+\.bak$
+\.bk$
+Makefile
+MYMETA.
+\.json$
+\.swp$
+\.swo$
+\.swn$
+MANIFEST\.SKIP$
+blib
+pm_to_blib
