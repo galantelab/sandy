@@ -29,30 +29,35 @@ coerce 'MyInt',
 	from 'Num',
 	via { int };
 
-has 'sequencing_error' => (is => 'rw', isa => 'Num',   required => 1);
-has 'read_size'        => (is => 'rw', isa => 'Int',   required => 1);
+has 'sequencing_error' => (is => 'ro', isa => 'Num',   required => 1);
+has 'read_size'        => (is => 'ro', isa => 'Int',   required => 1);
 has '_base'            => (is => 'rw', isa => 'MyInt', coerce   => 1);
 has '_count_base'      => (is => 'rw', isa => 'Int',   default  => 0);
 
 sub BUILD {
 	my $self = shift;
+	
+	croak 'read_size must be greater than 0'
+		if $self->read_size <= 0;
+
+	croak 'sequencing_error must be greater than 0'
+		if $self->sequencing_error <= 0;
+
 	$self->_base(1 / $self->sequencing_error);
 }
 
-around 'sequencing_error' => sub {
-	my ($orig, $self, $err) = @_;
-	return $self->$orig() unless defined $err;
-	$self->_base(1 / $err);
-	return $self->$orig($err);
+before 'subseq' => sub {
+	my ($self, $seq, $seq_len, $slice_len, $pos) = @_;
+
+	croak "pos must be greater than 0"
+		unless defined $pos and $pos >= 0;
+
+	croak "slice_len + pos <= seq_len ($slice_len + $pos) <= $seq_len"
+		unless ($slice_len + $pos) <= $seq_len;
 };
 
-around qw{subseq subseq_rand} => sub {
-	my ($orig, $self, $seq, $seq_len, $slice_len, $pos) = @_;
-
-	unless (defined $seq) {
-		carp "Skipping: No seq passed to 'subseq'";
-		return;
-	}
+before qw{subseq subseq_rand} => sub {
+	my ($self, $seq, $seq_len, $slice_len, $pos) = @_;
 
 	croak "seq argument must be a reference to a SCALAR"
 		unless ref $seq eq 'SCALAR';
@@ -63,20 +68,13 @@ around qw{subseq subseq_rand} => sub {
 	croak "slice_len must be greater than 0"
 		unless defined $slice_len and $slice_len > 0;
 
-	unless ($slice_len <= $seq_len) {
-		carp "Skipping: slice_len ($slice_len) greater than seq_len ($seq_len)";
-		return;
-	}
-
-	return $self->$orig($seq, $seq_len, $slice_len, $pos);
+	croak "slice_len ($slice_len) greater than seq_len ($seq_len)"
+		unless $slice_len <= $seq_len;
 };
 
 sub subseq {
 	my ($self, $seq, $seq_len, $slice_len, $pos) = @_;
 	
-	croak "pos must be greater than 0"
-		unless defined $pos and $pos >= 0;
-
 	my $read = substr $$seq, $pos, $slice_len;
 	return $read;
 }
