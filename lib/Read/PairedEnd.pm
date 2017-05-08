@@ -33,6 +33,7 @@ sub gen_read {
 	my $fragment_size = int(random_normal(1, $self->fragment_mean, $self->fragment_stdd));
 	my $fragment = $self->subseq_rand($seq, $seq_size, $fragment_size);	
 
+	#TODO remove this: The function calling gen_read must skip in error
 	return unless defined $fragment;
 
 	my $read1 = $self->subseq(\$fragment, $fragment_size, $self->read_size, 0);

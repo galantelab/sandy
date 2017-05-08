@@ -29,7 +29,9 @@ use strict;
 use warnings;
 use Carp;
 use Getopt::Long;
+use FindBin;
 #use MakeFastqGff;
+use lib "$FindBin::RealBin/../lib";
 use SimulateTranscriptome::PairedEnd;
 use MakeGeneRaffle;
 use feature 'say';
@@ -39,10 +41,10 @@ use feature 'say';
 #------------------------------------------------------------
 
 my $prefix = '.';
-my $config_dir = '.';
-my $quality;
-my $expression;
-my $list_of_genes;
+my $config_dir = "$FindBin::RealBin/../lib/auto/share/dist/Simulate-Reads";
+my $quality = 'quality';
+my $expression =  'expression';
+my $list_of_genes = 'list of genes';
 my $sequencing_error = 0.005;
 my $read_size = 100;
 my $number_of_reads = 0;
