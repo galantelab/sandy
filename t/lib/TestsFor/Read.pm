@@ -32,11 +32,13 @@ sub startup : Tests(startup) {
 
 sub setup : Tests(setup) {
 	my $test = shift;
+	my %child_arg = @_;
 	$test->SUPER::setup;
 
 	my %default_attr = (
 		sequencing_error => 0.1,
-		read_size        => 10
+		read_size        => 10,
+		%child_arg
 	);
 
 	my $seq = 'TGACCCGCTAACCTCAGTTCTGCAGCAGTAACAACTGCCGTATCTGGACTTTCCTAATACCTCGCATAGTCCGTCCCCTCGCGCGGCAAGAGGTGCGGCG';
@@ -74,7 +76,7 @@ sub subseq_attr : Test(10) {
 	my $read = $test->default_read;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
-	my $slice_len = 10;
+	my $slice_len = $read->read_size;
 
 	for my $fun (qw/subseq subseq_rand/) {
 		throws_ok {$read->$fun($seq, $seq_len, $slice_len, 0)}	
@@ -110,7 +112,7 @@ sub subseq_seq : Test(4) {
 	my $read = $test->default_read;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
-	my $slice_len = 10;
+	my $slice_len = $read->read_size;
 
 	for my $fun (qw/subseq subseq_rand/) {
 		my $read_seq = $read->$fun(\$seq, $seq_len, $slice_len, 0);
@@ -129,7 +131,7 @@ sub subseq_err : Test(40) {
 	my $read = $test->default_read;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
-	my $slice_len = 10;
+	my $slice_len = $read->read_size;
 	
 	for my $fun (qw/subseq subseq_rand/) {
 		my @subseq;

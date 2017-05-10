@@ -25,6 +25,7 @@ extends 'Read';
 
 sub gen_read {
 	my ($self, $seq, $seq_size) = @_;
+	return if $seq_size < $self->read_size;
 	my $read = $self->subseq_rand($seq, $seq_size, $self->read_size);
 	$self->update_count_base($self->read_size);
 	$self->insert_sequencing_error(\$read);

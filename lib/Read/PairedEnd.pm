@@ -22,19 +22,41 @@ use Carp;
 use Math::Random qw/random_normal/;
 use namespace::autoclean;
 
+use constant {
+	NUM_TRIES => 10
+};
+
 extends 'Read';
 
-has 'fragment_mean' => (is => 'rw', isa => 'Int', required => 1);
-has 'fragment_stdd' => (is => 'rw', isa => 'Int', required => 1);
+has 'fragment_mean' => (is => 'ro', isa => 'Int', required => 1);
+has 'fragment_stdd' => (is => 'ro', isa => 'Int', required => 1);
+
+sub BUILD {
+	my $self = shift;
+
+	croak 'fragment_mean must be greater than zero'
+		unless $self->fragment_mean > 0;
+
+	croak 'fragment_stdd must be greater or equal to zero'
+	 	unless $self->fragment_stdd >= 0;
+	
+	croak 'fragment_mean must be greater or equal to read_size'
+		unless $self->fragment_mean >= $self->read_size;
+}
 
 sub gen_read {
 	my ($self, $seq, $seq_size) = @_;
+	return if $seq_size < $self->read_size;
 
-	my $fragment_size = int(random_normal(1, $self->fragment_mean, $self->fragment_stdd));
+	my $fragment_size;
+	my $random_tries = 0;
+
+	do {
+		return if ++$random_tries == NUM_TRIES;
+		$fragment_size = $self->_random_half_normal;
+	} while ($seq_size < $fragment_size) || ($fragment_size < $self->read_size);
+
 	my $fragment = $self->subseq_rand($seq, $seq_size, $fragment_size);	
-
-	#TODO remove this: The function calling gen_read must skip in error
-	return unless defined $fragment;
 
 	my $read1 = $self->subseq(\$fragment, $fragment_size, $self->read_size, 0);
 	$self->update_count_base($self->read_size);
@@ -47,6 +69,14 @@ sub gen_read {
 	$self->insert_sequencing_error(\$read2);
 
 	return ($read1, $read2);
+}
+
+sub _random_half_normal {
+	my $self = shift;
+	my $fragment_size = -1;
+	$fragment_size = int(random_normal(1, $self->fragment_mean, $self->fragment_stdd))
+		while $fragment_size <= 0;
+	return $fragment_size;
 }
 
 __PACKAGE__->meta->make_immutable;
