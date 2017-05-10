@@ -11,3 +11,4 @@ MYMETA.
 MANIFEST\.SKIP$
 blib
 pm_to_blib
+\.git
