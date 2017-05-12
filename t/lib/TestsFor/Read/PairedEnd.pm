@@ -64,43 +64,62 @@ sub constructor : Tests(11) {
 		"Setting fragment_mean to less than read_size should fail";
 }
 
-sub gen_read : Tests(42) {
+sub gen_read : Tests(122) {
 	my $test = shift;
 
 	my $read = $test->default_read;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
 
-	ok not($read->gen_read(\$seq, $read->read_size - 1)),
+	ok not($read->gen_read(\$seq, $read->read_size - 1, 1)),
 		"Sequence length lesser than read_size must return undef";
 	
 	my $err = 0;
 	for (1..100) {
-		my ($r1, $r2) = $read->gen_read(\$seq, $seq_len);
-		$err++ unless defined $r1 && defined $r2;
+		my ($r1, $r2, $frag_pos, $frag_size) = $read->gen_read(\$seq, $seq_len, 1);
+		$err++ unless defined $r1 && defined $r2 && defined $frag_pos && defined $frag_size;
 	}
 
 	ok $err == 0, "100 tries: It must not give error";
 	
-	my @subseq;
-	push @subseq => $read->gen_read(\$seq, $seq_len) for 0..9;
-		
 	for my $i (0..9) {
-		my ($r1, $r2) = $read->gen_read(\$seq, $seq_len);
+		#For leader strand
+		my ($r1, $r2, $frag_pos, $frag_size) = $read->gen_read(\$seq, $seq_len, 1);
 		ok index($seq, $r1) < 0,
 			"Sequence with error must be outside seq in gen_read (PairEnd -> read1). Try $i";
 		my $r1_l1 = substr $r1, 0, $read->read_size - 1;
 		ok index($seq, $r1_l1) >= 0,
 			"Sequence with error (but last char -> err) must be inside seq in gen_read (PairedEnd -> read1). Try $i";
+		is index($seq, $r1_l1), $frag_pos,
+			"Position returned must be equal to index in gen_read (PairEnd -> read1). Try $i";
 
-		$r2 =~ tr/atcgATCG/tagcTAGC/;
-		$r2 = reverse $r2;
-
+		$read->reverse_complement(\$r2);
 		ok index($seq, $r2) < 0,
 			"Sequence with error must be outside seq in gen_read (PairEnd -> read2). Try $i";
 		my $r2_f1 = substr $r2, 1, $read->read_size;
 		ok index($seq, $r2_f1) >= 0,
 			"Sequence with error (but first char -> err) must be inside seq in gen_read (PairedEnd -> read2). Try $i";
+		is index($seq, $r2_f1), $frag_pos + $frag_size - $read->read_size + 1,
+			"Position returned + fragment size must be equal to index in gen_read (PairEnd -> read2). Try $i";
+
+		#For retarded strand
+		my ($r3, $r4, $frag_pos2, $frag_size2) = $read->gen_read(\$seq, $seq_len, 0);
+		ok index($seq, $r4) < 0,
+			"Sequence with error must be outside seq in gen_read (PairEnd, reverse_complement -> read2). Try $i";
+		my $r4_l1 = substr $r4, 0, $read->read_size - 1;
+		ok index($seq, $r4_l1) >= 0,
+			"Sequence with error (but last char -> err) must be inside seq in gen_read (PairedEnd, reverse_complement -> read2). Try $i";
+		is index($seq, $r4_l1), $frag_pos2;
+			"Position returned must be equal to index in gen_read (PairEnd, reverse_complement -> read2). Try $i";
+
+		$read->reverse_complement(\$r3);
+		ok index($seq, $r3) < 0,
+			"Sequence with error must be outside seq in gen_read (PairEnd, reverse_complement -> read1). Try $i";
+		my $r3_f1 = substr $r2, 1, $read->read_size;
+		ok index($seq, $r3_f1) >= 0,
+			"Sequence with error (but first char -> err) must be inside seq in gen_read (PairedEnd, reverse_complement -> read1). Try $i";
+		is index($seq, $r3_f1), $frag_pos + $frag_size - $read->read_size + 1,
+			"Position returned + fragment size must be equal to index in gen_read (PairEnd, reverse_complement -> read1). Try $i";
 	}
 }
 
