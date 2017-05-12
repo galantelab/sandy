@@ -109,7 +109,7 @@ sub gen_read : Tests(122) {
 		my $r4_l1 = substr $r4, 0, $read->read_size - 1;
 		ok index($seq, $r4_l1) >= 0,
 			"Sequence with error (but last char -> err) must be inside seq in gen_read (PairedEnd, reverse_complement -> read2). Try $i";
-		is index($seq, $r4_l1), $frag_pos2;
+		is index($seq, $r4_l1), $frag_pos2,
 			"Position returned must be equal to index in gen_read (PairEnd, reverse_complement -> read2). Try $i";
 
 		$read->reverse_complement(\$r3);

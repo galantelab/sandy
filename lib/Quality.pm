@@ -1,14 +1,14 @@
 #
 #===============================================================================
 #
-#         FILE: MakeQuality.pm
+#         FILE: Quality.pm
 #
 #  DESCRIPTION: Analyses a fastq set and generate a weight matrix based on the quality
 #               frequence for each position
 #
-#               use MakeQuality;
+#               use Quality;
 #
-#               my $q = MakeQuality->new(
+#               my $q = Quality->new(
 #					quality_matrix  => <FILE>,
 #					quality_size       => 76
 #               );
@@ -25,7 +25,7 @@
 #     REVISION: ---
 #===============================================================================
 
-package MakeQuality;
+package Quality;
 
 use Moose;
 use Carp 'croak';
