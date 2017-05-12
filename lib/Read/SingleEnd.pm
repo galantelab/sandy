@@ -24,12 +24,18 @@ use namespace::autoclean;
 extends 'Read';
 
 sub gen_read {
-	my ($self, $seq, $seq_size) = @_;
+	my ($self, $seq, $seq_size, $is_leader) = @_;
 	return if $seq_size < $self->read_size;
-	my $read = $self->subseq_rand($seq, $seq_size, $self->read_size);
+
+	my ($read, $read_pos) = $self->subseq_rand($seq, $seq_size, $self->read_size);
+
+	unless ($is_leader) {
+		$self->reverse_complement(\$read);
+	}
+
 	$self->update_count_base($self->read_size);
 	$self->insert_sequencing_error(\$read);
-	return $read;
+	return ($read, $read_pos);
 }
 
 __PACKAGE__->meta->make_immutable;

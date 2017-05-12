@@ -85,7 +85,7 @@ sub subseq_rand {
 	my $usable_len = $seq_len - $slice_len;
 	my $pos = $self->_randp($usable_len);
 	my $read = substr $$seq, $pos, $slice_len;
-	return $read;
+	return ($read, $pos);
 }
 
 sub insert_sequencing_error {
@@ -103,6 +103,18 @@ sub insert_sequencing_error {
 sub update_count_base {
 	my ($self, $val) = @_;
 	$self->_count_base($self->_count_base + $val);
+}
+
+before 'reverse_complement' => sub {
+	my ($self, $seq) = @_;
+	croak "seq argument must be a reference to a SCALAR"
+		unless ref $seq eq 'SCALAR';
+};
+
+sub reverse_complement {
+	my ($self, $seq) = @_;
+	$$seq = reverse $$seq;
+	$$seq =~ tr/atcgATCG/tagcTAGC/;
 }
 
 sub _randb {

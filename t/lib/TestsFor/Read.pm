@@ -106,7 +106,7 @@ sub subseq_attr : Test(10) {
 		"Setting a pos + slicelen > seq_len should fail";
 }
 
-sub subseq_seq : Test(4) {
+sub subseq_seq : Test(5) {
 	my $test = shift;
 
 	my $read = $test->default_read;
@@ -115,14 +115,19 @@ sub subseq_seq : Test(4) {
 	my $slice_len = $read->read_size;
 
 	for my $fun (qw/subseq subseq_rand/) {
-		my $read_seq = $read->$fun(\$seq, $seq_len, $slice_len, 0);
+		my ($read_seq, $pos) = $read->$fun(\$seq, $seq_len, $slice_len, 0);
 
 		is length($read_seq), 10,
 			"Setting a slice_len ($slice_len) should return a seq ($slice_len) in $fun";
 
 		ok index($seq, $read_seq) >= 0,
 			"Read sequence must be inside seq in $fun";
+
 	}
+
+	my ($read_seq, $pos) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
+	is index($seq, $read_seq), $pos,
+		"Position returned in subseq_rand ($pos) should be equal to postion in index";
 }
 
 sub subseq_err : Test(40) {
@@ -136,7 +141,7 @@ sub subseq_err : Test(40) {
 	for my $fun (qw/subseq subseq_rand/) {
 		my @subseq;
 		for (0..9) {
-			my $seq_t = $read->$fun(\$seq, $seq_len, $slice_len, $_ * 10);
+			my ($seq_t, $pos) = $read->$fun(\$seq, $seq_len, $slice_len, $_ * 10);
 			$read->update_count_base($read->read_size);
 			$read->insert_sequencing_error(\$seq_t);
 			push @subseq => $seq_t;
@@ -152,6 +157,27 @@ sub subseq_err : Test(40) {
 				"Sequence with error (but last char -> err) must be inside seq in $fun Try $i";
 		}
 	}
+}
+
+sub reverse_complement :Test(2) {
+	my $test = shift;
+
+	my $read = $test->default_read;
+	my $seq = $test->seq;
+	my $seq_len = $test->seq_len;
+	my $slice_len = $read->read_size;
+
+	throws_ok {$read->reverse_complement($seq)}
+	qr/must be a reference to a SCALAR/,
+		"Setting a non-scalar reference to a seq should fail in reverse_complement";
+	
+	my $seq_rev1 = $seq;
+	$read->reverse_complement(\$seq_rev1);
+	my $seq_rev2 = reverse $seq;
+	$seq_rev2 =~ tr/atcgATCG/tagcTAGC/;
+
+	ok $seq_rev1 eq $seq_rev2,
+		"The reverse_complement must return the reverse complement";
 }
 
 1;

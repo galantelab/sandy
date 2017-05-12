@@ -45,7 +45,7 @@ sub BUILD {
 }
 
 sub gen_read {
-	my ($self, $seq, $seq_size) = @_;
+	my ($self, $seq, $seq_size, $is_leader) = @_;
 	return if $seq_size < $self->read_size;
 
 	my $fragment_size;
@@ -56,19 +56,22 @@ sub gen_read {
 		$fragment_size = $self->_random_half_normal;
 	} while ($seq_size < $fragment_size) || ($fragment_size < $self->read_size);
 
-	my $fragment = $self->subseq_rand($seq, $seq_size, $fragment_size);	
+	my ($fragment, $fragment_pos) = $self->subseq_rand($seq, $seq_size, $fragment_size);	
+
+	unless ($is_leader) {
+		$self->reverse_complement(\$fragment);
+	}
 
 	my $read1 = $self->subseq(\$fragment, $fragment_size, $self->read_size, 0);
 	$self->update_count_base($self->read_size);
 	$self->insert_sequencing_error(\$read1);
 
 	my $read2 = $self->subseq(\$fragment, $fragment_size, $self->read_size, $fragment_size - $self->read_size);
-	$read2 = reverse $read2;
-	$read2 =~ tr/atcgATCG/tagcTAGC/;
+	$self->reverse_complement(\$read2);
 	$self->update_count_base($self->read_size);
 	$self->insert_sequencing_error(\$read2);
 
-	return ($read1, $read2);
+	return ($read1, $read2, $fragment_pos, $fragment_size);
 }
 
 sub _random_half_normal {
