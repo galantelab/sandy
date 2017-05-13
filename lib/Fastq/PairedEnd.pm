@@ -59,8 +59,8 @@ override 'fastq' => sub {
 		($seq_pos1, $seq_pos2) = ($seq_pos2, $seq_pos1);
 	}
 
-	my $header1 = "$id 1 Simulation_read sequence_postion=$seq_pos1";
-	my $header2 = "$id 2 Simulation_read sequence_postion=$seq_pos2";
+	my $header1 = "$id 1 Simulation_read sequence_position=$seq_pos1";
+	my $header2 = "$id 2 Simulation_read sequence_position=$seq_pos2";
 
 	my $fastq = super($header1, \$read1);
 	$fastq .= "\n";

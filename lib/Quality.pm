@@ -10,7 +10,7 @@
 #
 #               my $q = Quality->new(
 #					quality_matrix  => <FILE>,
-#					quality_size       => 76
+#					quality_size    => 76
 #               );
 #
 #               my $quality = $q->gen_quality;
@@ -28,30 +28,35 @@
 package Quality;
 
 use Moose;
-use Carp 'croak';
+use Carp;
 use namespace::autoclean;
 
 with 'Role::WeightedRaffle';
 
-has 'quality_matrix'    => (is => 'ro', isa => 'Str',      required => 1);
-has 'quality_size'      => (is => 'rw', isa => 'Int',      required => 1);
-has '_max_quality_size' => (is => 'rw', isa => 'Int');
-has '_pos'              => (is => 'rw', isa => 'ArrayRef');
+has 'quality_matrix'    => (is => 'ro', isa => 'Str', required => 1);
+has 'quality_size'      => (is => 'ro', isa => 'Int', required => 1);
+has '_pos'              => (
+	is         => 'ro',
+	isa        => 'ArrayRef',
+	builder    => '_build_pos',
+	lazy_build => 1
+);
 
 sub BUILD {
 	my $self = shift;
-
-	my $freq = $self->_get_freq;
-	$self->_get_weight($freq);
+	
+	croak "quality_matrix: " . $self->quality_matrix . " is not a valid file"
+		unless -f $self->quality_matrix;
+	
+	croak "quality_size must be greater than zero"
+		unless $self->quality_size > 0;
 }
 
-before 'quality_size' => sub {
-	my ($self, $quality_size) = @_;
-	if (defined $quality_size) {
-		croak "Read lenght $quality_size is grater than the max read size: " . $self->_max_quality_size
-			if $quality_size > $self->_max_quality_size;
-	}
-};
+sub _build_pos {
+	my $self = shift;
+	my $freq = $self->_get_freq;
+	return $self->_get_weight($freq);
+}
 
 sub _get_freq {
 	my $self = shift;
@@ -77,7 +82,6 @@ sub _get_freq {
 			$prev_len = $act_len;
 			croak "quality_size required is greater than the length at " . $self->quality_matrix
 				if $self->quality_size > $prev_len;
-			$self->_max_quality_size($prev_len);
 		} else {
 			croak "Different length at " . $self->quality_matrix
 				if $prev_len != $act_len;
@@ -96,13 +100,7 @@ sub _get_freq {
 sub _get_weight {
 	my ($self, $freq) = @_;
 	my @pos = map {$self->_calculate_weight($_)} @$freq;
-	$self->_pos(\@pos);
-}
-
-sub debug {
-	my $self = shift;
-	require Data::Dumper;
-	print Dumper($self->_pos);
+	return \@pos;
 }
 
 sub gen_quality {
