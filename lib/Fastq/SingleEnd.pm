@@ -50,7 +50,7 @@ override 'fastq' => sub {
 		"$seq_name:" . ($pos + 1) . "-" . ($pos + $self->read_size) :
 		"$seq_name:" . ($pos + $self->read_size) . "-" . ($pos + 1);
 
-	my $header = "$id Simulation_read sequence_postion=$seq_pos";
+	my $header = "$id Simulation_read sequence_position=$seq_pos";
 
 	return super($header, \$read);
 };
