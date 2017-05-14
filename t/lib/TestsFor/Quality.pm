@@ -20,7 +20,6 @@ package TestsFor::Quality;
 use Test::Most;
 use autodie;
 use base 'TestsFor';
-use Data::Dumper;
 
 use constant {
 	QUALITY       => '.data.txt',
@@ -73,7 +72,7 @@ sub setup : Tests(setup) {
 
 	my %default_attr = (
 		quality_matrix => QUALITY,
-		quality_size   => 10,
+		quality_size   => QUALITY_SIZE,
 		%child_arg
 	);
 

@@ -24,7 +24,7 @@ use namespace::autoclean;
 
 has 'read_size'        => (is => 'ro', isa => 'Int',   required => 1);
 has 'quality_file'     => (is => 'ro', isa => 'Str',   required => 1);
-has 'quality'          => (
+has '_quality'          => (
 	is         => 'ro',
 	isa        => 'Quality',
 	builder    => '_build_quality',
@@ -34,19 +34,23 @@ has 'quality'          => (
 
 sub _build_quality {
 	my $self = shift;
-	MakeQuality->new(
+	Quality->new(
 		quality_matrix => $self->quality_file,
 		quality_size   => $self->read_size
 	);
 }
 
-before 'fastq' => sub {
+before 'sprint_fastq' => sub {
 	my ($self, $header, $seq) = @_;
 	croak "seq argument must be a reference to a SCALAR"
 		unless ref $seq eq 'SCALAR';
+
+	my $len = length $$seq;
+	croak "seq length ($len) different of the read_size (" . $self->read_size . ")"
+		if $len != $self->read_size;
 };
 
-sub fastq {
+sub sprint_fastq {
 	my ($self, $header, $seq) = @_;
 	
 	my $quality = $self->gen_quality;
