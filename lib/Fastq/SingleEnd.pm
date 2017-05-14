@@ -25,7 +25,7 @@ use namespace::autoclean;
 extends 'Fastq';
 
 has 'sequencing_error' => (is => 'ro', isa => 'Num', required => 1);
-has 'read'             => (
+has '_read'            => (
 	is         => 'ro',
 	isa        => 'Read::SingleEnd',
 	builder    => '_build_read',
@@ -41,7 +41,7 @@ sub _build_read {
 	);
 }
 
-override 'fastq' => sub {
+sub fastq {
 	my ($self, $id, $seq_name, $seq, $seq_size, $is_leader) = @_;
 
 	my ($read, $pos) = $self->gen_read($seq, $seq_size, $is_leader);
@@ -52,8 +52,8 @@ override 'fastq' => sub {
 
 	my $header = "$id Simulation_read sequence_position=$seq_pos";
 
-	return super($header, \$read);
-};
+	return $self->sprint_fastq($header, \$read);
+}
 
 __PACKAGE__->meta->make_immutable;
 
