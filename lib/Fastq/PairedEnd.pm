@@ -27,7 +27,7 @@ extends 'Fastq';
 has 'fragment_mean'    => (is => 'rw', isa => 'Int', required => 1);
 has 'fragment_stdd'    => (is => 'rw', isa => 'Int', required => 1);
 has 'sequencing_error' => (is => 'ro', isa => 'Num', required => 1);
-has 'read'             => (
+has '_read'            => (
 	is         => 'ro',
 	isa        => 'Read::PairedEnd',
 	builder    => '_build_read',
@@ -45,7 +45,7 @@ sub _build_read {
 	);
 }
 
-override 'fastq' => sub {
+sub fastq {
 	my ($self, $id, $seq_name, $seq, $seq_size, $is_leader) = @_;
 
 	my ($read1, $read2, $fragment_pos, $fragment_size) = $self->gen_read($seq, $seq_size, $is_leader);
@@ -62,12 +62,12 @@ override 'fastq' => sub {
 	my $header1 = "$id 1 Simulation_read sequence_position=$seq_pos1";
 	my $header2 = "$id 2 Simulation_read sequence_position=$seq_pos2";
 
-	my $fastq = super($header1, \$read1);
+	my $fastq = $self->sprint_fastq($header1, \$read1);
 	$fastq .= "\n";
-	$fastq .= super($header2, \$read2);
+	$fastq .= $self->sprint_fastq($header2, \$read2);
 
 	return $fastq;
-};
+}
 
 __PACKAGE__->meta->make_immutable;
 

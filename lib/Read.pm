@@ -37,13 +37,14 @@ has '_count_base'      => (is => 'rw', isa => 'Int',   default  => 0);
 sub BUILD {
 	my $self = shift;
 	
-	croak 'read_size must be greater than 0'
+	croak 'read_size must be greater than zero'
 		if $self->read_size <= 0;
 
-	croak 'sequencing_error must be greater than 0'
-		if $self->sequencing_error <= 0;
+	croak 'sequencing_error must be greater or equal to zero'
+		if $self->sequencing_error < 0;
 
-	$self->_base(1 / $self->sequencing_error);
+	#If sequencing_error equal to zero, set _base to zero
+	$self->_base($self->sequencing_error ? (1 / $self->sequencing_error) : 0);
 }
 
 before 'subseq' => sub {
