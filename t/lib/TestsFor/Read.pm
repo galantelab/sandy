@@ -65,7 +65,7 @@ sub constructor : Tests(6) {
 	for my $attr (qw/sequencing_error read_size/) {
 		$attrs{$attr} = -1.0;
 		throws_ok { $class->new(%attrs) }
-		qr/must be greater than 0/,
+		qr/must be greater/,
 			"Setting $attr to less than zero should fail";
 	}
 }
@@ -130,7 +130,7 @@ sub subseq_seq : Test(5) {
 		"Position returned in subseq_rand ($pos) should be equal to postion in index";
 }
 
-sub subseq_err : Test(40) {
+sub subseq_err : Test(60) {
 	my $test = shift;
 
 	my $read = $test->default_read;
@@ -139,22 +139,31 @@ sub subseq_err : Test(40) {
 	my $slice_len = $read->read_size;
 	
 	for my $fun (qw/subseq subseq_rand/) {
-		my @subseq;
-		for (0..9) {
-			my ($seq_t, $pos) = $read->$fun(\$seq, $seq_len, $slice_len, $_ * 10);
+		for my $i (0..9) {
+			my ($seq_t, $pos) = $read->$fun(\$seq, $seq_len, $slice_len, $i * 10);
 			$read->update_count_base($read->read_size);
 			$read->insert_sequencing_error(\$seq_t);
-			push @subseq => $seq_t;
-		}
-		
-		my $i = 0;
-		for (@subseq) {
-			$i++;
-			ok index($seq, $_) < 0,
+
+			ok index($seq, $seq_t) < 0,
 				"Sequence with error must be outside seq in $fun Try $i";
-			my $seq_t = substr $_, 0, $slice_len - 1;
-			ok index($seq, $seq_t) >= 0,
+			my $seq_t_noerr = substr $seq_t, 0, $slice_len - 1;
+			ok index($seq, $seq_t_noerr) >= 0,
 				"Sequence with error (but last char -> err) must be inside seq in $fun Try $i";
+		}
+	}
+
+	# Check if sequencing_error = 0 won't insert error
+	my %attr = %{ $test->default_attr };
+	$attr{sequencing_error} = 0;
+	my $read2 = $test->class_to_test->new(%attr);
+
+	for my $fun (qw/subseq subseq_rand/) {
+		for my $i (0..9) {
+			my ($seq_t, $pos) = $read2->$fun(\$seq, $seq_len, $slice_len, $i * 10);
+			$read2->update_count_base($read2->read_size);
+			$read2->insert_sequencing_error(\$seq_t);
+			ok index($seq, $seq_t) >= 0,
+				"Sequence with sequencing_error = 0 must be inside seq in $fun Try $i";
 		}
 	}
 }

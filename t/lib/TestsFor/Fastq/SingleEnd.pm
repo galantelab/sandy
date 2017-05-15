@@ -8,8 +8,8 @@
 #        FILES: ---
 #         BUGS: ---
 #        NOTES: ---
-#       AUTHOR: YOUR NAME (), 
-# ORGANIZATION: 
+#       AUTHOR: Thiago Miller (tmiller), tmiller@mochsl.org.br
+# ORGANIZATION: Group of Bioinformatics
 #      VERSION: 1.0
 #      CREATED: 14-05-2017 01:34:50
 #     REVISION: ---
