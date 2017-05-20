@@ -28,29 +28,22 @@
 package Quality;
 
 use Moose;
+use MooseX::StrictConstructor;
+use My::Types;
 use Carp 'croak';
+
 use namespace::autoclean;
 
-with 'My::Role::WeightedRaffle';
+with qw/My::Role::WeightedRaffle My::Role::IO/;
 
-has 'quality_matrix'    => (is => 'ro', isa => 'Str', required => 1);
-has 'quality_size'      => (is => 'ro', isa => 'Int', required => 1);
+has 'quality_matrix'    => (is => 'ro', isa => 'My:File',   required => 1);
+has 'quality_size'      => (is => 'ro', isa => 'My:IntGt0', required => 1);
 has '_pos'              => (
 	is         => 'ro',
-	isa        => 'ArrayRef',
+	isa        => 'ArrayRef[My:Weights]',
 	builder    => '_build_pos',
 	lazy_build => 1
 );
-
-sub BUILD {
-	my $self = shift;
-	
-	croak "quality_matrix: " . $self->quality_matrix . " is not a valid file"
-		unless -f $self->quality_matrix;
-	
-	croak "quality_size must be greater than zero"
-		unless $self->quality_size > 0;
-}
 
 sub _build_pos {
 	my $self = shift;
@@ -61,14 +54,7 @@ sub _build_pos {
 sub _get_freq {
 	my $self = shift;
 
-	my $fh;
-	if ($self->quality_matrix =~ /\.gz$/) {
-		open $fh, "-|" => "gunzip -c " . $self->quality_matrix
-			or croak "Not possible to open pipe to " . $self->quality_matrix . ": $!";
-	} else {
-		open $fh, "<" => $self->quality_matrix
-			or croak "Not possible to read " . $self->quality_matrix . ": $!";
-	}
+	my $fh = $self->open($self->quality_matrix);
 
 	# freq [[0]:{'q' => N}, [1]:{'r' => N}, ...]
 	my @freq;
@@ -99,7 +85,7 @@ sub _get_freq {
 
 sub _get_weight {
 	my ($self, $freq) = @_;
-	my @pos = map {$self->_calculate_weight($_)} @$freq;
+	my @pos = map {$self->calculate_weight($_)} @$freq;
 	return \@pos;
 }
 
@@ -108,20 +94,10 @@ sub gen_quality {
 	my @q;
 	
 	for (my $i = 0; $i < $self->quality_size; $i++) {
-		push @q => $self->_gen_quality($i);
+		push @q => $self->weighted_raffle($self->_pos->[$i]);
 	}
 
 	return join "" => @q;
-}
-
-sub _gen_quality {
-	my ($self, $pos) = @_;
-	my $pos_weight = $self->_pos->[$pos];
-
-	my $range = int(rand($pos_weight->{acm} + 1));
-	my $weights = $pos_weight->{weight};
-
-	return $self->_search($weights, 0, $#{$weights}, $range);
 }
 
 __PACKAGE__->meta->make_immutable;

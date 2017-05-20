@@ -39,4 +39,13 @@ subtype 'My:File'
 	=> where   { -f $_ }
 	=> message { "'$_' must be a file" };
 
+subtype 'My:Weight'
+	=> as      'HashRef'
+	=> where   { exists $_->{down} && exists $_->{up} && exists $_->{feature} }
+	=> message { "'$_' is not a Weight object" };
+
+subtype 'My:Weights'
+	=> as 'ArrayRef[My:Weight]'
+	=> message { "'$_' is not a Weight object array" };
+
 1;
