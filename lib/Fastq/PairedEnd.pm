@@ -19,14 +19,13 @@ package Fastq::PairedEnd;
 
 use Moose;
 use MooseX::StrictConstructor;
-use MooseX::Params::Validate;
 use My::Types;
-use Carp;
 use Read::PairedEnd;
 
 use namespace::autoclean;
 
 extends 'Fastq';
+with    'My::Role::ABC::Fastq';
 
 has 'fragment_mean'    => (is => 'rw', isa => 'My:IntGt0', required => 1);
 has 'fragment_stdd'    => (is => 'rw', isa => 'My:IntGe0', required => 1);
@@ -48,18 +47,6 @@ sub _build_read {
 		fragment_stdd    => $self->fragment_stdd
 	);
 }
-
-before 'fastq' => sub {
-	my $self = shift;
-	my ($id, $seq_name, $seq, $seq_size, $is_leader) = pos_validated_list(
-		\@_,
-		{ isa => 'Str | Int'      },
-		{ isa => 'Str'            },
-		{ isa => 'ScalarRef[Str]' },
-		{ isa => 'My:IntGt0'      },
-		{ isa => 'Bool'           }
-	);
-};
 
 sub fastq {
 	my ($self, $id, $seq_name, $seq, $seq_size, $is_leader) = @_;

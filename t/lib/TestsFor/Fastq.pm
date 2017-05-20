@@ -114,7 +114,7 @@ sub sprint_fastq : Tests(3) {
 	my $header = "PONGA_HEADER";		
 	my $seq = "ATCGATCGAT";
 	throws_ok { $fastq->sprint_fastq($header, $seq) }
-	qr/seq argument must be a reference to a SCALAR/,
+	qr/Validation failed for 'ScalarRef\[Str\]'/,
 		"Not passing a reference to SCALAR (as seq) to fastq should fail";
 	
 	my $seq_bigger = $seq . "A";

@@ -28,10 +28,10 @@
 package Quality;
 
 use Moose;
-use Carp;
+use Carp 'croak';
 use namespace::autoclean;
 
-with 'Role::WeightedRaffle';
+with 'My::Role::WeightedRaffle';
 
 has 'quality_matrix'    => (is => 'ro', isa => 'Str', required => 1);
 has 'quality_size'      => (is => 'ro', isa => 'Int', required => 1);

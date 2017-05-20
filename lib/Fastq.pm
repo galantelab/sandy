@@ -3,7 +3,7 @@
 #
 #         FILE: Fastq.pm
 #
-#  DESCRIPTION: Fastq class
+#  DESCRIPTION: 'Fastq' base class
 #
 #        FILES: ---
 #         BUGS: ---
@@ -21,7 +21,7 @@ use Moose;
 use MooseX::StrictConstructor;
 use MooseX::Params::Validate;
 use My::Types;
-use Carp;
+use Carp 'croak';
 use Quality;
 
 use namespace::autoclean;
