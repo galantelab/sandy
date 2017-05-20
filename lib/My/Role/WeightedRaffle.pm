@@ -3,7 +3,7 @@
 #
 #         FILE: WeightedRaffle.pm
 #
-#  DESCRIPTION: with 'Role::WeightedRaffle';
+#  DESCRIPTION: with 'My::Role::WeightedRaffle';
 #               extends class with weighted raffle.
 #
 #        FILES: ---
@@ -16,7 +16,7 @@
 #     REVISION: ---
 #===============================================================================
 
-package Role::WeightedRaffle;
+package My::Role::WeightedRaffle;
 
 use Moose::Role;
 use MooseX::Params::Validate;
