@@ -107,7 +107,7 @@ sub constructor : Tests(7) {
 	$attrs{quality_size} = 11;
 	$attrs{quality_matrix} = "ponga";
 	throws_ok { $class->new(%attrs) }
-	qr/is not a valid file/,
+	qr/must be a file/,
 		"Setting quality_matrix to a non existing file should fail";
 
 	$attrs{quality_matrix} = QUALITY;

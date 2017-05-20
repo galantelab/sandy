@@ -20,41 +20,53 @@ package My::Role::WeightedRaffle;
 
 use Moose::Role;
 use MooseX::Params::Validate;
-use Carp;
+use My::Types;
+use Math::Random 'random_uniform_integer';
+use Carp 'carp';
 
-sub _calculate_weight {
+before 'calculate_weight' => sub {
 	my $self = shift;
 	my ($line) = pos_validated_list(
 		\@_,
 		{ isa => 'HashRef[Num]' }
 	);
+};
 
-	my @weight;
+sub calculate_weight {
+	my ($self, $line) = @_;
+
+	my @weights;
 	my $left = 0;
 
 	for my $feature (keys %$line) {
-		my %w = (
+		my %weight = (
 			down    => $left,
 			up      => $left + $line->{$feature} - 1,
 			feature => $feature
 		);
 		$left += $line->{$feature};
-		push @weight => \%w;
+		push @weights => \%weight;
 	}
 
-	my %pos_weight = (
-		acm    => $weight[$#weight]{up},
-		weight => \@weight
-	);
+	return \@weights;
+}
 
-	return \%pos_weight;
+before 'weighted_raffle' => sub {
+	my $self = shift;
+	my ($weights) = pos_validated_list(
+		\@_,
+		{ isa => 'My:Weights' }
+	);
+};
+
+sub weighted_raffle {
+	my ($self, $weights) = @_;
+	my $range = random_uniform_integer(1, 0, $weights->[$#{ $weights }]{up});
+	return $self->_search($weights, 0, $#{ $weights }, $range);
 }
  
 sub _search {
 	my ($self, $weights, $min_index, $max_index, $range) = @_;
-
-	croak "<$weights> argument is not an array ref"
-		unless ref($weights) eq "ARRAY";
 
 	if ($min_index > $max_index) {
 		carp "Random feature not found";
@@ -63,9 +75,6 @@ sub _search {
 
 	my $selected_index = int(($min_index + $max_index) / 2);
 	my $weight = $weights->[$selected_index];
-
-	croak "<$weight> inside @$weights is not a hash ref"
-		unless ref($weight) eq "HASH";
 
 	if ($range >= $weight->{down} && $range <= $weight->{up}) {
 		return $weight->{feature};
