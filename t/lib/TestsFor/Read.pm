@@ -62,12 +62,16 @@ sub constructor : Tests(6) {
 	}
 
 	my %attrs = %default_attr;
-	for my $attr (qw/sequencing_error read_size/) {
-		$attrs{$attr} = -1.0;
-		throws_ok { $class->new(%attrs) }
-		qr/must be greater/,
-			"Setting $attr to less than zero should fail";
-	}
+	$attrs{read_size} = -1.0;
+	throws_ok { $class->new(%attrs) }
+	qr/must be greater/,
+		"Setting read_size to less than zero should fail";
+
+	$attrs{read_size} = $default_attr{read_size};
+	$attrs{sequencing_error} = -1.0;
+	throws_ok { $class->new(%attrs) }
+	qr/must be between/,
+		"Setting sequencing_error to less than zero or more than 1 should fail";
 }
 
 sub subseq_attr : Test(10) {
@@ -78,26 +82,40 @@ sub subseq_attr : Test(10) {
 	my $seq_len = $test->seq_len;
 	my $slice_len = $read->read_size;
 
-	for my $fun (qw/subseq subseq_rand/) {
-		throws_ok {$read->$fun($seq, $seq_len, $slice_len, 0)}	
-		qr/must be a reference to a SCALAR/,
-			"Setting a non-scalar reference to a seq should fail in $fun";
+	throws_ok {$read->subseq_rand($seq, $seq_len, $slice_len)}	
+	qr/Validation failed for 'ScalarRef\[Str\]'/,
+		"Setting a non-scalar reference to a seq should fail in subseq_rand";
 
-		throws_ok {$read->$fun(\$seq, $seq_len, -1, 0)}
-		qr/must be greater than 0/,
-			"Setting a slice_len to less or equal to zero should fail in $fun";
+	throws_ok {$read->subseq($seq, $seq_len, $slice_len, 0)}	
+	qr/Validation failed for 'ScalarRef\[Str\]'/,
+		"Setting a non-scalar reference to a seq should fail in subseq";
 
-		throws_ok {$read->$fun(\$seq, -1, $slice_len, 0)}
-		qr/must be greater than 0/,
-			"Setting a seq_len to less or equal to zero should fail in $fun";
+	throws_ok {$read->subseq_rand(\$seq, $seq_len, -1)}
+	qr/must be greater than zero/,
+		"Setting a slice_len to less or equal to zero should fail in subseq_rand";
 
-		throws_ok {$read->$fun(\$seq, $seq_len, $seq_len + 1, 0)}
-		qr/slice_len \(\d+\) greater than seq_len \(\d+\)/,
-			"Setting a slice_len greater than seq_len should return undef";
-	}
+	throws_ok {$read->subseq(\$seq, $seq_len, -1, 0)}
+	qr/must be greater than zero/,
+		"Setting a slice_len to less or equal to zero should fail in subseq";
+
+	throws_ok {$read->subseq_rand(\$seq, -1, $slice_len)}
+	qr/must be greater than zero/,
+		"Setting a seq_len to less or equal to zero should fail in subseq_rand";
+
+	throws_ok {$read->subseq(\$seq, -1, $slice_len, 0)}
+	qr/must be greater than zero/,
+		"Setting a seq_len to less or equal to zero should fail in subseq";
+
+	throws_ok {$read->subseq_rand(\$seq, $seq_len, $seq_len + 1)}
+	qr/slice_len \(\d+\) greater than seq_len \(\d+\)/,
+		"Setting a slice_len greater than seq_len should return undef in subseq_rand";
+
+	throws_ok {$read->subseq(\$seq, $seq_len, $seq_len + 1, 0)}
+	qr/slice_len \(\d+\) greater than seq_len \(\d+\)/,
+		"Setting a slice_len greater than seq_len should return undef";
 
 	throws_ok {$read->subseq(\$seq, $seq_len, $slice_len, -1)}
-	qr/must be greater than 0/,
+	qr/must be greater or equal to zero/,
 		"Setting a pos to less or equal to zero should fail in subseq";
 	
 	my $pos =  $seq_len - $slice_len + 1;
@@ -114,20 +132,25 @@ sub subseq_seq : Test(5) {
 	my $seq_len = $test->seq_len;
 	my $slice_len = $read->read_size;
 
-	for my $fun (qw/subseq subseq_rand/) {
-		my ($read_seq, $pos) = $read->$fun(\$seq, $seq_len, $slice_len, 0);
+	my ($read_seq1, $pos1) = $read->subseq(\$seq, $seq_len, $slice_len, 0);
 
-		is length($read_seq), 10,
-			"Setting a slice_len ($slice_len) should return a seq ($slice_len) in $fun";
+	is length($read_seq1), 10,
+		"Setting a slice_len ($slice_len) should return a seq ($slice_len) in subseq";
 
-		ok index($seq, $read_seq) >= 0,
-			"Read sequence must be inside seq in $fun";
+	ok index($seq, $read_seq1) >= 0,
+		"Read sequence must be inside seq in subseq";
 
-	}
+	my ($read_seq2, $pos2) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
 
-	my ($read_seq, $pos) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
-	is index($seq, $read_seq), $pos,
-		"Position returned in subseq_rand ($pos) should be equal to postion in index";
+	is length($read_seq2), 10,
+		"Setting a slice_len ($slice_len) should return a seq ($slice_len) in subseq_rand";
+
+	ok index($seq, $read_seq2) >= 0,
+		"Read sequence must be inside seq in subseq";
+
+	my ($read_seq3, $pos3) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
+	is index($seq, $read_seq3), $pos3,
+		"Position returned in subseq_rand ($pos3) should be equal to postion in index";
 }
 
 sub subseq_err : Test(60) {
@@ -138,18 +161,28 @@ sub subseq_err : Test(60) {
 	my $seq_len = $test->seq_len;
 	my $slice_len = $read->read_size;
 	
-	for my $fun (qw/subseq subseq_rand/) {
-		for my $i (0..9) {
-			my ($seq_t, $pos) = $read->$fun(\$seq, $seq_len, $slice_len, $i * 10);
-			$read->update_count_base($read->read_size);
-			$read->insert_sequencing_error(\$seq_t);
+	for my $i (0..9) {
+		my ($seq_t, $pos) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
+		$read->update_count_base($read->read_size);
+		$read->insert_sequencing_error(\$seq_t);
 
-			ok index($seq, $seq_t) < 0,
-				"Sequence with error must be outside seq in $fun Try $i";
-			my $seq_t_noerr = substr $seq_t, 0, $slice_len - 1;
-			ok index($seq, $seq_t_noerr) >= 0,
-				"Sequence with error (but last char -> err) must be inside seq in $fun Try $i";
-		}
+		ok index($seq, $seq_t) < 0,
+			"Sequence with error must be outside seq in subseq_rand Try $i";
+		my $seq_t_noerr = substr $seq_t, 0, $slice_len - 1;
+		ok index($seq, $seq_t_noerr) >= 0,
+			"Sequence with error (but last char -> err) must be inside seq in subseq_rand Try $i";
+	}
+
+	for my $i (0..9) {
+		my ($seq_t, $pos) = $read->subseq(\$seq, $seq_len, $slice_len, $i * 10);
+		$read->update_count_base($read->read_size);
+		$read->insert_sequencing_error(\$seq_t);
+
+		ok index($seq, $seq_t) < 0,
+			"Sequence with error must be outside seq in subseq Try $i";
+		my $seq_t_noerr = substr $seq_t, 0, $slice_len - 1;
+		ok index($seq, $seq_t_noerr) >= 0,
+			"Sequence with error (but last char -> err) must be inside seq in subseq_rand Try $i";
 	}
 
 	# Check if sequencing_error = 0 won't insert error
@@ -157,14 +190,20 @@ sub subseq_err : Test(60) {
 	$attr{sequencing_error} = 0;
 	my $read2 = $test->class_to_test->new(%attr);
 
-	for my $fun (qw/subseq subseq_rand/) {
-		for my $i (0..9) {
-			my ($seq_t, $pos) = $read2->$fun(\$seq, $seq_len, $slice_len, $i * 10);
-			$read2->update_count_base($read2->read_size);
-			$read2->insert_sequencing_error(\$seq_t);
-			ok index($seq, $seq_t) >= 0,
-				"Sequence with sequencing_error = 0 must be inside seq in $fun Try $i";
-		}
+	for my $i (0..9) {
+		my ($seq_t, $pos) = $read2->subseq_rand(\$seq, $seq_len, $slice_len);
+		$read2->update_count_base($read2->read_size);
+		$read2->insert_sequencing_error(\$seq_t);
+		ok index($seq, $seq_t) >= 0,
+			"Sequence with sequencing_error = 0 must be inside seq in subseq_rand Try $i";
+	}
+
+	for my $i (0..9) {
+		my ($seq_t, $pos) = $read2->subseq(\$seq, $seq_len, $slice_len, $i * 10);
+		$read2->update_count_base($read2->read_size);
+		$read2->insert_sequencing_error(\$seq_t);
+		ok index($seq, $seq_t) >= 0,
+			"Sequence with sequencing_error = 0 must be inside seq in subseq Try $i";
 	}
 }
 
@@ -177,7 +216,7 @@ sub reverse_complement :Test(2) {
 	my $slice_len = $read->read_size;
 
 	throws_ok {$read->reverse_complement($seq)}
-	qr/must be a reference to a SCALAR/,
+	qr/Validation failed for 'ScalarRef\[Str\]'/,
 		"Setting a non-scalar reference to a seq should fail in reverse_complement";
 	
 	my $seq_rev1 = $seq;

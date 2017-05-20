@@ -19,13 +19,15 @@
 package Role::WeightedRaffle;
 
 use Moose::Role;
+use MooseX::Params::Validate;
 use Carp;
 
 sub _calculate_weight {
-	my ($self, $line) = @_;
-
-	croak "<$line> argument is not a hash ref"
-		unless ref($line) eq "HASH";
+	my $self = shift;
+	my ($line) = pos_validated_list(
+		\@_,
+		{ isa => 'HashRef[Num]' }
+	);
 
 	my @weight;
 	my $left = 0;

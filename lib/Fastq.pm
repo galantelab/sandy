@@ -18,13 +18,17 @@
 package Fastq;
 
 use Moose;
+use MooseX::StrictConstructor;
+use MooseX::Params::Validate;
+use My::Types;
 use Carp;
 use Quality;
+
 use namespace::autoclean;
 
-has 'read_size'        => (is => 'ro', isa => 'Int',   required => 1);
-has 'quality_file'     => (is => 'ro', isa => 'Str',   required => 1);
-has '_quality'          => (
+has 'read_size'        => (is => 'ro', isa => 'My:IntGt0', required => 1);
+has 'quality_file'     => (is => 'ro', isa => 'My:File',   required => 1);
+has '_quality'         => (
 	is         => 'ro',
 	isa        => 'Quality',
 	builder    => '_build_quality',
@@ -41,9 +45,12 @@ sub _build_quality {
 }
 
 before 'sprint_fastq' => sub {
-	my ($self, $header, $seq) = @_;
-	croak "seq argument must be a reference to a SCALAR"
-		unless ref $seq eq 'SCALAR';
+	my $self = shift;
+	my ($header, $seq) = pos_validated_list(
+		\@_,
+		{ isa => 'Str'            },
+		{ isa => 'ScalarRef[Str]' }
+	);
 
 	my $len = length $$seq;
 	croak "seq length ($len) different of the read_size (" . $self->read_size . ")"
