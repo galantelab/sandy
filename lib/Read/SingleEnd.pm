@@ -18,10 +18,24 @@
 package Read::SingleEnd;
 
 use Moose;
+use MooseX::StrictConstructor;
+use MooseX::Params::Validate;
+use My::Types;
 use Carp;
+
 use namespace::autoclean;
 
 extends 'Read';
+
+before 'gen_read' => sub {
+	my $self = shift;
+	my ($seq, $seq_size, $is_leader) = pos_validated_list(
+		\@_,
+		{ isa => 'ScalarRef[Str]' },
+		{ isa => 'My:IntGt0'      },
+		{ isa => 'Bool'           }
+	);
+};
 
 sub gen_read {
 	my ($self, $seq, $seq_size, $is_leader) = @_;

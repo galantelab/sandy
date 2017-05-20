@@ -18,8 +18,12 @@
 package Read::PairedEnd;
 
 use Moose;
+use MooseX::StrictConstructor;
+use MooseX::Params::Validate;
+use My::Types;
 use Carp;
 use Math::Random qw/random_normal/;
+
 use namespace::autoclean;
 
 use constant {
@@ -28,21 +32,25 @@ use constant {
 
 extends 'Read';
 
-has 'fragment_mean' => (is => 'ro', isa => 'Int', required => 1);
-has 'fragment_stdd' => (is => 'ro', isa => 'Int', required => 1);
+has 'fragment_mean' => (is => 'ro', isa => 'My:IntGt0', required => 1);
+has 'fragment_stdd' => (is => 'ro', isa => 'My:IntGt0', required => 1);
 
 sub BUILD {
 	my $self = shift;
 
-	croak 'fragment_mean must be greater than zero'
-		unless $self->fragment_mean > 0;
-
-	croak 'fragment_stdd must be greater or equal to zero'
-	 	unless $self->fragment_stdd >= 0;
-	
 	croak 'fragment_mean must be greater or equal to read_size'
 		unless $self->fragment_mean >= $self->read_size;
 }
+
+before 'gen_read' => sub {
+	my $self = shift;
+	my ($seq, $seq_size, $is_leader) = pos_validated_list(
+		\@_,
+		{ isa => 'ScalarRef[Str]' },
+		{ isa => 'My:IntGt0'      },
+		{ isa => 'Bool'           }
+	);
+};
 
 sub gen_read {
 	my ($self, $seq, $seq_size, $is_leader) = @_;

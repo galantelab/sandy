@@ -18,13 +18,17 @@
 package Fastq::SingleEnd;
 
 use Moose;
+use MooseX::StrictConstructor;
+use MooseX::Params::Validate;
+use My::Types;
 use Carp;
 use Read::SingleEnd;
+
 use namespace::autoclean;
 
 extends 'Fastq';
 
-has 'sequencing_error' => (is => 'ro', isa => 'Num', required => 1);
+has 'sequencing_error' => (is => 'ro', isa => 'My:NumHS', required => 1);
 has '_read'            => (
 	is         => 'ro',
 	isa        => 'Read::SingleEnd',
@@ -40,6 +44,18 @@ sub _build_read {
 		read_size        => $self->read_size
 	);
 }
+
+before 'fastq' => sub {
+	my $self = shift;
+	my ($id, $seq_name, $seq, $seq_size, $is_leader) = pos_validated_list(
+		\@_,
+		{ isa => 'Str | Int'      },
+		{ isa => 'Str'            },
+		{ isa => 'ScalarRef[Str]' },
+		{ isa => 'My:IntGt0'      },
+		{ isa => 'Bool'           }
+	);
+};
 
 sub fastq {
 	my ($self, $id, $seq_name, $seq, $seq_size, $is_leader) = @_;

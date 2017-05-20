@@ -18,59 +18,40 @@
 package Read;
 
 use Moose;
-use Moose::Util::TypeConstraints;
+use MooseX::StrictConstructor;
+use MooseX::Params::Validate;
+use My::Types;
 use Carp;
+
 use namespace::autoclean;
 
-subtype 'MyInt',
-	as 'Int';
-
-coerce 'MyInt',
-	from 'Num',
-	via { int };
-
-has 'sequencing_error' => (is => 'ro', isa => 'Num',   required => 1);
-has 'read_size'        => (is => 'ro', isa => 'Int',   required => 1);
-has '_base'            => (is => 'rw', isa => 'MyInt', coerce   => 1);
-has '_count_base'      => (is => 'rw', isa => 'Int',   default  => 0);
+has 'sequencing_error' => (is => 'ro', isa => 'My:NumHS',  required => 1);
+has 'read_size'        => (is => 'ro', isa => 'My:IntGt0', required => 1);
+has '_count_base'      => (is => 'rw', isa => 'Int',       default  => 0);
+has '_base'            => (is => 'rw', isa => 'Int');
 
 sub BUILD {
 	my $self = shift;
-	
-	croak 'read_size must be greater than zero'
-		if $self->read_size <= 0;
-
-	croak 'sequencing_error must be greater or equal to zero'
-		if $self->sequencing_error < 0;
 
 	#If sequencing_error equal to zero, set _base to zero
-	$self->_base($self->sequencing_error ? (1 / $self->sequencing_error) : 0);
+	$self->_base($self->sequencing_error ? int(1 / $self->sequencing_error) : 0);
 }
 
 before 'subseq' => sub {
-	my ($self, $seq, $seq_len, $slice_len, $pos) = @_;
-
-	croak "pos must be greater than 0"
-		unless defined $pos and $pos >= 0;
-
-	croak "slice_len + pos <= seq_len ($slice_len + $pos) <= $seq_len"
-		unless ($slice_len + $pos) <= $seq_len;
-};
-
-before qw{subseq subseq_rand} => sub {
-	my ($self, $seq, $seq_len, $slice_len, $pos) = @_;
-
-	croak "seq argument must be a reference to a SCALAR"
-		unless ref $seq eq 'SCALAR';
-
-	croak "seq_len must be greater than 0"
-		unless defined $seq_len and $seq_len > 0;
-
-	croak "slice_len must be greater than 0"
-		unless defined $slice_len and $slice_len > 0;
+	my $self = shift;
+	my ($seq, $seq_len, $slice_len, $pos) = pos_validated_list(
+		\@_,
+		{ isa => 'ScalarRef[Str]' },
+		{ isa => 'My:IntGt0'      },
+		{ isa => 'My:IntGt0'      },
+		{ isa => 'My:IntGe0'      }
+	);
 
 	croak "slice_len ($slice_len) greater than seq_len ($seq_len)"
 		unless $slice_len <= $seq_len;
+
+	croak "slice_len + pos <= seq_len ($slice_len + $pos) <= $seq_len"
+		unless ($slice_len + $pos) <= $seq_len;
 };
 
 sub subseq {
@@ -80,6 +61,19 @@ sub subseq {
 	return $read;
 }
 
+before 'subseq_rand' => sub {
+	my $self = shift;
+	my ($seq, $seq_len, $slice_len) = pos_validated_list(
+		\@_,
+		{ isa => 'ScalarRef[Str]' },
+		{ isa => 'My:IntGt0'      },
+		{ isa => 'My:IntGt0'      }
+	);
+
+	croak "slice_len ($slice_len) greater than seq_len ($seq_len)"
+		unless $slice_len <= $seq_len;
+};
+
 sub subseq_rand {
 	my ($self, $seq, $seq_len, $slice_len) = @_;
 
@@ -88,6 +82,14 @@ sub subseq_rand {
 	my $read = substr $$seq, $pos, $slice_len;
 	return ($read, $pos);
 }
+
+before 'insert_sequencing_error' => sub {
+	my $self = shift;
+	my ($seq_ref) = pos_validated_list(
+		\@_,
+		{ isa => 'ScalarRef[Str]' }
+	);
+};
 
 sub insert_sequencing_error {
 	my ($self, $seq_ref) = @_;
@@ -101,15 +103,25 @@ sub insert_sequencing_error {
 	}
 }
 
+before 'update_count_base' => sub {
+	my $self = shift;
+	my ($val) = pos_validated_list(
+		\@_,
+		{ isa => 'Int' }
+	);
+};
+
 sub update_count_base {
 	my ($self, $val) = @_;
 	$self->_count_base($self->_count_base + $val);
 }
 
 before 'reverse_complement' => sub {
-	my ($self, $seq) = @_;
-	croak "seq argument must be a reference to a SCALAR"
-		unless ref $seq eq 'SCALAR';
+	my $self = shift;
+	my ($seq) = pos_validated_list(
+		\@_,
+		{ isa => 'ScalarRef[Str]' }
+	);
 };
 
 sub reverse_complement {
