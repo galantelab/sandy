@@ -1,18 +1,26 @@
 use inc::Module::Install;
 
-name 'Simulate-Reads';
-author 'Thiago Miller';
-version '0.01';
-license 'GPL';
+# Define metadata
+name     'Simulate-Reads';
+abstract 'Creates single-end and paired-end fastq reads for transcriptome and genome simulation';
+author   'Thiago Miller';
+version  '0.01';
+license  'GPL';
 
-requires 'Moose';
-requires 'Math::Random';
-auto_install;
+# Specific dependencies
+requires       'Moose'                     => 2.2005;
+requires       'MooseX::StrictConstructor' => 0.21;
+requires       'MooseX::Params::Validate'  => 0.21;
+requires       'Math::Random'              => 0.72;
+requires       'Try::Tiny'                 => 0.28;
+requires       'Carp'                      => 1.40;
+requires       'namespace::autoclean'      => 0.28;
+test_requires  'Test::Most'                => 0.35;
+test_requires  'Test::Class'               => 0.50;
 
-test_requires 'Test::Most'  => 0.35;
-test_requires 'Test::Class' => 0.50;
-
-install_share;
+# Install data
 install_script 'simulate_reads';
+install_share;
+auto_install;
 
 WriteAll;
