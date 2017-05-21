@@ -21,6 +21,7 @@ use Moose;
 use MooseX::StrictConstructor;
 use MooseX::Params::Validate;
 use My::Types;
+use Math::Random 'random_uniform_integer';
 use Carp 'croak';
 
 use namespace::autoclean;
@@ -78,7 +79,7 @@ sub subseq_rand {
 	my ($self, $seq, $seq_len, $slice_len) = @_;
 
 	my $usable_len = $seq_len - $slice_len;
-	my $pos = $self->_randp($usable_len);
+	my $pos = random_uniform_integer(1, 0, $usable_len);
 	my $read = substr $$seq, $pos, $slice_len;
 	return ($read, $pos);
 }
@@ -133,13 +134,8 @@ sub reverse_complement {
 sub _randb {
 	my ($self, $not_b) = @_;
 	my $b = $not_b;
-	$b = qw{A T C G}[int(rand(4))] while $b eq $not_b;
+	$b = qw{A T C G}[random_uniform_integer(1, 0, 3)] while $b eq $not_b;
 	return $b;
-}
-
-sub _randp {
-	my ($self, $len) = @_;
-	return int(rand($len + 1));
 }
 
 __PACKAGE__->meta->make_immutable;
