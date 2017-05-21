@@ -21,6 +21,7 @@ use Moose;
 use MooseX::StrictConstructor;
 use MooseX::Params::Validate;
 use My::Types;
+use Math::Random 'random_uniform_integer';
 use Carp 'croak';
 use Try::Tiny;
 use feature 'say';
@@ -101,7 +102,8 @@ sub run_simulation {
 	for (my $i = 1; $i <= $number_of_reads; $i++) {
 		my $chr = $self->weighted_raffle($self->_chr_weight);
 		try {
-			say $fh $self->get_fastq("SR$i", $chr, \$genome->{$chr}{seq}, $genome->{$chr}{size}, int(rand(2)));
+			say $fh $self->get_fastq("SR$i", $chr, \$genome->{$chr}{seq},
+				$genome->{$chr}{size}, random_uniform_integer(1, 0, 1));
 		} catch {
 			die "[GENOME] $_";
 		};
