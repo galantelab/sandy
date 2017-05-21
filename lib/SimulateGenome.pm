@@ -18,45 +18,44 @@
 package SimulateGenome;
 
 use Moose;
-use Carp; 
+use MooseX::StrictConstructor;
+use MooseX::Params::Validate;
+use My::Types;
+use Carp 'croak';
 use Try::Tiny;
 use feature 'say';
+
 use namespace::autoclean;
 
-with 'Role::WeightedRaffle';
+with qw/My::Role::WeightedRaffle My::Role::IO/;
 
-has 'genome_file' => (is => 'ro', isa => 'Str', required => 1);
-has 'coverage'    => (is => 'ro', isa => 'Int', required => 1);
-has 'fastq'       => (
+has 'prefix'          => (is => 'ro', isa => 'Str',       required => 1);
+has 'output_gzipped'  => (is => 'ro', isa => 'Bool',      required => 1);
+has 'genome_file'     => (is => 'ro', isa => 'My:File',   required => 1);
+has 'coverage'        => (is => 'ro', isa => 'My:IntGt0', required => 1);
+has 'fastq'           => (
 	is         => 'ro',
 	isa        => 'Fastq::SingleEnd | Fastq::PairedEnd',
 	required   => 1,
 	handles    => { get_fastq => 'fastq' }
 );
-has '_genome'     => (
+has '_genome'         => (
 	is         => 'ro',
-	isa        => 'HashRef',
-	builder    => '_build_genome'
+	isa        => 'HashRef[HashRef]',
+	builder    => '_build_genome',
+	lazy_build => 1
 );
-has '_chr_weight' => (
+has '_chr_weight'     => (
 	is         => 'ro',
-	isa        => 'HashRef',
+	isa        => 'My:Weights',
 	builder    => '_build_chr_weight',
 	lazy_build => 1
 );
 
-# TODO: Pass this function to Roles
 sub _build_genome {
 	my $self = shift;
 
-	my $fh;
-	if ($self->genome =~ /\.gz$/) {
-		open $fh, "-|" => "gunzip -c " . $self->genome
-			or croak "Not possible to open pipe to " . $self->genome . ": $!";
-	} else {
-		open $fh, "<" => $self->genome
-			or croak "Not possible to read " . $self->genome . ": $!";
-	}
+	my $fh = $self->my_open_r($self->genome_file);
 
 	# indexed_genome = ID => (seq, len)
 	my %indexed_genome;
@@ -67,7 +66,7 @@ sub _build_genome {
 			$id = $_;
 			$id =~ s/^>//;
 		} else {
-			croak "Error reading genome '" . $self->genome . "': Not defined id"
+			croak "Error reading genome '" . $self->genome_file . "': Not defined id"
 				unless defined $id;
 			$indexed_genome{$id}{seq} .= $_;
 		}
@@ -84,7 +83,7 @@ sub _build_genome {
 sub _build_chr_weight {
 	my $self = shift;
 	my %chr_size = map { $_, $self->_genome->{$_}{size} } keys %{ $self->_genome };
-	return $self->_calculate_weight(\%chr_size);
+	return $self->calculate_weight(\%chr_size);
 }
 
 sub run_simulation {
@@ -96,23 +95,19 @@ sub run_simulation {
 	$genome_size += $genome->{$_}{size} for keys %{ $genome };
 	my $number_of_reads = int(($genome_size * $self->coverage) / $self->fastq->read_size);
 
+	my $fh = $self->my_open_w($self->prefix . "_simulation_seq.fastq", $self->output_gzipped);
+
 	# Run simualtion
 	for (my $i = 1; $i <= $number_of_reads; $i++) {
-		my $chr = $self->_raffle_chr;			
+		my $chr = $self->weighted_raffle($self->_chr_weight);
 		try {
-			say $self->get_fastq("SR$i", $chr, $genome->{$chr}{seq}, $genome->{$chr}{size}, int(rand(2)));
+			say $fh $self->get_fastq("SR$i", $chr, \$genome->{$chr}{seq}, $genome->{$chr}{size}, int(rand(2)));
 		} catch {
 			die "[GENOME] $_";
 		};
 	}
-}
 
-sub _raffle_chr {
-	my $self = shift;
-	my $chr_weight = $self->_chr_weight;
-	my $range = int(rand($chr_weight->{acm} + 1));
-	my $weights = $chr_weight->{weights};
-	return $self->_search($weights, 0, $#{$weights}, $range);
+	close $fh;
 }
 
 __PACKAGE__->meta->make_immutable;
