@@ -54,7 +54,7 @@ sub _build_pos {
 sub _get_freq {
 	my $self = shift;
 
-	my $fh = $self->open($self->quality_matrix);
+	my $fh = $self->my_open_r($self->quality_matrix);
 
 	# freq [[0]:{'q' => N}, [1]:{'r' => N}, ...]
 	my @freq;
