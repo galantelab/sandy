@@ -28,8 +28,10 @@ use constant {
 	QUALITY_SIZE  => 10,
 	QUALITY_LINES => 25,
 	GENOME        => '.data.fa',
+	GENOME_SIZE   => 1981,
 	COVERAGE      => 5,
-	PREFIX        => 'ponga'
+	PREFIX        => 'ponga',
+	OUTPUT        => 'ponga_simulation_seq.fastq'
 };
 
 sub startup : Tests(startup) {
@@ -157,14 +159,56 @@ sub cleanup : Tests(shutdown) {
 	$test->SUPER::shutdown;
 }
 
-sub run_simulation : Tests() {
+sub constructor : Tests(8) {
 	my $test = shift;
 
-#	my $sg_single_end = $test->default_sg_single_end;
-#	$sg_single_end->run_simulation;
-	
-	my $sg_paired_end = $test->default_sg_paired_end;
-	$sg_paired_end->run_simulation;
+	my $class = $test->class_to_test;
+	my $sg = $test->default_sg_single_end;
+	my %default_attr = %{ $test->default_attr };
+
+	while (my ($attr, $value) = each %default_attr) {
+		can_ok $sg, $attr;
+		is $sg->$attr, $value, "The value for $attr shold be correct";
+	}
+}
+
+sub run_simulation : Tests(6) {
+	my $test = shift;
+	my $output = OUTPUT;
+
+	for my $fun (qw/default_sg_single_end default_sg_paired_end/) {
+		my $sg = $test->$fun;
+		$sg->run_simulation;
+
+		ok -f OUTPUT,
+			"run_simulation must create a fastq file for $fun";
+		
+		my $entries = 0;
+		my %chr_acm;
+		open my $fh, "<" => $output;
+		while (<$fh>) {
+			chomp;
+			if (/^@/) {
+				$entries++;
+				my @tmp1 = split / /;
+				my @tmp2 = split /=/ => $fun =~ /paired_end/ ? $tmp1[3] : $tmp1[2];
+				my @tmp3 = split /:/ => $tmp2[1];
+				$chr_acm{$tmp3[0]}++;
+			}
+		}
+		close $fh;
+
+		$entries = $entries / 2 if $fun =~ /paired_end/;
+
+		is int((GENOME_SIZE * $sg->coverage)/$sg->fastq->read_size), $entries,
+			"run_simulation must create a fastq with the right number of entries for $fun";
+
+		my $str_sort = join " " => sort { $chr_acm{$a} <=> $chr_acm{$b} } keys %chr_acm;
+		ok(($str_sort eq "Chr2 Chr3 Chr5 Chr1 Chr4" || $str_sort eq "Chr3 Chr2 Chr5 Chr1 Chr4"),
+			"chromossome frequency must follow a weighted raffle pattern for $fun");
+			
+		unlink OUTPUT;
+	}
 }
 
 1;
