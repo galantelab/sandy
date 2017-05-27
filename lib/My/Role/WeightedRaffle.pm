@@ -61,7 +61,7 @@ before 'weighted_raffle' => sub {
 
 sub weighted_raffle {
 	my ($self, $weights) = @_;
-	my $range = random_uniform_integer(1, 0, $weights->[$#{ $weights }]{up});
+	my $range = int(rand($weights->[-1]{up} + 1));
 	return $self->_search($weights, 0, $#{ $weights }, $range);
 }
  
