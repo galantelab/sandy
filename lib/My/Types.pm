@@ -29,6 +29,16 @@ subtype 'My:IntGe0'
 	=> where   { $_ >= 0 } 
 	=> message { "Value must be greater or equal to zero, not $_" };
 
+subtype 'My:NumGt0'
+	=> as      'Num'
+	=> where   { $_ > 0 } 
+	=> message { "Value must be greater than zero, not $_" };
+
+subtype 'My:NumGe0'
+	=> as      'Num'
+	=> where   { $_ >= 0 } 
+	=> message { "Value must be greater or equal to zero, not $_" };
+
 subtype 'My:NumHS'
 	=> as      'Num'
 	=> where   { $_ >= 0 && $_ <= 1 }

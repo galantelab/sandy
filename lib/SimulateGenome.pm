@@ -21,7 +21,6 @@ use Moose;
 use MooseX::StrictConstructor;
 use MooseX::Params::Validate;
 use My::Types;
-use Math::Random 'random_uniform_integer';
 use Carp 'croak';
 use Try::Tiny;
 use feature 'say';
@@ -33,7 +32,7 @@ with qw/My::Role::WeightedRaffle My::Role::IO/;
 has 'prefix'          => (is => 'ro', isa => 'Str',       required => 1);
 has 'output_gzipped'  => (is => 'ro', isa => 'Bool',      required => 1);
 has 'genome_file'     => (is => 'ro', isa => 'My:File',   required => 1);
-has 'coverage'        => (is => 'ro', isa => 'My:IntGt0', required => 1);
+has 'coverage'        => (is => 'ro', isa => 'My:NumGt0', required => 1);
 has 'fastq'           => (
 	is         => 'ro',
 	isa        => 'Fastq::SingleEnd | Fastq::PairedEnd',
@@ -103,7 +102,7 @@ sub run_simulation {
 		my $chr = $self->weighted_raffle($self->_chr_weight);
 		try {
 			say $fh $self->get_fastq("SR$i", $chr, \$genome->{$chr}{seq},
-				$genome->{$chr}{size}, random_uniform_integer(1, 0, 1));
+				$genome->{$chr}{size}, int(rand(2)));
 		} catch {
 			die "[GENOME] $_";
 		};
