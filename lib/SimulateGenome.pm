@@ -22,13 +22,16 @@ use MooseX::StrictConstructor;
 use MooseX::Params::Validate;
 use My::Types;
 use Carp 'croak';
+use File::Cat 'cat';
+use Parallel::ForkManager;
 use Try::Tiny;
-use feature 'say';
 
+use feature 'say';
 use namespace::autoclean;
 
 with qw/My::Role::WeightedRaffle My::Role::IO/;
 
+has 'threads'         => (is => 'ro', isa => 'My:IntGt0', required => 1);
 has 'prefix'          => (is => 'ro', isa => 'Str',       required => 1);
 has 'output_gzipped'  => (is => 'ro', isa => 'Bool',      required => 1);
 has 'genome_file'     => (is => 'ro', isa => 'My:File',   required => 1);
@@ -94,18 +97,53 @@ sub run_simulation {
 	my $genome_size = 0;
 	$genome_size += $genome->{$_}{size} for keys %{ $genome };
 	my $number_of_reads = int(($genome_size * $self->coverage) / $self->fastq->read_size);
+	my $file = $self->prefix . "_simulation_seq.fastq";
 
-	my $fh = $self->my_open_w($self->prefix . "_simulation_seq.fastq", $self->output_gzipped);
+	# Forks
+	my $number_of_threads = $self->threads;
+	my @tmp_files;
+	my $pm = Parallel::ForkManager->new($number_of_threads);
 
-	# Run simualtion
-	for (my $i = 1; $i <= $number_of_reads; $i++) {
-		my $chr = $self->weighted_raffle($self->_chr_weight);
-		try {
-			say $fh $self->get_fastq("SR$i", $chr, \$genome->{$chr}{seq},
+	for my $tid (1..$number_of_threads) {
+		# Inside parent
+		my $file_t = ".$file.${$}_$tid";
+		push @tmp_files => $file_t;
+		my $pid = $pm->start and next;	
+
+		# Inside child
+		my $seed = time + $$;
+		srand($seed);
+
+		my $number_of_reads_t = int($number_of_reads/$number_of_threads);
+		# If it is the first thread, make it work on the leftover reads of int() truncation
+		$number_of_reads_t += $number_of_reads % $number_of_threads
+			if $tid == 1;
+
+		my $fh = $self->my_open_w($file_t, 0);
+
+		# Run simualtion in child
+		for my $i (1..$number_of_reads_t) {
+			my $chr = $self->weighted_raffle($self->_chr_weight);
+			say $fh $self->get_fastq("SR${i}.$tid", $chr, \$genome->{$chr}{seq},
 				$genome->{$chr}{size}, int(rand(2)));
-		} catch {
-			die "[GENOME] $_";
-		};
+		}
+
+		close $fh;
+		$pm->finish;
+	}
+
+	# Bach to parent
+	$pm->wait_all_children;
+
+	# Concatenate all temporary files
+	my $fh = $self->my_open_w($file, $self->output_gzipped);
+
+	for my $file_t (@tmp_files) {
+		cat $file_t => $fh
+			or croak "Cannot concatenate $file_t to $file: $!";
+
+		unlink $file_t
+			or croak "Cannot remove temporary file: $file_t: $!";
 	}
 
 	close $fh;

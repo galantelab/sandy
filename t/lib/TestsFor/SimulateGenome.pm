@@ -124,7 +124,8 @@ sub setup : Tests(setup) {
 		prefix         => PREFIX,
 		output_gzipped => 0,
 		genome_file    => GENOME,
-		coverage       => COVERAGE
+		coverage       => COVERAGE,
+		threads        => 4
 	);
 	
 	my %sg_single_end = (
@@ -159,7 +160,7 @@ sub cleanup : Tests(shutdown) {
 	$test->SUPER::shutdown;
 }
 
-sub constructor : Tests(8) {
+sub constructor : Tests(10) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
