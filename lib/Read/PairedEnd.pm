@@ -56,10 +56,6 @@ sub gen_read {
 
 	my ($fragment, $fragment_pos) = $self->subseq_rand($seq, $seq_size, $fragment_size);	
 
-	unless ($is_leader) {
-		$self->reverse_complement(\$fragment);
-	}
-
 	my $read1 = $self->subseq(\$fragment, $fragment_size, $self->read_size, 0);
 	$self->update_count_base($self->read_size);
 	$self->insert_sequencing_error(\$read1);
@@ -69,7 +65,9 @@ sub gen_read {
 	$self->update_count_base($self->read_size);
 	$self->insert_sequencing_error(\$read2);
 
-	return ($read1, $read2, $fragment_pos, $fragment_size);
+	return $is_leader ?
+		($read1, $read2, $fragment_pos, $fragment_size) :
+		($read2, $read1, $fragment_pos, $fragment_size);
 }
 
 sub _random_half_normal {
