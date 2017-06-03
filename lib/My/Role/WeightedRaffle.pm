@@ -21,10 +21,18 @@ package My::Role::WeightedRaffle;
 use Moose::Role;
 use MooseX::Params::Validate;
 use My::Types;
-use Math::Random 'random_uniform_integer';
 use Carp 'carp';
 
-before 'calculate_weight' => sub {
+requires '_build_weights';
+
+has 'weights' => (
+	is         => 'ro',
+	isa        => 'My:Weights',
+	builder    => '_build_weights',
+	lazy_build => 1
+);
+
+before 'calculate_weights' => sub {
 	my $self = shift;
 	my ($line) = pos_validated_list(
 		\@_,
@@ -32,7 +40,7 @@ before 'calculate_weight' => sub {
 	);
 };
 
-sub calculate_weight {
+sub calculate_weights {
 	my ($self, $line) = @_;
 
 	my @weights;
@@ -51,22 +59,14 @@ sub calculate_weight {
 	return \@weights;
 }
 
-#before 'weighted_raffle' => sub {
-#	my $self = shift;
-#	my ($weights) = pos_validated_list(
-#		\@_,
-#		{ isa => 'My:Weights' }
-#	);
-#};
-
 sub weighted_raffle {
-	my ($self, $weights) = @_;
-	my $range = int(rand($weights->[-1]{up} + 1));
-	return $self->_search($weights, 0, $#{ $weights }, $range);
+	my $self = shift;
+	my $range = int(rand($self->weights->[-1]{up} + 1));
+	return $self->_search(0, $#{ $self->weights }, $range);
 }
  
 sub _search {
-	my ($self, $weights, $min_index, $max_index, $range) = @_;
+	my ($self, $min_index, $max_index, $range) = @_;
 
 	if ($min_index > $max_index) {
 		carp "Random feature not found";
@@ -74,16 +74,16 @@ sub _search {
 	}
 
 	my $selected_index = int(($min_index + $max_index) / 2);
-	my $weight = $weights->[$selected_index];
+	my $weight = $self->weights->[$selected_index];
 
 	if ($range >= $weight->{down} && $range <= $weight->{up}) {
 		return $weight->{feature};
 	}
 	elsif ($range > $weight->{down}) {
-		return $self->_search($weights, $selected_index + 1,
+		return $self->_search($selected_index + 1,
 			$max_index, $range);
 	} else {
-		return $self->_search($weights, $min_index,
+		return $self->_search($min_index,
 			$selected_index - 1, $range);
 	}
 }
