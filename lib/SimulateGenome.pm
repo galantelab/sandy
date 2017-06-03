@@ -48,12 +48,6 @@ has '_genome'         => (
 	builder    => '_build_genome',
 	lazy_build => 1
 );
-has '_chr_weight'     => (
-	is         => 'ro',
-	isa        => 'My:Weights',
-	builder    => '_build_chr_weight',
-	lazy_build => 1
-);
 
 sub _build_genome {
 	my $self = shift;
@@ -83,10 +77,10 @@ sub _build_genome {
 	return \%indexed_genome;
 }
 
-sub _build_chr_weight {
+sub _build_weights {
 	my $self = shift;
 	my %chr_size = map { $_, $self->_genome->{$_}{size} } keys %{ $self->_genome };
-	return $self->calculate_weight(\%chr_size);
+	return $self->calculate_weights(\%chr_size);
 }
 
 sub run_simulation {
@@ -123,7 +117,7 @@ sub run_simulation {
 
 		# Run simualtion in child
 		for my $i (1..$number_of_reads_t) {
-			my $chr = $self->weighted_raffle($self->_chr_weight);
+			my $chr = $self->weighted_raffle;
 			say $fh $self->get_fastq("SR${i}.$tid", $chr, \$genome->{$chr}{seq},
 				$genome->{$chr}{size}, int(rand(2)));
 		}
