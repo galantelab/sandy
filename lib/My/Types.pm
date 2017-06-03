@@ -55,7 +55,21 @@ subtype 'My:Weight'
 	=> message { "'$_' is not a Weight object" };
 
 subtype 'My:Weights'
-	=> as 'ArrayRef[My:Weight]'
+	=> as      'ArrayRef[My:Weight]'
 	=> message { "'$_' is not a Weight object array" };
+
+subtype 'My:SeqSys'
+	=> as      'Str'
+	=> where   { $_ eq 'hiseq' }
+	=> message { "'$_' is not a valid sequencing system" };
+
+coerce 'My:SeqSys'
+	=> from    'Str'
+	=> via     { lc $_ };
+
+subtype 'My:QualityH'
+	=> as      'HashRef'
+	=> where   { exists $_->{mtx} && exists $_->{len} }
+	=> message { "$_ is not a valid quality hash" };
 
 1;

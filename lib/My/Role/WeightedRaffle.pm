@@ -51,13 +51,13 @@ sub calculate_weight {
 	return \@weights;
 }
 
-before 'weighted_raffle' => sub {
-	my $self = shift;
-	my ($weights) = pos_validated_list(
-		\@_,
-		{ isa => 'My:Weights' }
-	);
-};
+#before 'weighted_raffle' => sub {
+#	my $self = shift;
+#	my ($weights) = pos_validated_list(
+#		\@_,
+#		{ isa => 'My:Weights' }
+#	);
+#};
 
 sub weighted_raffle {
 	my ($self, $weights) = @_;

@@ -22,9 +22,8 @@ use autodie;
 use base 'TestsFor';
 
 use constant {
-	QUALITY       => '.data.txt',
+	SEQ_SYS       => 'HiSeq',
 	QUALITY_SIZE  => 10,
-	QUALITY_LINES => 25
 };
 
 sub startup : Tests(startup) {
@@ -35,36 +34,6 @@ sub startup : Tests(startup) {
 	$class->mk_classdata('default_attr');
 	$class->mk_classdata('seq');
 	$class->mk_classdata('seq_len');
-
-	my $quality = q{*++++,,--.
-,)+-0,*,/~
-,)+-0,*,/~
-,)+-0,*,/~
-,)+-0,*,/~
-,)+-0,*,/~
-,)+*0,*,/~
-,)+*0,*,/~
-,)+*0,*,/~
-*(+*0,*11~
-*(+*),+11~
-*(+*),+11~
-*(+*),+11~
-*(+*),+11~
-*(+*)/011~
-*(-*)/011~
-*(-*)/011~
-*(-.)/011~
-*(-.)/011~
-*(-.)/011~
-*(-.)/011/
-*(-.)-011/
-*(-.)-011/
-*+-.)-011/
-*+-.)-011/};
-
-	open my $fh, ">" => QUALITY;
-	print $fh "$quality\n";
-	close $fh;
 }
 
 sub setup : Tests(setup) {
@@ -73,8 +42,8 @@ sub setup : Tests(setup) {
 	$test->SUPER::setup;
 
 	my %default_attr = (
-		quality_file => QUALITY,
-		read_size    => QUALITY_SIZE,
+		sequencing_system => SEQ_SYS,
+		read_size         => QUALITY_SIZE,
 		%child_arg
 	);
 
@@ -86,12 +55,6 @@ sub setup : Tests(setup) {
 	$test->seq_len(length $seq);
 }
 
-sub cleanup : Tests(shutdown) {
-	my $test = shift;
-	unlink QUALITY;
-	$test->SUPER::shutdown;
-}
-
 sub constructor : Tests(4) {
 	my $test = shift;
 
@@ -101,7 +64,7 @@ sub constructor : Tests(4) {
 
 	while (my ($attr, $value) = each %default_attr) {
 		can_ok $fastq, $attr;
-		is $fastq->$attr, $value, "The value for $attr shold be correct";
+		is $fastq->$attr, lc $value, "The value for $attr shold be correct";
 	}
 }
 

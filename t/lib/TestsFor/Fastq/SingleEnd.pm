@@ -50,7 +50,7 @@ sub constructor : Tests(6) {
 
 	while (my ($attr, $value) = each %default_attr) {
 		can_ok $fastq, $attr;
-		is $fastq->$attr, $value, "The value for $attr shold be correct";
+		is $fastq->$attr, lc $value, "The value for $attr shold be correct";
 	}
 }
 
