@@ -26,9 +26,9 @@ use Quality;
 
 use namespace::autoclean;
 
-has 'read_size'        => (is => 'ro', isa => 'My:IntGt0', required => 1);
-has 'quality_file'     => (is => 'ro', isa => 'My:File',   required => 1);
-has '_quality'         => (
+has 'sequencing_system' => (is => 'ro', isa => 'My:SeqSys', required => 1, coerce => 1);
+has 'read_size'         => (is => 'ro', isa => 'My:IntGt0', required => 1);
+has '_quality'          => (
 	is         => 'ro',
 	isa        => 'Quality',
 	builder    => '_build_quality',
@@ -39,8 +39,8 @@ has '_quality'         => (
 sub _build_quality {
 	my $self = shift;
 	Quality->new(
-		quality_matrix => $self->quality_file,
-		quality_size   => $self->read_size
+		sequencing_system => $self->sequencing_system,
+		read_size         => $self->read_size
 	);
 }
 
@@ -65,7 +65,7 @@ sub sprint_fastq {
 	my $fastq = "\@$header\n";
 	$fastq .= "$$seq\n";
 	$fastq .= "+$header\n";
-	$fastq .= "$quality";
+	$fastq .= "$$quality";
 
 	return $fastq;
 }

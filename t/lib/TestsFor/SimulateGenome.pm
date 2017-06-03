@@ -24,9 +24,8 @@ use autodie;
 use base 'TestsFor';
  
 use constant {
-	QUALITY       => '.data.txt',
+	SEQ_SYS       => 'HiSeq',
 	QUALITY_SIZE  => 10,
-	QUALITY_LINES => 25,
 	GENOME        => '.data.fa',
 	GENOME_SIZE   => 1981,
 	COVERAGE      => 5,
@@ -41,32 +40,6 @@ sub startup : Tests(startup) {
 	$class->mk_classdata('default_attr');
 	$class->mk_classdata('default_sg_single_end');
 	$class->mk_classdata('default_sg_paired_end');
-
-	my $quality = q{*++++,,--.
-,)+-0,*,/~
-,)+-0,*,/~
-,)+-0,*,/~
-,)+-0,*,/~
-,)+-0,*,/~
-,)+*0,*,/~
-,)+*0,*,/~
-,)+*0,*,/~
-*(+*0,*11~
-*(+*),+11~
-*(+*),+11~
-*(+*),+11~
-*(+*),+11~
-*(+*)/011~
-*(-*)/011~
-*(-*)/011~
-*(-.)/011~
-*(-.)/011~
-*(-.)/011~
-*(-.)/011/
-*(-.)-011/
-*(-.)-011/
-*+-.)-011/
-*+-.)-011/};
 
 	my $genome = q{>Chr1
 TTACTGCTTTTAACATTACAGTAACTGTTACAGGTTCCAGCAGGCTAACTGGGTGGAAAT
@@ -107,11 +80,7 @@ GGTCATTAGTCTTCATAAAGAAAGGCTCTCTACAAAAACGGAGGGATGCCCTTTTTCTGG
 CATTTAATACGTAAGAAATTGCCTCCAATAGAAACCAGAGTTGCCTGATTACTATCAGCA
 CAGGAGAAATGTATTAATGTGCCTTTCTAGTAACAGGTTTTTAGAAAGTCAAATATAAAC};
 
-	open my $fh, ">" => QUALITY;
-	print $fh "$quality\n";
-	close $fh;
-
-	open $fh, ">" => GENOME;
+	open my $fh, ">" => GENOME;
 	print $fh "$genome\n";
 	close $fh;
 }
@@ -131,20 +100,20 @@ sub setup : Tests(setup) {
 	my %sg_single_end = (
 		%default_attr,
 		fastq => Fastq::SingleEnd->new(
-			quality_file     => QUALITY,
-			read_size        => QUALITY_SIZE,
-			sequencing_error => 0.1,
+			sequencing_system => 'HiSeq',
+			read_size         => QUALITY_SIZE,
+			sequencing_error  => 0.1,
 		)
 	);
 
 	my %sg_paired_end = (
 		%default_attr,
 		fastq => 	Fastq::PairedEnd->new(
-			quality_file     => QUALITY,
-			read_size        => QUALITY_SIZE,
-			sequencing_error => 0.1,
-			fragment_mean    => 50,
-			fragment_stdd    => 10
+			sequencing_system => 'HiSeq',
+			read_size         => QUALITY_SIZE,
+			sequencing_error  => 0.1,
+			fragment_mean     => 50,
+			fragment_stdd     => 10
 		)
 	);
 
@@ -155,7 +124,6 @@ sub setup : Tests(setup) {
 
 sub cleanup : Tests(shutdown) {
 	my $test = shift;
-	unlink QUALITY;
 	unlink GENOME;
 	$test->SUPER::shutdown;
 }
@@ -187,14 +155,18 @@ sub run_simulation : Tests(6) {
 		my $entries = 0;
 		my %chr_acm;
 		open my $fh, "<" => $output;
+		my $mark = 4;
+		my $acm = 0;
 		while (<$fh>) {
 			chomp;
-			if (/^@/) {
+			if (++$acm == 1) {
 				$entries++;
 				my @tmp1 = split / /;
 				my @tmp2 = split /=/ => $fun =~ /paired_end/ ? $tmp1[3] : $tmp1[2];
 				my @tmp3 = split /:/ => $tmp2[1];
 				$chr_acm{$tmp3[0]}++;
+			} elsif ($acm == $mark) {
+				$acm = 0;
 			}
 		}
 		close $fh;
