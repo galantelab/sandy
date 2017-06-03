@@ -72,10 +72,7 @@ sub gen_read {
 
 sub _random_half_normal {
 	my $self = shift;
-	my $fragment_size = -1;
-	$fragment_size = int(random_normal(1, $self->fragment_mean, $self->fragment_stdd))
-		while $fragment_size <= 0;
-	return $fragment_size;
+	return abs(int(random_normal(1, $self->fragment_mean, $self->fragment_stdd)));
 }
 
 __PACKAGE__->meta->make_immutable;
