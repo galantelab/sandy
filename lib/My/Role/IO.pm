@@ -20,6 +20,7 @@ package My::Role::IO;
 use Moose::Role;
 use MooseX::Params::Validate;
 use My::Types;
+use PerlIO::gzip;
 use Carp 'croak';
 
 before 'my_open_r' => sub {
@@ -34,13 +35,10 @@ sub my_open_r {
 	my ($self, $file) = @_;
 
 	my $fh;
-	if ($file =~ /\.gz$/) {
-		open $fh, "-|" => "gunzip -c $file"
-			or croak "Not possible to open pipe to $file: $!";
-	} else {
-		open $fh, "<" => $file
-			or croak "Not possible to read $file: $!";
-	}
+	my $mode = $file =~ /\.gz$/ ? "<:gzip" : "<";
+
+	open $fh, $mode => $file
+		or croak "Not possible to read $file: $!";
 
 	return $fh;
 }
@@ -59,14 +57,17 @@ sub my_open_w {
 	my ($self, $file, $is_gzipped) = @_;
 
 	my $fh;
+	my $mode;
+
 	if ($is_gzipped) {
+		$mode = ">:gzip";
 		$file .= '.gz';
-		open $fh, "|-" => "gzip > $file"
-			or croak "Not possible to open pipe to $file: $!";
 	} else {
-		open $fh, ">" => $file
-			or croak "Not possible to create $file: $!";
+		$mode = ">";
 	}
+
+	open $fh, $mode => $file
+		or croak "Not possible to create $file: $!";
 
 	return $fh;
 }

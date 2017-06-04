@@ -26,7 +26,6 @@ use File::Cat 'cat';
 use Parallel::ForkManager;
 use Try::Tiny;
 
-use feature 'say';
 use namespace::autoclean;
 
 with qw/My::Role::WeightedRaffle My::Role::IO/;
@@ -120,11 +119,13 @@ sub run_simulation {
 		# Run simualtion in child
 		for my $i (1..$number_of_reads_t) {
 			my $chr = $self->weighted_raffle;
-			say $fh $self->get_fastq("SR${i}.$tid", $chr, \$genome->{$chr}{seq},
-				$genome->{$chr}{size}, int(rand(2)));
+			$fh->say(
+				$self->get_fastq("SR${i}.$tid", $chr, \$genome->{$chr}{seq},
+					$genome->{$chr}{size}, int(rand(2)))
+			);
 		}
 
-		close $fh;
+		$fh->close;
 		$pm->finish;
 	}
 
@@ -142,7 +143,7 @@ sub run_simulation {
 			or croak "Cannot remove temporary file: $file_t: $!";
 	}
 
-	close $fh;
+	$fh->close;
 }
 
 __PACKAGE__->meta->make_immutable;
