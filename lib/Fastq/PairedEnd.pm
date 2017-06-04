@@ -65,9 +65,9 @@ sub fastq {
 	my $header1 = "$id 1 Simulation_read sequence_position=$seq_pos1";
 	my $header2 = "$id 2 Simulation_read sequence_position=$seq_pos2";
 
-	my $fastq = $self->sprint_fastq($header1, \$read1);
+	my $fastq = $self->sprint_fastq(\$header1, \$read1);
 	$fastq .= "\n";
-	$fastq .= $self->sprint_fastq($header2, \$read2);
+	$fastq .= $self->sprint_fastq(\$header2, \$read2);
 
 	return $fastq;
 }

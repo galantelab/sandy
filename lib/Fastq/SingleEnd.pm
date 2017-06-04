@@ -55,7 +55,7 @@ sub fastq {
 
 	my $header = "$id Simulation_read sequence_position=$seq_pos";
 
-	return $self->sprint_fastq($header, \$read);
+	return $self->sprint_fastq(\$header, \$read);
 }
 
 __PACKAGE__->meta->make_immutable;
