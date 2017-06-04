@@ -48,14 +48,9 @@ before 'sprint_fastq' => sub {
 	my $self = shift;
 	my ($header, $seq) = pos_validated_list(
 		\@_,
-		{ isa => 'Str'            },
+		{ isa => 'ScalarRef[Str]' },
 		{ isa => 'ScalarRef[Str]' }
 	);
-
-	#TODO Another bottelneck in my code!
-	my $len = length $$seq;
-	croak "seq length ($len) different of the read_size (" . $self->read_size . ")"
-		if $len != $self->read_size;
 };
 
 sub sprint_fastq {
@@ -63,9 +58,9 @@ sub sprint_fastq {
 	
 	my $quality = $self->gen_quality;
 
-	my $fastq = "\@$header\n";
+	my $fastq = "\@$$header\n";
 	$fastq .= "$$seq\n";
-	$fastq .= "+$header\n";
+	$fastq .= "+$$header\n";
 	$fastq .= "$$quality";
 
 	return $fastq;

@@ -76,18 +76,17 @@ sub sprint_fastq : Tests(3) {
 	
 	my $header = "PONGA_HEADER";		
 	my $seq = "ATCGATCGAT";
-	throws_ok { $fastq->sprint_fastq($header, $seq) }
+	throws_ok { $fastq->sprint_fastq($header, \$seq) }
+	qr/Validation failed for 'ScalarRef\[Str\]'/,
+		"Not passing a reference to SCALAR (as header) to fastq should fail";
+
+	throws_ok { $fastq->sprint_fastq(\$header, $seq) }
 	qr/Validation failed for 'ScalarRef\[Str\]'/,
 		"Not passing a reference to SCALAR (as seq) to fastq should fail";
 	
-	my $seq_bigger = $seq . "A";
-	throws_ok { $fastq->sprint_fastq($header, \$seq_bigger) }
-	qr/seq length \(\d+\) different of the read_size \(\d+\)/,
-		"Passing a seq greater than read_size should fail";
-	
 	my $quality_size = QUALITY_SIZE;
 	my $rg = qr/\@${header}\n${seq}\n\+${header}\n.{$quality_size}/;
-	ok $fastq->sprint_fastq($header, \$seq) =~ $rg,
+	ok $fastq->sprint_fastq(\$header, \$seq) =~ $rg,
 		"'fastq' should return an entry in fastq format";
 }
 
