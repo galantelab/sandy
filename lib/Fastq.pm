@@ -52,6 +52,7 @@ before 'sprint_fastq' => sub {
 		{ isa => 'ScalarRef[Str]' }
 	);
 
+	#TODO Another bottelneck in my code!
 	my $len = length $$seq;
 	croak "seq length ($len) different of the read_size (" . $self->read_size . ")"
 		if $len != $self->read_size;
