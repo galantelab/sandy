@@ -59,8 +59,10 @@ sub _build_genome {
 	my $id;
 	while (<$fh>) {
 		chomp;
+		next if /^;/;
 		if (/^>/) {
-			$id = $_;
+			my @fields = split /\|/;
+			$id = (split / / => $fields[0])[0];
 			$id =~ s/^>//;
 		} else {
 			croak "Error reading genome '" . $self->genome_file . "': Not defined id"
