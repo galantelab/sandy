@@ -74,7 +74,7 @@ sub _build_genome {
 		$indexed_genome{$_}{size} = length $indexed_genome{$_}{seq};
 	}
 
-	close $fh;
+	$fh->close;
 	return \%indexed_genome;
 }
 
@@ -129,7 +129,7 @@ sub run_simulation {
 		$pm->finish;
 	}
 
-	# Bach to parent
+	# Back to parent
 	$pm->wait_all_children;
 
 	# Concatenate all temporary files
