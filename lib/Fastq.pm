@@ -21,7 +21,6 @@ use Moose;
 use MooseX::StrictConstructor;
 use MooseX::Params::Validate;
 use My::Types;
-use Carp 'croak';
 use Quality;
 
 use namespace::autoclean;
