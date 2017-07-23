@@ -19,12 +19,12 @@ package SimulateGenome;
 
 use Moose;
 use MooseX::StrictConstructor;
-use MooseX::Params::Validate;
 use My::Types;
-use Carp 'croak';
+use Fastq::SingleEnd;
+use Fastq::PairedEnd;
+use Carp;
 use File::Cat 'cat';
 use Parallel::ForkManager;
-use Try::Tiny;
 
 use namespace::autoclean;
 
@@ -88,10 +88,14 @@ sub run_simulation {
 	my $self = shift;
 	my $genome = $self->_genome;
 
-	# Calculate the number of reads to be generated
+	## Calculate the number of reads to be generated
 	my $genome_size = 0;
 	$genome_size += $genome->{$_}{size} for keys %{ $genome };
-	my $number_of_reads = int(($genome_size * $self->coverage) / $self->fastq->read_size);
+	# In case it is paired-end read, divide the numver of reads by 2 because Fastq::PairedEnd class
+	# returns 2 reads at time
+	my $read_type_factor = ref $self->fastq eq 'Fastq::PairedEnd' ? 2 : 1;
+	my $number_of_reads = int(($genome_size * $self->coverage) / ($self->fastq->read_size * $read_type_factor));
+
 	my $file = $self->prefix . "_simulation_seq.fastq";
 
 	# Forks
@@ -101,7 +105,7 @@ sub run_simulation {
 
 	for my $tid (1..$number_of_threads) {
 		# Inside parent
-		my $file_t = ".$file.${$}_$tid";
+		my $file_t = "$file.${$}_$tid";
 		push @tmp_files => $file_t;
 		my $pid = $pm->start and next;	
 
@@ -134,16 +138,18 @@ sub run_simulation {
 
 	# Concatenate all temporary files
 	my $fh = $self->my_open_w($file, $self->output_gzipped);
-
 	for my $file_t (@tmp_files) {
 		cat $file_t => $fh
-			or croak "Cannot concatenate $file_t to $file: $!";
-
-		unlink $file_t
-			or croak "Cannot remove temporary file: $file_t: $!";
+			or carp "Cannot concatenate $file_t to $file: $!";
 	}
 
 	$fh->close;
+
+	# Clean up the mess
+	for my $file_t (@tmp_files) {
+		unlink $file_t
+			or carp "Cannot remove temporary file: $file_t: $!";
+	}
 }
 
 __PACKAGE__->meta->make_immutable;
