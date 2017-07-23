@@ -49,7 +49,7 @@ sub setup : Tests(setup) {
 	$test->seq_len(length $seq);
 }
 
-sub constructor : Tests(6) {
+sub constructor : Tests(4) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
@@ -60,68 +60,6 @@ sub constructor : Tests(6) {
 		can_ok $read, $attr;
 		is $read->$attr, $value,"The value for $attr shold be correct";
 	}
-
-	my %attrs = %default_attr;
-	$attrs{read_size} = -1.0;
-	throws_ok { $class->new(%attrs) }
-	qr/must be greater/,
-		"Setting read_size to less than zero should fail";
-
-	$attrs{read_size} = $default_attr{read_size};
-	$attrs{sequencing_error} = -1.0;
-	throws_ok { $class->new(%attrs) }
-	qr/must be between/,
-		"Setting sequencing_error to less than zero or more than 1 should fail";
-}
-
-sub subseq_attr : Test(10) {
-	my $test = shift;
-
-	my $read = $test->default_read;
-	my $seq = $test->seq;
-	my $seq_len = $test->seq_len;
-	my $slice_len = $read->read_size;
-
-	throws_ok {$read->subseq_rand($seq, $seq_len, $slice_len)}	
-	qr/Validation failed for 'ScalarRef\[Str\]'/,
-		"Setting a non-scalar reference to a seq should fail in subseq_rand";
-
-	throws_ok {$read->subseq($seq, $seq_len, $slice_len, 0)}	
-	qr/Validation failed for 'ScalarRef\[Str\]'/,
-		"Setting a non-scalar reference to a seq should fail in subseq";
-
-	throws_ok {$read->subseq_rand(\$seq, $seq_len, -1)}
-	qr/must be greater than zero/,
-		"Setting a slice_len to less or equal to zero should fail in subseq_rand";
-
-	throws_ok {$read->subseq(\$seq, $seq_len, -1, 0)}
-	qr/must be greater than zero/,
-		"Setting a slice_len to less or equal to zero should fail in subseq";
-
-	throws_ok {$read->subseq_rand(\$seq, -1, $slice_len)}
-	qr/must be greater than zero/,
-		"Setting a seq_len to less or equal to zero should fail in subseq_rand";
-
-	throws_ok {$read->subseq(\$seq, -1, $slice_len, 0)}
-	qr/must be greater than zero/,
-		"Setting a seq_len to less or equal to zero should fail in subseq";
-
-	throws_ok {$read->subseq_rand(\$seq, $seq_len, $seq_len + 1)}
-	qr/slice_len \(\d+\) greater than seq_len \(\d+\)/,
-		"Setting a slice_len greater than seq_len should return undef in subseq_rand";
-
-	throws_ok {$read->subseq(\$seq, $seq_len, $seq_len + 1, 0)}
-	qr/slice_len \(\d+\) greater than seq_len \(\d+\)/,
-		"Setting a slice_len greater than seq_len should return undef";
-
-	throws_ok {$read->subseq(\$seq, $seq_len, $slice_len, -1)}
-	qr/must be greater or equal to zero/,
-		"Setting a pos to less or equal to zero should fail in subseq";
-	
-	my $pos =  $seq_len - $slice_len + 1;
-	throws_ok {$read->subseq(\$seq, $seq_len, $slice_len, $pos)}
-	qr/\($slice_len \+ $pos\) <= $seq_len/,
-		"Setting a pos + slicelen > seq_len should fail";
 }
 
 sub subseq_seq : Test(5) {
@@ -207,7 +145,7 @@ sub subseq_err : Test(60) {
 	}
 }
 
-sub reverse_complement :Test(2) {
+sub reverse_complement :Test(1) {
 	my $test = shift;
 
 	my $read = $test->default_read;
@@ -215,10 +153,6 @@ sub reverse_complement :Test(2) {
 	my $seq_len = $test->seq_len;
 	my $slice_len = $read->read_size;
 
-	throws_ok {$read->reverse_complement($seq)}
-	qr/Validation failed for 'ScalarRef\[Str\]'/,
-		"Setting a non-scalar reference to a seq should fail in reverse_complement";
-	
 	my $seq_rev1 = $seq;
 	$read->reverse_complement(\$seq_rev1);
 	my $seq_rev2 = reverse $seq;

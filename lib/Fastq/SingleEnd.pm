@@ -25,7 +25,6 @@ use Read::SingleEnd;
 use namespace::autoclean;
 
 extends 'Fastq';
-with    'My::Role::ABC::Fastq';
 
 has 'sequencing_error' => (is => 'ro', isa => 'My:NumHS', required => 1);
 has '_read'            => (

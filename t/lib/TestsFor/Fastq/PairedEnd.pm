@@ -43,7 +43,7 @@ sub cleanup : Tests(shutdown) {
 	$test->SUPER::shutdown;
 }
 
-sub constructor : Tests(10) {
+sub constructor : Tests(12) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;

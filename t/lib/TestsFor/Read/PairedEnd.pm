@@ -49,13 +49,6 @@ sub constructor : Tests(11) {
 	}
 
 	my %attrs = %default_attr;
-	for my $attr (qw/fragment_mean fragment_stdd/) {
-		$attrs{$attr} = -1.0;
-		throws_ok { $class->new(%attrs) }
-		qr/must be greater/,
-			"Setting $attr to less than zero should fail";
-		$attrs{$attr} = 50;
-	}
 	
 	$attrs{fragment_mean} = 50;
 	$attrs{read_size} = 51;
@@ -71,8 +64,9 @@ sub gen_read : Tests(122) {
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
 
-	ok not($read->gen_read(\$seq, $read->read_size - 1, 1)),
-		"Sequence length lesser than read_size must return undef";
+	throws_ok { $read->gen_read(\$seq, $read->read_size - 1, 1) }
+	qr/The constraints were not met/,
+		"Sequence length lesser than read_size must return error";
 	
 	my $err = 0;
 	for (1..100) {

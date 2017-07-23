@@ -30,27 +30,32 @@ use constant {
 };
 
 extends 'Read';
-with    'My::Role::ABC::Read';
 
 has 'fragment_mean' => (is => 'ro', isa => 'My:IntGt0', required => 1);
 has 'fragment_stdd' => (is => 'ro', isa => 'My:IntGt0', required => 1);
 
 sub BUILD {
 	my $self = shift;
-
 	croak 'fragment_mean must be greater or equal to read_size'
 		unless $self->fragment_mean >= $self->read_size;
 }
 
 sub gen_read {
 	my ($self, $seq, $seq_size, $is_leader) = @_;
-	return if $seq_size < $self->read_size;
 
 	my $fragment_size;
 	my $random_tries = 0;
 
 	do {
-		return if ++$random_tries == NUM_TRIES;
+		# seq_size must be greater or equal to fragment_size and
+		# fragment_size must be greater or equal to read_size
+		# As fragment_size is randomly calculated, try out NUM_TRIES times
+		if (++$random_tries == NUM_TRIES) {
+			croak "paired-end read fail: The constraints were not met:\n" .
+				"seq_size ($seq_size) >= fragment_size ($fragment_size) && fragment_size ($fragment_size) >= read_sizei (" .
+					$self->read_size . ")\n";
+		}
+
 		$fragment_size = $self->_random_half_normal;
 	} while ($seq_size < $fragment_size) || ($fragment_size < $self->read_size);
 

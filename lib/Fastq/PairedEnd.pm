@@ -25,7 +25,6 @@ use Read::PairedEnd;
 use namespace::autoclean;
 
 extends 'Fastq';
-with    'My::Role::ABC::Fastq';
 
 has 'fragment_mean'    => (is => 'rw', isa => 'My:IntGt0', required => 1);
 has 'fragment_stdd'    => (is => 'rw', isa => 'My:IntGe0', required => 1);

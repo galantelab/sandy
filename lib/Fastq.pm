@@ -19,7 +19,6 @@ package Fastq;
 
 use Moose;
 use MooseX::StrictConstructor;
-use MooseX::Params::Validate;
 use My::Types;
 use Quality;
 
@@ -43,18 +42,8 @@ sub _build_quality {
 	);
 }
 
-before 'sprint_fastq' => sub {
-	my $self = shift;
-	my ($header, $seq) = pos_validated_list(
-		\@_,
-		{ isa => 'ScalarRef[Str]' },
-		{ isa => 'ScalarRef[Str]' }
-	);
-};
-
 sub sprint_fastq {
 	my ($self, $header, $seq) = @_;
-	
 	my $quality = $self->gen_quality;
 
 	my $fastq = "\@$$header\n";

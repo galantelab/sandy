@@ -19,15 +19,19 @@ package Read::SingleEnd;
 
 use Moose;
 use MooseX::StrictConstructor;
+use Carp 'croak';
 
 use namespace::autoclean;
 
 extends 'Read';
-with    'My::Role::ABC::Read';
 
 sub gen_read {
 	my ($self, $seq, $seq_size, $is_leader) = @_;
-	return if $seq_size < $self->read_size;
+	# seq_size must be greater or equal to read_size
+	if ($seq_size < $self->read_size) {
+		croak "single-end read fail: The constraints were not met:\n" .
+			"seq_size ($seq_size) >= read_size (" . $self->read_size . ")\n";
+	}
 
 	my ($read, $read_pos) = $self->subseq_rand($seq, $seq_size, $self->read_size);
 
