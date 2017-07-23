@@ -72,4 +72,41 @@ sub my_open_w {
 	return $fh;
 }
  
+before 'index_fasta' => sub {
+	my $self = shift;
+	my ($fasta) = pos_validated_list(
+		\@_,
+		{ isa => 'My:Fasta' }
+	);
+};
+
+sub index_fasta {
+	my ($self, $fasta) = @_;
+	my $fh = $self->my_open_r($fasta);
+
+	# indexed_genome = ID => (seq, len)
+	my %indexed_fasta;
+	my $id;
+	while (<$fh>) {
+		chomp;
+		next if /^;/;
+		if (/^>/) {
+			my @fields = split /\|/;
+			$id = (split / / => $fields[0])[0];
+			$id =~ s/^>//;
+		} else {
+			croak "Error reading fasta file '$fasta': Not defined id"
+				unless defined $id;
+			$indexed_fasta{$id}{seq} .= $_;
+		}
+	}
+	
+	for (keys %indexed_fasta) {
+		$indexed_fasta{$_}{size} = length $indexed_fasta{$_}{seq};
+	}
+
+	$fh->close;
+	return \%indexed_fasta;
+}
+
 1;

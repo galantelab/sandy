@@ -49,6 +49,11 @@ subtype 'My:File'
 	=> where   { -f $_ }
 	=> message { "'$_' must be a file" };
 
+subtype 'My:Fasta'
+	=> as      'My:File'
+	=> where   { $_ =~ /.+\.(fasta|fa|fna|ffn)(\.gz)*$/ }
+	=> message { "'$_' must be a fasta file: Check the extension (.fasta, .fa, .fna, .ffn - compressed, or not, by gzip, as in .fasta.gz etc)" };
+
 subtype 'My:Weight'
 	=> as      'HashRef'
 	=> where   { exists $_->{down} && exists $_->{up} && exists $_->{feature} }
