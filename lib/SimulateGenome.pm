@@ -25,6 +25,7 @@ use Fastq::PairedEnd;
 use Carp;
 use File::Cat 'cat';
 use Parallel::ForkManager;
+use Try::Tiny;
 
 use namespace::autoclean;
 
@@ -50,7 +51,17 @@ has '_genome'         => (
 
 sub _build_genome {
 	my $self = shift;
-	return $self->index_fasta($self->genome_file);
+	my $indexed_fasta = $self->index_fasta($self->genome_file);
+	my $err;
+	for my $id (keys %$indexed_fasta) {
+		my $index_size = $indexed_fasta->{$id}{size};
+		my $read_size = $self->fastq->read_size;
+		$err .= "seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n"
+			if $index_size < $read_size;
+	}
+	
+	croak "Error parsing '" . $self->genome_file . "':\n$err" if defined $err;
+	return $indexed_fasta;
 }
 
 sub _build_weights {
@@ -66,11 +77,19 @@ sub run_simulation {
 	## Calculate the number of reads to be generated
 	my $genome_size = 0;
 	$genome_size += $genome->{$_}{size} for keys %{ $genome };
-	# In case it is paired-end read, divide the numver of reads by 2 because Fastq::PairedEnd class
+	# In case it is paired-end read, divide the number of reads by 2 because Fastq::PairedEnd class
 	# returns 2 reads at time
 	my $read_type_factor = ref $self->fastq eq 'Fastq::PairedEnd' ? 2 : 1;
 	my $number_of_reads = int(($genome_size * $self->coverage) / ($self->fastq->read_size * $read_type_factor));
-
+	# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or genome_size
+	if ($number_of_reads <= 0) {
+		croak "Number of reads is equal to zero: Check the variables:\n" .
+			"genome size: $genome_size\n" .
+			"coverage: " . $self->coverage . "\n" .
+			"read size: " . $self->fastq->read_size . "\n";
+	}
+	
+	# File to be generated
 	my $file = $self->prefix . "_simulation_seq.fastq";
 
 	# Forks
@@ -98,10 +117,14 @@ sub run_simulation {
 		# Run simualtion in child
 		for my $i (1..$number_of_reads_t) {
 			my $chr = $self->weighted_raffle;
-			$fh->say(
-				$self->get_fastq("SR${i}.$tid", $chr, \$genome->{$chr}{seq},
-					$genome->{$chr}{size}, int(rand(2)))
-			);
+			my $entry;
+			try {
+				$entry = $self->get_fastq("SR${i}.$tid", $chr, \$genome->{$chr}{seq}, $genome->{$chr}{size}, int(rand(2)));
+			} catch {
+				carp "Not defined entry for seqid '>$chr' at job $tid: $_";
+			} finally {
+				$fh->say($entry) unless @_;
+			};
 		}
 
 		$fh->close;

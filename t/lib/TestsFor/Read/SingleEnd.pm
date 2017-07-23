@@ -37,8 +37,9 @@ sub gen_read : Tests(51) {
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
 
-	ok not($read->gen_read(\$seq, $read->read_size - 1, 1)),
-		"Sequence length lesser than read_size must return undef";
+	throws_ok { $read->gen_read(\$seq, $read->read_size - 1, 1) }
+	qr/The constraints were not met/,
+		"Sequence length lesser than read_size must return error";
 	
 	for my $i (0..9) {
 		my ($r1, $pos1) = $read->gen_read(\$seq, $seq_len, 1);

@@ -68,7 +68,7 @@ sub constructor : Tests(4) {
 	}
 }
 
-sub sprint_fastq : Tests(3) {
+sub sprint_fastq : Tests(1) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
@@ -76,13 +76,6 @@ sub sprint_fastq : Tests(3) {
 	
 	my $header = "PONGA_HEADER";		
 	my $seq = "ATCGATCGAT";
-	throws_ok { $fastq->sprint_fastq($header, \$seq) }
-	qr/Validation failed for 'ScalarRef\[Str\]'/,
-		"Not passing a reference to SCALAR (as header) to fastq should fail";
-
-	throws_ok { $fastq->sprint_fastq(\$header, $seq) }
-	qr/Validation failed for 'ScalarRef\[Str\]'/,
-		"Not passing a reference to SCALAR (as seq) to fastq should fail";
 	
 	my $quality_size = QUALITY_SIZE;
 	my $rg = qr/\@${header}\n${seq}\n\+${header}\n.{$quality_size}/;

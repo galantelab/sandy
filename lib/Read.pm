@@ -19,9 +19,7 @@ package Read;
 
 use Moose;
 use MooseX::StrictConstructor;
-use MooseX::Params::Validate;
 use My::Types;
-use Carp 'croak';
 
 use namespace::autoclean;
 
@@ -32,27 +30,26 @@ has '_base'            => (is => 'rw', isa => 'Int');
 
 sub BUILD {
 	my $self = shift;
-
 	# If sequencing_error equal to zero, set _base to zero
 	$self->_base($self->sequencing_error ? int(1 / $self->sequencing_error) : 0);
 }
 
-before 'subseq' => sub {
-	my $self = shift;
-	my ($seq, $seq_len, $slice_len, $pos) = pos_validated_list(
-		\@_,
-		{ isa => 'ScalarRef[Str]' },
-		{ isa => 'My:IntGt0'      },
-		{ isa => 'My:IntGt0'      },
-		{ isa => 'My:IntGe0'      }
-	);
-
-	croak "slice_len ($slice_len) greater than seq_len ($seq_len)"
-		unless $slice_len <= $seq_len;
-
-	croak "slice_len + pos <= seq_len ($slice_len + $pos) <= $seq_len"
-		unless ($slice_len + $pos) <= $seq_len;
-};
+#before 'subseq' => sub {
+#	my $self = shift;
+#	my ($seq, $seq_len, $slice_len, $pos) = pos_validated_list(
+#		\@_,
+#		{ isa => 'ScalarRef[Str]' },
+#		{ isa => 'My:IntGt0'      },
+#		{ isa => 'My:IntGt0'      },
+#		{ isa => 'My:IntGe0'      }
+#	);
+#
+#	croak "slice_len ($slice_len) greater than seq_len ($seq_len)"
+#		unless $slice_len <= $seq_len;
+#
+#	croak "slice_len + pos <= seq_len ($slice_len + $pos) <= $seq_len"
+#		unless ($slice_len + $pos) <= $seq_len;
+#};
 
 sub subseq {
 	my ($self, $seq, $seq_len, $slice_len, $pos) = @_;
@@ -61,18 +58,18 @@ sub subseq {
 	return $read;
 }
 
-before 'subseq_rand' => sub {
-	my $self = shift;
-	my ($seq, $seq_len, $slice_len) = pos_validated_list(
-		\@_,
-		{ isa => 'ScalarRef[Str]' },
-		{ isa => 'My:IntGt0'      },
-		{ isa => 'My:IntGt0'      }
-	);
-
-	croak "slice_len ($slice_len) greater than seq_len ($seq_len)"
-		unless $slice_len <= $seq_len;
-};
+#before 'subseq_rand' => sub {
+#	my $self = shift;
+#	my ($seq, $seq_len, $slice_len) = pos_validated_list(
+#		\@_,
+#		{ isa => 'ScalarRef[Str]' },
+#		{ isa => 'My:IntGt0'      },
+#		{ isa => 'My:IntGt0'      }
+#	);
+#
+#	croak "slice_len ($slice_len) greater than seq_len ($seq_len)"
+#		unless $slice_len <= $seq_len;
+#};
 
 sub subseq_rand {
 	my ($self, $seq, $seq_len, $slice_len) = @_;
@@ -83,13 +80,13 @@ sub subseq_rand {
 	return ($read, $pos);
 }
 
-before 'insert_sequencing_error' => sub {
-	my $self = shift;
-	my ($seq_ref) = pos_validated_list(
-		\@_,
-		{ isa => 'ScalarRef[Str]' }
-	);
-};
+#before 'insert_sequencing_error' => sub {
+#	my $self = shift;
+#	my ($seq_ref) = pos_validated_list(
+#		\@_,
+#		{ isa => 'ScalarRef[Str]' }
+#	);
+#};
 
 sub insert_sequencing_error {
 	my ($self, $seq_ref) = @_;
@@ -103,26 +100,26 @@ sub insert_sequencing_error {
 	}
 }
 
-before 'update_count_base' => sub {
-	my $self = shift;
-	my ($val) = pos_validated_list(
-		\@_,
-		{ isa => 'Int' }
-	);
-};
+#before 'update_count_base' => sub {
+#	my $self = shift;
+#	my ($val) = pos_validated_list(
+#		\@_,
+#		{ isa => 'Int' }
+#	);
+#};
 
 sub update_count_base {
 	my ($self, $val) = @_;
 	$self->_count_base($self->_count_base + $val);
 }
 
-before 'reverse_complement' => sub {
-	my $self = shift;
-	my ($seq) = pos_validated_list(
-		\@_,
-		{ isa => 'ScalarRef[Str]' }
-	);
-};
+#before 'reverse_complement' => sub {
+#	my $self = shift;
+#	my ($seq) = pos_validated_list(
+#		\@_,
+#		{ isa => 'ScalarRef[Str]' }
+#	);
+#};
 
 sub reverse_complement {
 	my ($self, $seq) = @_;
