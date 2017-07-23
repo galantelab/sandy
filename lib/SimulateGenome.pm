@@ -33,7 +33,7 @@ with qw/My::Role::WeightedRaffle My::Role::IO/;
 has 'threads'         => (is => 'ro', isa => 'My:IntGt0', required => 1);
 has 'prefix'          => (is => 'ro', isa => 'Str',       required => 1);
 has 'output_gzipped'  => (is => 'ro', isa => 'Bool',      required => 1);
-has 'genome_file'     => (is => 'ro', isa => 'My:File',   required => 1);
+has 'genome_file'     => (is => 'ro', isa => 'My:Fasta',  required => 1);
 has 'coverage'        => (is => 'ro', isa => 'My:NumGt0', required => 1);
 has 'fastq'           => (
 	is         => 'ro',
@@ -50,32 +50,7 @@ has '_genome'         => (
 
 sub _build_genome {
 	my $self = shift;
-
-	my $fh = $self->my_open_r($self->genome_file);
-
-	# indexed_genome = ID => (seq, len)
-	my %indexed_genome;
-	my $id;
-	while (<$fh>) {
-		chomp;
-		next if /^;/;
-		if (/^>/) {
-			my @fields = split /\|/;
-			$id = (split / / => $fields[0])[0];
-			$id =~ s/^>//;
-		} else {
-			croak "Error reading genome '" . $self->genome_file . "': Not defined id"
-				unless defined $id;
-			$indexed_genome{$id}{seq} .= $_;
-		}
-	}
-	
-	for (keys %indexed_genome) {
-		$indexed_genome{$_}{size} = length $indexed_genome{$_}{seq};
-	}
-
-	$fh->close;
-	return \%indexed_genome;
+	return $self->index_fasta($self->genome_file);
 }
 
 sub _build_weights {
