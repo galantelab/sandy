@@ -171,9 +171,7 @@ sub run_simulation : Tests(6) {
 		}
 		close $fh;
 
-		$entries = $entries / 2 if $fun =~ /paired_end/;
-
-		is int((GENOME_SIZE * $sg->coverage)/$sg->fastq->read_size), $entries,
+		is int((GENOME_SIZE * $sg->coverage) / $sg->fastq->read_size), $entries,
 			"run_simulation must create a fastq with the right number of entries for $fun";
 
 		my $str_sort = join " " => sort { $chr_acm{$a} <=> $chr_acm{$b} } keys %chr_acm;

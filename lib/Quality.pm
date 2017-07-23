@@ -6,15 +6,6 @@
 #  DESCRIPTION: Analyses a fastq set and generate a weight matrix based on the quality
 #               frequence for each position
 #
-#               use Quality;
-#
-#               my $q = Quality->new(
-#					quality_matrix  => <FILE>,
-#					quality_size    => 76
-#               );
-#
-#               my $quality = $q->gen_quality;
-#
 #        FILES: ---
 #         BUGS: ---
 #        NOTES: ---
