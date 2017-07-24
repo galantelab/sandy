@@ -26,6 +26,9 @@ use namespace::autoclean;
 
 extends 'Fastq';
 
+#-------------------------------------------------------------------------------
+#  Moose attributes
+#-------------------------------------------------------------------------------
 has 'fragment_mean'    => (is => 'rw', isa => 'My:IntGt0', required => 1);
 has 'fragment_stdd'    => (is => 'rw', isa => 'My:IntGe0', required => 1);
 has 'sequencing_error' => (is => 'ro', isa => 'My:NumHS',  required => 1);
@@ -37,6 +40,16 @@ has '_read'            => (
 	handles    => [qw{ gen_read }]
 );
 
+#===  CLASS METHOD  ============================================================
+#        CLASS: Fastq::PairedEnd
+#       METHOD: _build_read (BUILDER)
+#   PARAMETERS: Void
+#      RETURNS: Read::PairedEnd obj
+#  DESCRIPTION: Build a Read::PairedEnd object
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub _build_read {
 	my $self = shift;
 	Read::PairedEnd->new(
@@ -45,8 +58,19 @@ sub _build_read {
 		fragment_mean    => $self->fragment_mean,
 		fragment_stdd    => $self->fragment_stdd
 	);
-}
+} ## --- end sub _build_read
 
+#===  CLASS METHOD  ============================================================
+#        CLASS: Fastq::PairedEnd
+#       METHOD: fastq
+#   PARAMETERS: $id Str, $seq_name Str, $seq Ref Str, $seq_size Int > 0, $is_leader Bool
+#      RETURNS: $fastq Str
+#  DESCRIPTION: Consumes sprint_fastq parent template, twice, to generate a 
+#               paired-end fastq entry
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub fastq {
 	my ($self, $id, $seq_name, $seq, $seq_size, $is_leader) = @_;
 
@@ -61,16 +85,16 @@ sub fastq {
 		($seq_pos1, $seq_pos2) = ($seq_pos2, $seq_pos1);
 	}
 
-	my $header1 = "$id 1 Simulation_read sequence_position=$seq_pos1";
-	my $header2 = "$id 2 Simulation_read sequence_position=$seq_pos2";
+	my $header1 = "$id|$seq_pos1 1 simulation_read length=" . $self->read_size;
+	my $header2 = "$id|$seq_pos2 2 simulation_read length=" . $self->read_size;
 
 	my $fastq = $self->sprint_fastq(\$header1, \$read1);
 	$fastq .= "\n";
 	$fastq .= $self->sprint_fastq(\$header2, \$read2);
 
 	return $fastq;
-}
+} ## --- end sub fastq
 
 __PACKAGE__->meta->make_immutable;
 
-1;
+1; ## --- end class Fastq::PairedEnd

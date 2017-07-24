@@ -67,8 +67,9 @@ sub fastq : Tests(5) {
 	my $id = "SR0001";
 	my $seq_name = "Chr1";
 	my $read = $fastq->fastq($id, $seq_name, \$seq, length $seq, 1);
-	my $header = "Simulation_read sequence_position=$seq_name";
-	my $rg = qr/\@${id} [12] ${header}:\d+-\d+\n.+\n\+${id} [12] ${header}:\d+-\d+\n.+\n\@${id} [12] ${header}:\d+-\d+\n.+\n\+${id} [12] ${header}:\d+-\d+\n.+/;
+	my $read_size = $fastq->read_size;
+	my $header = qr/$id\|${seq_name}:\d+-\d+ [12] simulation_read length=$read_size/;
+	my $rg = qr/\@${header}\n.+\n\+\n.+\n\@${header}\n.+\n\+\n.+/;
 	ok $read =~ $rg,
 		"read retuned by 'fastq' must be in fastq format";
 	
@@ -76,7 +77,7 @@ sub fastq : Tests(5) {
 	my @lines = split /\n/ => $read;
 	my $read_seq1_l1 = substr $lines[1], 0, $fastq->read_size - 1;
 	my $index_s1 = index $seq, $read_seq1_l1;
-	my $pos_s1 = $lines[0] =~ /sequence_position=(.+)/ ? $1 : undef;
+	my $pos_s1 = $lines[0] =~ /\|(.+?) / ? $1 : undef;
 	my $pos_s1_t = "$seq_name:" . (1 + $index_s1) . "-" . ($fastq->read_size + $index_s1);
 
 	is $pos_s1, $pos_s1_t,
@@ -85,7 +86,7 @@ sub fastq : Tests(5) {
 	$fastq->_read->reverse_complement(\$lines[5]);
 	my $read_seq2_f1 = substr $lines[5], 1, $fastq->read_size;
 	my $index_s2 = index $seq, $read_seq2_f1;
-	my $pos_s2 = $lines[4] =~ /sequence_position=(.+)/ ? $1 : undef;
+	my $pos_s2 = $lines[4] =~ /\|(.+?) / ? $1 : undef;
 	my $pos_s2_t = "$seq_name:" . ($fastq->read_size + $index_s2 - 1) . "-" . ($index_s2);
 
 	is $pos_s2, $pos_s2_t,
@@ -98,7 +99,7 @@ sub fastq : Tests(5) {
 	$fastq->_read->reverse_complement(\$lines2[1]);
 	my $read2_seq1_f1 = substr $lines2[1], 1, $fastq->read_size;
 	my $index2_s1 = index $seq, $read2_seq1_f1;
-	my $pos2_s1 = $lines2[0] =~ /sequence_position=(.+)/ ? $1 : undef;
+	my $pos2_s1 = $lines2[0] =~ /\|(.+?) / ? $1 : undef;
 	my $pos2_s1_t = "$seq_name:" . ($fastq->read_size + $index2_s1 - 1) . "-" . ($index2_s1);
 
 	is $pos2_s1, $pos2_s1_t,
@@ -106,7 +107,7 @@ sub fastq : Tests(5) {
 
 	my $read2_seq2_l1 = substr $lines2[5], 0, $fastq->read_size - 1;
 	my $index2_s2 = index $seq, $read2_seq2_l1;
-	my $pos2_s2 = $lines2[4] =~ /sequence_position=(.+)/ ? $1 : undef;
+	my $pos2_s2 = $lines2[4] =~ /\|(.+?) / ? $1 : undef;
 	my $pos2_s2_t = "$seq_name:" . ($index2_s2 + 1) . "-" . ($fastq->read_size + $index2_s2);
 
 	is $pos2_s2, $pos2_s2_t,

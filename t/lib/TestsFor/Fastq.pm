@@ -78,7 +78,7 @@ sub sprint_fastq : Tests(1) {
 	my $seq = "ATCGATCGAT";
 	
 	my $quality_size = QUALITY_SIZE;
-	my $rg = qr/\@${header}\n${seq}\n\+${header}\n.{$quality_size}/;
+	my $rg = qr/\@${header}\n${seq}\n\+\n.{$quality_size}/;
 	ok $fastq->sprint_fastq(\$header, \$seq) =~ $rg,
 		"'fastq' should return an entry in fastq format";
 }
