@@ -162,7 +162,7 @@ sub run_simulation : Tests(6) {
 			if (++$acm == 1) {
 				$entries++;
 				my @tmp1 = split / /;
-				my @tmp2 = split /=/ => $fun =~ /paired_end/ ? $tmp1[3] : $tmp1[2];
+				my @tmp2 = split /\|/ => $tmp1[0];
 				my @tmp3 = split /:/ => $tmp2[1];
 				$chr_acm{$tmp3[0]}++;
 			} elsif ($acm == $mark) {

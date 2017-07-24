@@ -31,6 +31,9 @@ use namespace::autoclean;
 
 with qw/My::Role::WeightedRaffle My::Role::IO/;
 
+#-------------------------------------------------------------------------------
+#  Moose attributes
+#-------------------------------------------------------------------------------
 has 'threads'         => (is => 'ro', isa => 'My:IntGt0', required => 1);
 has 'prefix'          => (is => 'ro', isa => 'Str',       required => 1);
 has 'output_gzipped'  => (is => 'ro', isa => 'Bool',      required => 1);
@@ -49,6 +52,16 @@ has '_genome'         => (
 	lazy_build => 1
 );
 
+#===  CLASS METHOD  ============================================================
+#        CLASS: SimulateGenome
+#       METHOD: _build_genome (BUILDER)
+#   PARAMETERS: ????
+#      RETURNS: ????
+#  DESCRIPTION: 
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub _build_genome {
 	my $self = shift;
 	my $indexed_fasta = $self->index_fasta($self->genome_file);
@@ -62,14 +75,34 @@ sub _build_genome {
 	
 	croak "Error parsing '" . $self->genome_file . "':\n$err" if defined $err;
 	return $indexed_fasta;
-}
+} ## --- end sub _build_genome
 
+#===  CLASS METHOD  ============================================================
+#        CLASS: SimulateGenome
+#       METHOD: _build_weights (BUILDER)
+#   PARAMETERS: ????
+#      RETURNS: ????
+#  DESCRIPTION: 
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub _build_weights {
 	my $self = shift;
 	my %chr_size = map { $_, $self->_genome->{$_}{size} } keys %{ $self->_genome };
 	return $self->calculate_weights(\%chr_size);
-}
+} ## --- end sub _build_weights
 
+#===  CLASS METHOD  ============================================================
+#        CLASS: SimulateGenome
+#       METHOD: run_simulation
+#   PARAMETERS: ????
+#      RETURNS: ????
+#  DESCRIPTION: 
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub run_simulation {
 	my $self = shift;
 	my $genome = $self->_genome;
@@ -148,8 +181,8 @@ sub run_simulation {
 		unlink $file_t
 			or carp "Cannot remove temporary file: $file_t: $!";
 	}
-}
+} ## --- end sub run_simulation
 
 __PACKAGE__->meta->make_immutable;
 
-1;
+1; ## --- end class SimulateGenome

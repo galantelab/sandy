@@ -18,19 +18,19 @@
 package My::Role::IO;
 
 use Moose::Role;
-use MooseX::Params::Validate;
-use My::Types;
 use PerlIO::gzip;
 use Carp 'croak';
 
-before 'my_open_r' => sub {
-	my $self = shift;
-	my ($file) = pos_validated_list(
-		\@_,
-		{ isa => 'My:File' }
-	);
-};
-
+#===  CLASS METHOD  ============================================================
+#        CLASS: My::Role::IO (Role)
+#       METHOD: my_open_r
+#   PARAMETERS: $file File
+#      RETURNS: $fh IO::File
+#  DESCRIPTION: Verify if the file is gzipped compressed and open it properly
+#       THROWS: If open fails, throws an error
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub my_open_r {
 	my ($self, $file) = @_;
 
@@ -41,18 +41,18 @@ sub my_open_r {
 		or croak "Not possible to read $file: $!";
 
 	return $fh;
-}
+} ## --- end sub my_open_r
 
-before 'my_open_w' => sub {
-	my $self = shift;
-	my ($file, $is_gzipped) = pos_validated_list(
-		\@_,
-		{ isa => 'Str'  },
-		{ isa => 'Bool' }
-	);
-
-};
-
+#===  CLASS METHOD  ============================================================
+#        CLASS: My::Role::IO (Role)
+#       METHOD: my_open_w
+#   PARAMETERS: $file Str, $is_gzipped Bool
+#      RETURNS: $fh IO::File
+#  DESCRIPTION: Opens for writing a file, gzipped or not
+#       THROWS: If open fails, throws an error
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub my_open_w {
 	my ($self, $file, $is_gzipped) = @_;
 
@@ -70,16 +70,8 @@ sub my_open_w {
 		or croak "Not possible to create $file: $!";
 
 	return $fh;
-}
+} ## --- end sub my_open_w
  
-before 'index_fasta' => sub {
-	my $self = shift;
-	my ($fasta) = pos_validated_list(
-		\@_,
-		{ isa => 'My:Fasta' }
-	);
-};
-
 sub index_fasta {
 	my ($self, $fasta) = @_;
 	my $fh = $self->my_open_r($fasta);
@@ -109,4 +101,4 @@ sub index_fasta {
 	return \%indexed_fasta;
 }
 
-1;
+1; ## --- end class My::Role::IO

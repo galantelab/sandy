@@ -25,6 +25,16 @@ use namespace::autoclean;
 
 extends 'Read';
 
+#===  CLASS METHOD  ============================================================
+#        CLASS: Read::SingleEnd
+#       METHOD: gen_read
+#   PARAMETERS: $seq Ref Str, $seq_size Int > 0, $is_leader Bool
+#      RETURNS: $read Str, $read_pos Int >= 0
+#  DESCRIPTION: Generate single-end read
+#       THROWS: If $seq_size less then read_size, throws an error message
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub gen_read {
 	my ($self, $seq, $seq_size, $is_leader) = @_;
 	# seq_size must be greater or equal to read_size
@@ -42,8 +52,8 @@ sub gen_read {
 	$self->update_count_base($self->read_size);
 	$self->insert_sequencing_error(\$read);
 	return ($read, $read_pos);
-}
+} ## --- end sub gen_read
 
 __PACKAGE__->meta->make_immutable;
 
-1;
+1; ## --- end class Read::SingleEnd
