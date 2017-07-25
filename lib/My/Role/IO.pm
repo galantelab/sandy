@@ -74,6 +74,7 @@ sub my_open_w {
  
 sub index_fasta {
 	my ($self, $fasta) = @_;
+	print STDERR "file: $fasta\n";
 	my $fh = $self->my_open_r($fasta);
 
 	# indexed_genome = ID => (seq, len)
@@ -99,6 +100,26 @@ sub index_fasta {
 
 	$fh->close;
 	return \%indexed_fasta;
+}
+
+sub index_weight_file {
+	my ($self, $weight_file) = @_;
+	print STDERR "file: $weight_file\n";
+	my $fh = $self->my_open_r($weight_file);
+	my %indexed_file;
+	my $line = 0;
+	while (<$fh>) {
+		$line++;
+		chomp;
+		next if /^\s*$/;
+		my @fields = split /\t/;
+		croak "Error parsing '$weight_file': seqid (first column) not found at line $line\n" unless defined $fields[0];
+		croak "Error parsing '$weight_file': weight (second column) not found at line $line\n" unless defined $fields[1];
+		$indexed_file{$fields[0]} = $fields[1];
+	}
+	
+	$fh->close;
+	return \%indexed_file;
 }
 
 1; ## --- end class My::Role::IO
