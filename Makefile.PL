@@ -10,7 +10,6 @@ license        'GPL';
 # Specific dependencies
 requires       'Moose'                     => 2.2005;
 requires       'MooseX::StrictConstructor' => 0.21;
-requires       'MooseX::Params::Validate'  => 0.21;
 requires       'namespace::autoclean'      => 0.28;
 requires       'Math::Random'              => 0.72;
 requires       'Try::Tiny'                 => 0.28;
@@ -18,6 +17,7 @@ requires       'Carp'                      => 1.38;
 requires       'File::Basename'            => 2.85;
 requires       'File::Spec'                => 3.63;
 requires       'File::Cat'                 => 1.20;
+requires       'Scalar::Util'              => 1.48;
 requires       'Storable'                  => 2.56;
 requires       'Parallel::ForkManager'     => 1.19;
 requires       'PerlIO::gzip'              => 0.19;
