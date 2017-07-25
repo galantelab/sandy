@@ -19,6 +19,7 @@ package My::Role::IO;
 
 use Moose::Role;
 use PerlIO::gzip;
+use Scalar::Util 'looks_like_number';
 use Carp 'croak';
 
 #===  CLASS METHOD  ============================================================
@@ -72,9 +73,18 @@ sub my_open_w {
 	return $fh;
 } ## --- end sub my_open_w
  
+#===  CLASS METHOD  ============================================================
+#        CLASS: My::Role::IO (Role)
+#       METHOD: index_fasta
+#   PARAMETERS: $fasta My:Fasta
+#      RETURNS: HashRef[Hashref]
+#  DESCRIPTION: Indexes a fasta file: id => (seq, size)
+#       THROWS: It tries to validate the fasta file, if fails, throws an error
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub index_fasta {
 	my ($self, $fasta) = @_;
-	print STDERR "file: $fasta\n";
 	my $fh = $self->my_open_r($fasta);
 
 	# indexed_genome = ID => (seq, len)
@@ -87,6 +97,7 @@ sub index_fasta {
 			my @fields = split /\|/;
 			$id = (split / / => $fields[0])[0];
 			$id =~ s/^>//;
+			$id = lc $id;
 		} else {
 			croak "Error reading fasta file '$fasta': Not defined id"
 				unless defined $id;
@@ -100,11 +111,20 @@ sub index_fasta {
 
 	$fh->close;
 	return \%indexed_fasta;
-}
+} ## --- end sub index_fasta
 
+#===  CLASS METHOD  ============================================================
+#        CLASS: My::Role::IO
+#       METHOD: index_weight_file
+#   PARAMETERS: $weight_file My:File
+#      RETURNS: $indexed_file Hashref[Int]
+#  DESCRIPTION: It indexes a tab separated file with a seqid and its weight
+#       THROWS: It tries to validate the file, if fails, the throws an exception
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub index_weight_file {
 	my ($self, $weight_file) = @_;
-	print STDERR "file: $weight_file\n";
 	my $fh = $self->my_open_r($weight_file);
 	my %indexed_file;
 	my $line = 0;
@@ -115,11 +135,13 @@ sub index_weight_file {
 		my @fields = split /\t/;
 		croak "Error parsing '$weight_file': seqid (first column) not found at line $line\n" unless defined $fields[0];
 		croak "Error parsing '$weight_file': weight (second column) not found at line $line\n" unless defined $fields[1];
-		$indexed_file{$fields[0]} = $fields[1];
+		croak "Error parsing '$weight_file': weight (second column) does not look like a number at line $line\n" if not looks_like_number($fields[1]);
+		croak "Error parsing '$weight_file': weight (second column) lesser or equal to zero at line $line\n" if $fields[1] <= 0;
+		$indexed_file{lc $fields[0]} = $fields[1];
 	}
 	
 	$fh->close;
 	return \%indexed_file;
-}
+} ## --- end sub index_weight_file
 
 1; ## --- end class My::Role::IO

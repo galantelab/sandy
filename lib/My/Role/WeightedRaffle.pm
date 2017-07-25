@@ -19,12 +19,14 @@
 package My::Role::WeightedRaffle;
 
 use Moose::Role;
-use MooseX::Params::Validate;
 use My::Types;
-use Carp 'carp';
+use Carp 'croak';
 
 requires '_build_weights';
 
+#-------------------------------------------------------------------------------
+#  Moose attributes
+#-------------------------------------------------------------------------------
 has 'weights' => (
 	is         => 'ro',
 	isa        => 'My:Weights',
@@ -32,14 +34,17 @@ has 'weights' => (
 	lazy_build => 1
 );
 
-before 'calculate_weights' => sub {
-	my $self = shift;
-	my ($line) = pos_validated_list(
-		\@_,
-		{ isa => 'HashRef[Num]' }
-	);
-};
-
+#===  CLASS METHOD  ============================================================
+#        CLASS: My::Role::WeightedRaffle (Role)
+#       METHOD: calculate_weights
+#   PARAMETERS: $line HashRef[Int]
+#      RETURNS: ????
+#  DESCRIPTION: Calculates weight based in a hash -> key => weight, giving:
+#              	[ { down, up, feature }, { down, up, feature } .. ] 
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub calculate_weights {
 	my ($self, $line) = @_;
 
@@ -57,20 +62,43 @@ sub calculate_weights {
 	}
 
 	return \@weights;
-}
+} ## --- end sub calculate_weights
 
+#===  CLASS METHOD  ============================================================
+#        CLASS: My::Role::WeightedRaffle (Role)
+#       METHOD: weighted_raffle
+#   PARAMETERS: Void
+#      RETURNS: $self->_search()
+#  DESCRIPTION: Makes a binary search on the intervals between the weights. The
+#               bigger the interval bigger the weight. It begins by making a
+#               raffle on the sum of weights, then calls _search that searches
+#               for the feature whose value hit the interval
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: _search
+#===============================================================================
 sub weighted_raffle {
 	my $self = shift;
 	my $range = int(rand($self->weights->[-1]{up} + 1));
 	return $self->_search(0, $#{ $self->weights }, $range);
-}
+} ## --- end sub weighted_raffle
  
+#===  CLASS METHOD  ============================================================
+#        CLASS: My::Role::WeightedRaffle (Role)
+#       METHOD: _search (PRIVATE)
+#   PARAMETERS: $min_index Int >= 0, $max_index Int > 0, $range Int > 0
+#      RETURNS: $weight->{feature} when found
+#  DESCRIPTION: Binary search
+#       THROWS: If $min_index greater the $max_index, which may not occur, throws
+#               an exception
+#     COMMENTS: none
+#     SEE ALSO: weighted_raffle
+#===============================================================================
 sub _search {
 	my ($self, $min_index, $max_index, $range) = @_;
 
 	if ($min_index > $max_index) {
-		carp "Random feature not found";
-		return;
+		croak "Random feature not found";
 	}
 
 	my $selected_index = int(($min_index + $max_index) / 2);
@@ -86,6 +114,6 @@ sub _search {
 		return $self->_search($min_index,
 			$selected_index - 1, $range);
 	}
-}
+} ## --- end sub _search
 
-1;
+1; ## --- end class My::Role::WeightedRaffle
