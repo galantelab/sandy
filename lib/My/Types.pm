@@ -77,4 +77,19 @@ subtype 'My:QualityH'
 	=> where   { exists $_->{mtx} && exists $_->{len} }
 	=> message { "$_ is not a valid quality hash" };
 
+subtype 'My:StrandBias'
+	=> as      'Str'
+	=> where   { $_ eq 'plus' || $_ eq 'minus' || $_ eq 'random' }
+	=> message { "$_ is not a valid strand_bias: 'plus', 'minus' or 'random'" };
+
+subtype 'My:SeqWeight'
+	=> as      'Str'
+	=> where   { $_ eq 'length' || $_ eq 'same' || $_ eq 'file' }
+	=> message { "$_ is not a valid sequence_weight: 'length', 'same' or 'file'" };
+
+subtype 'My:CountLoopBy'
+	=> as      'Str'
+	=> where   { $_ eq 'coverage' || $_ eq 'number_of_reads' }
+	=> message { "$_ is not a valid count_loops_by: 'coverage' or 'number_of_reads'" };
+
 1;
