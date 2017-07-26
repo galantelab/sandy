@@ -1,9 +1,9 @@
 #
 #===============================================================================
 #
-#         FILE: SimulateGenome.pm
+#         FILE: SimulateRead.pm
 #
-#  DESCRIPTION: Simulates single-end and pair-end reads for genome
+#  DESCRIPTION: Simulates single-end and pair-end reads
 #
 #        FILES: ---
 #         BUGS: ---
@@ -15,7 +15,7 @@
 #     REVISION: ---
 #===============================================================================
 
-package SimulateGenome;
+package SimulateRead;
 
 use Moose;
 use MooseX::StrictConstructor;
@@ -38,12 +38,12 @@ with qw/My::Role::WeightedRaffle My::Role::IO/;
 has 'threads'         => (is => 'ro', isa => 'My:IntGt0',      required => 1);
 has 'prefix'          => (is => 'ro', isa => 'Str',            required => 1);
 has 'output_gzipped'  => (is => 'ro', isa => 'Bool',           required => 1);
-has 'genome_file'     => (is => 'ro', isa => 'My:Fasta',       required => 1);
+has 'fasta_file'      => (is => 'ro', isa => 'My:Fasta',       required => 1);
 has 'coverage'        => (is => 'ro', isa => 'My:NumGt0',      required => 0);
 has 'number_of_reads' => (is => 'ro', isa => 'My:IntGt0',      required => 0);
 has 'count_loops_by'  => (is => 'ro', isa => 'My:CountLoopBy', required => 1);
 has 'strand_bias'     => (is => 'ro', isa => 'My:StrandBias',  required => 1);
-has 'sequence_weight' => (is => 'ro', isa => 'My:SeqWeight',   required => 1);
+has 'seqid_weight'    => (is => 'ro', isa => 'My:SeqIdWeight', required => 1);
 has 'weight_file'     => (is => 'ro', isa => 'My:File',        required => 0);
 has 'fastq'           => (
 	is         => 'ro',
@@ -51,33 +51,33 @@ has 'fastq'           => (
 	required   => 1,
 	handles    => { get_fastq => 'fastq' }
 );
-has '_strand'         => (
+has '_fasta'         => (
+	is         => 'ro',
+	isa        => 'My:IdxFasta',
+	builder    => '_build_fasta',
+	lazy_build => 1
+);
+has '_strand'        => (
 	is         => 'ro',
 	isa        => 'CodeRef',
 	builder    => '_build_strand',
 	lazy_build => 1
 );
-has '_genome'         => (
-	is         => 'ro',
-	isa        => 'HashRef[HashRef]',
-	builder    => '_build_genome',
-	lazy_build => 1
-);
-has '_raffle'        => (
+has '_seqid_raffle'  => (
 	is         => 'ro',
 	isa        => 'CodeRef',
-	builder    => '_build_raffle',
+	builder    => '_build_seqid_raffle',
 	lazy_build => 1
 );
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateGenome
+#        CLASS: SimulateRead
 #       METHOD: BUILD (Moose)
 #   PARAMETERS: Void
 #      RETURNS: Void
 #  DESCRIPTION: Validate optional attributes and/or attributes that depends of
 #               another attribute
-#       THROWS: If sequence_weight == 'file' and the user did not pass a weight
+#       THROWS: If seqid_weight == 'file' and the user did not pass a weight
 #               file, throws an exception.
 #               If count_loops_by == 'coverage', then coverage must be defined,
 #               as well as 'number_of_reads', number_of_reads must be defined
@@ -88,9 +88,9 @@ has '_raffle'        => (
 sub BUILD {
 	my $self = shift;
 
-	# If sequence_weight is 'file', then weight_file must be defined
-	if ($self->sequence_weight eq 'file' and not defined $self->weight_file) {
-		croak "sequence_weight=file requires a weight_file\n";
+	# If seqid_weight is 'file', then weight_file must be defined
+	if ($self->seqid_weight eq 'file' and not defined $self->weight_file) {
+		croak "seqid_weight=file requires a weight_file\n";
 	}
 
 	# If count_loops_by is 'coverage', then coverage must be defined. Else if
@@ -102,16 +102,16 @@ sub BUILD {
 	}
 	
 	## Just to ensure that the lazy attributes are built before &new returns
-	# Only sequence_weight=same is not a weighted raffle, so in this case
+	# Only seqid_weight=same is not a weighted raffle, so in this case
 	# not construct weight attribute
-	$self->weights if $self->sequence_weight ne 'same';
+	$self->weights if $self->seqid_weight ne 'same';
 	$self->_strand;
-	$self->_genome;
-	$self->_raffle;
+	$self->_fasta;
+	$self->_seqid_raffle;
 } ## --- end sub BUILD
  
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateGenome
+#        CLASS: SimulateRead
 #       METHOD: _build_strand (BUILDER)
 #   PARAMETERS: Void
 #      RETURNS: Ref Code
@@ -132,19 +132,19 @@ sub _build_strand {
 } ## --- end sub _build_strand
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateGenome
-#       METHOD: _build_genome (BUILDER)
+#        CLASS: SimulateRead
+#       METHOD: _build_fasta (BUILDER)
 #   PARAMETERS: Void
-#      RETURNS: Hash[HashRef]
-#  DESCRIPTION: Build _genome attribute
+#      RETURNS: $indexed_fasta My:IdxFasta
+#  DESCRIPTION: Build _fasta attribute
 #       THROWS: If the read size required is greater than any genomic sequence,
 #               then throws an error
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
-sub _build_genome {
+sub _build_fasta {
 	my $self = shift;
-	my $indexed_fasta = $self->index_fasta($self->genome_file);
+	my $indexed_fasta = $self->index_fasta($self->fasta_file);
 	# Validate genome about the read size required
 	my $err;
 	for my $id (keys %$indexed_fasta) {
@@ -154,36 +154,36 @@ sub _build_genome {
 			if $index_size < $read_size;
 	}
 	
-	croak "Error parsing '" . $self->genome_file . "':\n$err" if defined $err;
+	croak "Error parsing '" . $self->fasta_file . "':\n$err" if defined $err;
 	return $indexed_fasta;
-} ## --- end sub _build_genome
+} ## --- end sub _build_fasta
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateGenome
+#        CLASS: SimulateRead
 #       METHOD: _build_weights (BUILDER)
 #   PARAMETERS: Void
 #      RETURNS: My:Weights
 #  DESCRIPTION: Build weights. It is required by the WeightedRaffle role. 
-#               It verifies sequence_weight and sets the required weights matrix
-#       THROWS: If sequence_weight == 'file', then it needs to be validated
+#               It verifies seqid_weight and sets the required weights matrix
+#       THROWS: If seqid_weight == 'file', then it needs to be validated
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
 sub _build_weights {
 	my $self = shift;
-	if ($self->sequence_weight eq 'length') {
-		my %chr_size = map { $_, $self->_genome->{$_}{size} } keys %{ $self->_genome };
+	if ($self->seqid_weight eq 'length') {
+		my %chr_size = map { $_, $self->_fasta->{$_}{size} } keys %{ $self->_fasta };
 		return $self->calculate_weights(\%chr_size);
-	} elsif ($self->sequence_weight eq 'file') {
+	} elsif ($self->seqid_weight eq 'file') {
 		my $indexed_file = $self->index_weight_file($self->weight_file);
 		# Validate weight_file
 		croak "Error parsing '" . $self->weight_file . "': Maybe the file is empty\n"
 			unless %$indexed_file;
-		my $indexed_fasta = $self->_genome;
+		my $indexed_fasta = $self->_fasta;
 		my $err;
 		for my $id (keys %$indexed_file) {
 			if (not exists $indexed_fasta->{$id}) {
-				$err .= "seqid '$id' not found in '" . $self->genome_file . "'\n";
+				$err .= "seqid '$id' not found in '" . $self->fasta_file . "'\n";
 			}
 		}
 		croak "Error in validating '" . $self->weight_file . "':\n" . $err
@@ -193,19 +193,19 @@ sub _build_weights {
 } ## --- end sub _build_weights
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateGenome
-#       METHOD: _build_raffle (BUILDER)
+#        CLASS: SimulateRead
+#       METHOD: _build_seqid_raffle (BUILDER)
 #   PARAMETERS: Void
 #      RETURNS: Ref Code
-#  DESCRIPTION: Build _raffle attribute. (dynamic linkage) 
+#  DESCRIPTION: Build _seqid_raffle attribute. (dynamic linkage) 
 #       THROWS: no exceptions
-#     COMMENTS: sequence_weight can be: 'length', 'file' and 'same'
+#     COMMENTS: seqid_weight can be: 'length', 'file' and 'same'
 #     SEE ALSO: n/a
 #===============================================================================
-sub _build_raffle {
+sub _build_seqid_raffle {
 	my $self = shift;
-	if ($self->sequence_weight eq 'same') {
-		my @seqids = keys %{ $self->_genome };
+	if ($self->seqid_weight eq 'same') {
+		my @seqids = keys %{ $self->_fasta };
 		return sub { 
 			state @id;
 			@id = @seqids if not @id;
@@ -214,10 +214,10 @@ sub _build_raffle {
 	} else {
 		return sub { $self->weighted_raffle };
 	}
-} ## --- end sub _build_raffle
+} ## --- end sub _build_seqid_raffle
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateGenome
+#        CLASS: SimulateRead
 #       METHOD: _calculate_number_of_reads (PRIVATE)
 #   PARAMETERS: Void
 #      RETURNS: $number_of_reads Int > 0
@@ -235,17 +235,17 @@ sub _calculate_number_of_reads {
 
 	if ($self->count_loops_by eq 'coverage') {
 		# It is needed to calculate the genome size
-		my $genome = $self->_genome;
-		my $genome_size = 0;
-		$genome_size += $genome->{$_}{size} for keys %{ $genome };
+		my $fasta = $self->_fasta;
+		my $fasta_size = 0;
+		$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
 		# In case it is paired-end read, divide the number of reads by 2 because Fastq::PairedEnd class
 		# returns 2 reads at time
 		my $read_type_factor = ref $self->fastq eq 'Fastq::PairedEnd' ? 2 : 1;
-		$number_of_reads = int(($genome_size * $self->coverage) / ($self->fastq->read_size * $read_type_factor));
+		$number_of_reads = int(($fasta_size * $self->coverage) / ($self->fastq->read_size * $read_type_factor));
 		# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or genome_size
 		if ($number_of_reads <= 0) {
 			croak "Number of reads is equal to zero: Check the variables:\n" .
-				"genome size: $genome_size\n" .
+				"genome size: $fasta_size\n" .
 				"coverage: " . $self->coverage . "\n" .
 				"read size: " . $self->fastq->read_size . "\n";
 		}
@@ -257,11 +257,11 @@ sub _calculate_number_of_reads {
 } ## --- end sub _calculate_number_of_reads
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateGenome
+#        CLASS: SimulateRead
 #       METHOD: run_simulation
 #   PARAMETERS: Void
 #      RETURNS: Void
-#  DESCRIPTION: The main class method when the simulation unfolds
+#  DESCRIPTION: The main class method where the simulation unfolds
 #       THROWS: Try catch the fasta object passed by the user. If occurs an error,
 #               then throws an exception
 #     COMMENTS: It is not recommended to make parallelism in perl, so the workaround
@@ -272,7 +272,7 @@ sub _calculate_number_of_reads {
 #===============================================================================
 sub run_simulation {
 	my $self = shift;
-	my $genome = $self->_genome;
+	my $fasta = $self->_fasta;
 
 	# Calculate the number of reads to be generated
 	my $number_of_reads = $self->_calculate_number_of_reads;
@@ -280,8 +280,8 @@ sub run_simulation {
 	# Function that returns strand by strand_bias
 	my $strand = $self->_strand;
 
-	# Function that returns seqid by sequence_weight
-	my $seqid = $self->_raffle;
+	# Function that returns seqid by seqid_weight
+	my $seqid = $self->_seqid_raffle;
 
 	# File to be generated
 	my $file = $self->prefix . "_simulation_seq.fastq";
@@ -319,7 +319,7 @@ sub run_simulation {
 			my $id = $seqid->();
 			my $entry;
 			try {
-				$entry = $self->get_fastq("SR${i}.$tid", $id, \$genome->{$id}{seq}, $genome->{$id}{size}, $strand->());
+				$entry = $self->get_fastq("SR${i}.$tid", $id, \$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
 			} catch {
 				croak "Not defined entry for seqid '>$id' at job $tid: $_";
 			} finally {
@@ -352,4 +352,4 @@ sub run_simulation {
 
 __PACKAGE__->meta->make_immutable;
 
-1; ## --- end class SimulateGenome
+1; ## --- end class SimulateRead

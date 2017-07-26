@@ -1,9 +1,9 @@
 #
 #===============================================================================
 #
-#         FILE: SimulateGenome.pm
+#         FILE: SimulateRead.pm
 #
-#  DESCRIPTION: Tests for 'SimulateGenome' class
+#  DESCRIPTION: Tests for 'SimulateRead' class
 #
 #        FILES: ---
 #         BUGS: ---
@@ -15,7 +15,7 @@
 #     REVISION: ---
 #===============================================================================
 
-package TestsFor::SimulateGenome;
+package TestsFor::SimulateRead;
 
 use Test::Most;
 use Fastq::SingleEnd;
@@ -41,7 +41,7 @@ sub startup : Tests(startup) {
 	$class->mk_classdata('default_sg_single_end');
 	$class->mk_classdata('default_sg_paired_end');
 
-	my $genome = q{>Chr1
+	my $fasta = q{>Chr1
 TTACTGCTTTTAACATTACAGTAACTGTTACAGGTTCCAGCAGGCTAACTGGGTGGAAAT
 GAGTTTGGTTTCACTTAGTCTCTCTAAAGAGAAAGCAAGTCGGTAGACTAATACCTAATA
 AAAGCAAAGCTGCCAACAATTGAAATTGCCTAGGCTGCTCTGTGTGTCCCACATGCATGG
@@ -81,7 +81,7 @@ CATTTAATACGTAAGAAATTGCCTCCAATAGAAACCAGAGTTGCCTGATTACTATCAGCA
 CAGGAGAAATGTATTAATGTGCCTTTCTAGTAACAGGTTTTTAGAAAGTCAAATATAAAC};
 
 	open my $fh, ">" => GENOME;
-	print $fh "$genome\n";
+	print $fh "$fasta\n";
 	close $fh;
 }
 
@@ -92,7 +92,7 @@ sub setup : Tests(setup) {
 	my %default_attr = (
 		prefix         => PREFIX,
 		output_gzipped => 0,
-		genome_file    => GENOME,
+		fasta_file     => GENOME,
 		coverage       => COVERAGE,
 		threads        => 4
 	);

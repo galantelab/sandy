@@ -77,15 +77,24 @@ subtype 'My:QualityH'
 	=> where   { exists $_->{mtx} && exists $_->{len} }
 	=> message { "$_ is not a valid quality hash" };
 
+subtype 'My:IdFa'
+	=> as      'HashRef'
+	=> where   { exists $_->{seq} && exists $_->{size} }
+	=> message { "$_ is not a valid fasta id" };
+
+subtype 'My:IdxFasta'
+	=> as      'HashRef[My:IdFa]'
+	=> message { "$_ is not a valid indexed fasta" };
+
 subtype 'My:StrandBias'
 	=> as      'Str'
 	=> where   { $_ eq 'plus' || $_ eq 'minus' || $_ eq 'random' }
 	=> message { "$_ is not a valid strand_bias: 'plus', 'minus' or 'random'" };
 
-subtype 'My:SeqWeight'
+subtype 'My:SeqIdWeight'
 	=> as      'Str'
 	=> where   { $_ eq 'length' || $_ eq 'same' || $_ eq 'file' }
-	=> message { "$_ is not a valid sequence_weight: 'length', 'same' or 'file'" };
+	=> message { "$_ is not a valid seqid_weight: 'length', 'same' or 'file'" };
 
 subtype 'My:CountLoopBy'
 	=> as      'Str'
