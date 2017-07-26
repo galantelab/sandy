@@ -28,8 +28,11 @@ use File::Spec;
 
 use namespace::autoclean;
 
+#-------------------------------------------------------------------------------
+#  Moose attributes
+#-------------------------------------------------------------------------------
 has 'sequencing_system' => (is => 'ro', isa => 'My:SeqSys', required => 1, coerce => 1);
-#TODO verify if read_size is not bigger than chosen sequencing_system length
+#TODO read_size will be limited according to the sequencing_system chosen
 has 'read_size'         => (is => 'ro', isa => 'My:IntGt0', required => 1);
 has '_quality'          => (
 	is         => 'ro',
@@ -38,6 +41,9 @@ has '_quality'          => (
 	lazy_build => 1
 );
 
+#-------------------------------------------------------------------------------
+#  Hardcoded paths for sequencing_system
+#-------------------------------------------------------------------------------
 my $LIB_PATH            = dirname(__FILE__);
 my $QUALITY_MATRIX      = "sequencing_system.perldata";
 my @QUALITY_MATRIX_PATH = (
@@ -47,6 +53,18 @@ my @QUALITY_MATRIX_PATH = (
 
 #TODO %quality { sequencing_system } { size }
 #                     -> { mtx } { len }
+#===  CLASS METHOD  ============================================================
+#        CLASS: Quality
+#       METHOD: _build_quality (BUILDER)
+#   PARAMETERS: Void
+#      RETURNS: $quality_by_system My:QualityH
+#  DESCRIPTION: Searches into the paths for sequencing_system.perldata where is
+#               found the quality distribution for a given system
+#       THROWS: If sequencing_system not found, or a given system is not stored
+#               in the database, throws an exception
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub _build_quality {
 	my $self = shift;
 
@@ -73,8 +91,22 @@ sub _build_quality {
 	
 	my $quality_by_system = $quality->{$self->sequencing_system};
 	return $quality_by_system;
-}
+} ## --- end sub _build_quality
 
+#===  CLASS METHOD  ============================================================
+#        CLASS: Quality
+#       METHOD: gen_quality
+#   PARAMETERS: Void
+#      RETURNS: \$quality Ref Str
+#  DESCRIPTION: Calcultes a quality string by raffle inside a quality matrix -
+#               where each position is a vector encoding a distribution. So
+#               if the string length is 100 bases, it needs to raffle 100 times.
+#               The more present is a given quality, the more chance to be raffled
+#               it will be
+#       THROWS: no exceptions
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
 sub gen_quality {
 	my $self = shift;
 
@@ -88,7 +120,7 @@ sub gen_quality {
 	}
 
 	return \$quality;
-}
+} ## --- end sub gen_quality
 
 __PACKAGE__->meta->make_immutable;
 
