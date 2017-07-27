@@ -1,21 +1,14 @@
 #!/usr/bin/env perl 
 #===============================================================================
 #
-#         FILE: simulate_read.pl
+#         FILE: simulate_reads
 #
-#        USAGE: perl ./simulate-read.pl --prefix=ponga --config-dir=assets \
-#                 --expression-matrix=expression_matrix \
-#                 --quality-matrix=quality --list-of-genes=list \
-#                 --sequencing-error=0.005 --read-size=76 --number-of-reads=1000
+#        USAGE: ./simulate-reads [OPTIONS] <FASTA>
 #
-#  DESCRIPTION: Retrives parental, non parental and retrocopy sequences from rcpedia
-#               based in a list file and makes a fastq with random reads created over
-#               that list. It also generates a gff file and a count file with the
-#               number of reads by gene raffled
+#  DESCRIPTION:
 #
-#      OPTIONS: prefix=s config-dir=s quality-matrix=s list_of_genes=s
-#               expression-matrix=s sequencing_error=s read-size=i number-of-reads=i
-# REQUIREMENTS: MakeFastqGff MakeQuality MakeRandomReads MakeGeneRaffle Moose
+#      OPTIONS: 
+# REQUIREMENTS:
 #         BUGS: ---
 #        NOTES: ---
 #       AUTHOR: Thiago Miller
@@ -27,139 +20,236 @@
 
 use strict;
 use warnings;
-use Carp;
+use Carp 'croak';
 use Getopt::Long;
-use FindBin;
-#use MakeFastqGff;
-use lib "$FindBin::RealBin/../lib";
-use SimulateTranscriptome::PairedEnd;
-use MakeGeneRaffle;
-use feature 'say';
+use Fastq::SingleEnd;
+use Fastq::PairedEnd;
+use SimulateRead;
 
-#------------------------------------------------------------
-# Define
-#------------------------------------------------------------
+#-------------------------------------------------------------------------------
+#  Default values and constants
+#-------------------------------------------------------------------------------
+use constant {
+	PREFIX                => 'out',
+	JOBS                  => 1,
+	OUTPUT_GZIP           => 1,
+	COUNT_LOOPS_BY        => 'coverage',
+	COVERAGE              => 8,
+	STRAND_BIAS           => 'random',
+	SEQID_WEIGHT          => 'length',
+	SEQUENCING_TYPE       => 'paired-end',
+	FRAGMENT_MEAN         => 300,
+	FRAGMENT_STDD         => 50,
+	SEQUENCING_ERROR      => 0.005,
+	READ_SIZE             => 101,
+	SEQUENCING_SYSTEM     => 'hiseq',
+	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
+	STRAND_BIAS_OPT       => ['random', 'plus', 'minus'],
+	SEQID_WEIGHT_OPT      => ['length', 'same', 'file'],
+	SEQUENCING_TYPE_OPT   => ['single-end', 'paired-end'],
+	SEQUENCING_SYSTEM_OPT => ['hiseq']
+};
 
-my $prefix = '.';
-my $config_dir = "$FindBin::RealBin/../lib/auto/share/dist/Simulate-Reads";
-my $quality = 'quality';
-my $expression =  'expression';
-my $list_of_genes = 'list of genes';
-my $sequencing_error = 0.005;
-my $read_size = 100;
-my $number_of_reads = 0;
+# Decisions
+my $count_loops_by    = COUNT_LOOPS_BY;
 
-#------------------------------------------------------------
-# Parse
-#------------------------------------------------------------
+# Default values
+my $prefix            = PREFIX;
+my $jobs              = JOBS;
+my $output_gzip       = OUTPUT_GZIP;
+my $coverage          = COVERAGE;
+my $read_size         = READ_SIZE;
+my $fragment_mean     = FRAGMENT_MEAN;
+my $fragment_stdd     = FRAGMENT_STDD;
+my $sequencing_error  = SEQUENCING_ERROR;
+my $sequencing_type   = SEQUENCING_TYPE;
+my $sequencing_system = SEQUENCING_SYSTEM;
+my $strand_bias       = STRAND_BIAS;
+my $seqid_weight      = SEQID_WEIGHT;
 
+# Optional values
+my $number_of_reads;
+my $weight_file;
+
+# Possible alternatives
+my %STRAND_BIAS       = map { $_ => 1 } @{ &STRAND_BIAS_OPT       };
+my %SEQID_WEIGHT      = map { $_ => 1 } @{ &SEQID_WEIGHT_OPT      };
+my %SEQUENCING_TYPE   = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT   }; 
+my %SEQUENCING_SYSTEM = map { $_ => 1 } @{ &SEQUENCING_SYSTEM_OPT };
+
+# Mandatory arguments
+my $fasta_file;
+
+#-------------------------------------------------------------------------------
+#  Parsing command-line arguments
+#-------------------------------------------------------------------------------
 GetOptions(
-	'prefix=s'              => \$prefix,
-	'config-dir=s'          => \$config_dir,
-	'quality-matrix=s'      => \$quality,
-	'expression-matrix=s'   => \$expression,
-	'list-of-genes=s'       => \$list_of_genes,
-	'sequencing-error=s'    => \$sequencing_error,
-	'read-size=i'           => \$read_size,
-	'number-of-reads=i'     => \$number_of_reads
-) or croak 'Error in command line argumments';
+	'prefix=s'            => \$prefix,
+	'jobs=i'              => \$jobs,
+	'output-gzip!'        => \$output_gzip,
+	'coverage=f'          => \$coverage,
+	'read-size=i'         => \$read_size,
+	'fragment-mean=i'     => \$fragment_mean,
+	'fragment-stdd=i'     => \$fragment_stdd,
+	'sequencing-error=f'  => \$sequencing_error,
+	'sequencing-type=s'   => \$sequencing_type,
+	'sequencing-system=s' => \$sequencing_system,
+	'strand-bias=s'       => \$strand_bias,
+	'seqid-weight=s'      => \$seqid_weight,
+	'number-of-reads=i'   => \$number_of_reads,
+	'weight-file=s'       => \$weight_file
+) or croak 'Error in command line arguments';
 
-my $fastq_file = "${prefix}_simulation_seq.fastq.gz";
-my $gff_file = "${prefix}_simulation_info.gff.gz";
-my $count_file = "${prefix}_simulation_count.txt.gz";
-my $geneinfo = "$config_dir/config_geneinfo.gz";
-my $geneseq = "$config_dir/config_geneseq.gz";
+$fasta_file = shift;
 
-if (-d $config_dir) {
-	unless (-f "$geneinfo") {
-		croak "Not found config_geneinfo.gz inside $config_dir";
+#-------------------------------------------------------------------------------
+#  Validating arguments
+#-------------------------------------------------------------------------------
+
+## Independently validated arguments
+
+# Mandatory fasta file
+if (not defined $fasta_file) {
+	croak "You need to give me a fasta file to simulate reads\n";
+}
+
+# Ut is really a file?
+if (not -f $fasta_file) {
+	croak "<$fasta_file> is not a file. Please, give me a valid fasta file\n";
+}
+
+# Check the file extension: fasta, fa, fna, ffn followed, or not, by .gz 
+if ($fasta_file !~ /.+\.(fasta|fa|fna|ffn)(\.gz)*$/) {
+	croak "<$fasta_file> does not seem to be a fasta file. Please check the file extension\n";
+}
+
+# jobs > 0
+if ($jobs <= 0) {
+	croak "Option 'jobs' requires an integer greater than zero, not $jobs\n";
+}
+
+# 0 <= sequencing_error <= 1
+if (0 > $sequencing_error || $sequencing_error > 1)  {
+	croak "Option 'sequencing-error' requires a value between zero and one, not $sequencing_error\n";
+}
+
+# sequencing_system eq hiseq for now
+if (lc $sequencing_system ne SEQUENCING_SYSTEM) {
+	croak "Option 'sequencing-system' has only one valid option for now: 'hiseq', not $sequencing_system\n";
+}
+
+# strand_bias (STRAND_BIAS_OPT)
+if (not exists $STRAND_BIAS{$strand_bias}) {
+	my $opt = join ', ' => keys %STRAND_BIAS;
+	croak "Option 'strand-bias' requires one of these arguments: $opt not $strand_bias\n";
+}
+
+# sequencing_type (SEQUENCING_TYPE_OPT)
+if (not exists $SEQUENCING_TYPE{$sequencing_type}) {
+	my $opt = join ', ' => keys %SEQUENCING_TYPE;
+	croak "Option 'sequencing-type' requires one of these arguments: $opt not $sequencing_type\n";
+}
+
+# 0 < read_size <= 101. It will become more complex when sequencing_system increase
+if (0 > $read_size || $read_size > READ_SIZE) {
+	croak "Option 'read-size' requires an integer greater than zero and lesser than " . READ_SIZE . ", not $read_size\n";
+}
+
+## Dependently validated arguments
+
+# fragment_mean and fragment_stdd
+if ($sequencing_type eq 'paired-end') {
+	# fragment_mean > 0
+	if ($fragment_mean <= 0) {
+		croak "Option 'fragment-mean' requires a value greater than zero, not $fragment_mean\n";
 	}
-	unless (-f "$geneseq") {
-		croak "Not found config_geneseq.gz inside $config_dir";
+
+	# fragment_stdd > 0
+	if ($fragment_stdd <= 0) {
+		croak "Option 'fragment-stdd' requires a value greater than zero, not $fragment_stdd\n";
 	}
+
+	# (fragment_mean - fragment_stdd) >= read_size
+	if (($fragment_mean - $fragment_stdd) < $read_size) {
+		croak "Option 'fragment-mean' minus 'fragment-stdd' requires a value greater or equal read-size, not " .
+			($fragment_mean - $fragment_stdd) . "\n";
+	}
+}
+
+# count_loops_by (COUNT_LOOPS_BY_OPT). The default value is counting by coverage
+# Or calculate number of reads by coverage, or the user pass the number_of_reads.
+# number-of-reads option overrides coverage
+if (defined $number_of_reads) {
+	# number_of_reads > 0
+	if ($number_of_reads <= 0) {
+		croak "Option 'number-of-reads' requires a value greater than zero, not $number_of_reads\n";
+	}
+	$count_loops_by = 'number_of_reads';
 } else {
-	croak "config-dir must be a existing directory";
+	# coverage > 0
+	if ($coverage <= 0) {
+		croak "Option 'coverage' requires a value greater than zero, not $coverage\n";
+	}
 }
 
-unless (-f $quality) {
-	croak "$quality file does not exist";
+# seqid_weight (SEQID_WEIGHT_OPT)
+if (not exists $SEQID_WEIGHT{$seqid_weight}) {
+	my $opt = join ', ' => keys %SEQID_WEIGHT;
+	croak "Option 'seqid-weight' requires one of these arguments: $opt not $seqid_weight\n";
 }
 
-unless (-f $expression) {
-	croak "$expression file does not exist";
-}
-
-unless (-f $list_of_genes) {
-	croak "$list_of_genes file does not exist";
-}
-
-#------------------------------------------------------------
-# Main
-#------------------------------------------------------------
-
-#my $mk = MakeFastqGff->new(
-#	geneseq_file     => $geneseq,
-#	geneinfo_file    => $geneinfo,
-#	quality_matrix   => $quality,
-#	read_size        => $read_size,
-#	sequencing_error => $sequencing_error
-#);
-#my $mk = SimulateTranscriptome::SingleEnd->new(
-#	geneseq_file     => $geneseq,
-#	geneinfo_file    => $geneinfo,
-#	quality_file     => $quality,
-#	read_size        => $read_size,
-#	sequencing_error => $sequencing_error
-#);
-my $mk = SimulateTranscriptome::PairedEnd->new(
-	geneseq_file     => $geneseq,
-	geneinfo_file    => $geneinfo,
-	quality_file     => $quality,
-	read_size        => $read_size,
-	sequencing_error => $sequencing_error,
-	fragment_mean => 300,
-	fragment_stdd => 50
-);
-
-my $gr = MakeGeneRaffle->new(
-	list_of_genes     => $list_of_genes,
-	expression_matrix => $expression
-);
-
-open my $fastq_fh, "|-" => "gzip > $fastq_file"
-	or croak "Not possible to open pipe to $fastq_file";
-
-open my $gff_fh, "|-" => "gzip > $gff_file"
-	or croak "Not possible to open pipe to $gff_file";
-
-open my $count_fh, "|-" => "gzip > $count_file"
-	or croak "Not possible to open pipe to $count_file";
-
-my %genes_seen;
-my %blacklist;
-
-for (1..$number_of_reads) {
-	my $gene = $gr->gene_raffle;
-	redo if $blacklist{$gene};
-
-	my $fastq = $mk->fastq($gene);
-	my $gff = $mk->gff($gene);
-
-	unless (defined $fastq and defined $gff) {
-		carp "Problem to obtain $gene data. Added to blacklist";
-		$blacklist{$gene} = 1;
-		redo;
+# seqid_weight eq 'file' requires a weight_file
+if ($seqid_weight eq 'file') {
+	if (not defined $weight_file) {
+		croak "Option 'seqid-weight=file' requires the argument 'weight-file' with a tab-separated values file\n";
 	}
 
-	say $fastq_fh $fastq;
-	say $gff_fh $gff unless $genes_seen{$gene};
-	$genes_seen{$gene} = 1;
+	# It is defined, but the file exists?
+	if (not -f $weight_file) {
+		croak "Option 'weight-file' requires a valid file, not $weight_file\n";
+	}
 }
 
-say $count_fh $mk->get_read_count;
+# TODO: I need to make a log interface. Firstly printing the argumtns passed by the user to
+#       the simulator and latter printing all arguments received by the simulator
 
-close $fastq_fh;
-close $gff_fh;
-close $count_fh;
+#-------------------------------------------------------------------------------
+#  Construct the Fastq and SimulateRead classes
+#-------------------------------------------------------------------------------
+my $fastq;
+if ($sequencing_type eq 'paired-end') {
+	$fastq = Fastq::PairedEnd->new(
+		sequencing_system => $sequencing_system,
+		sequencing_error  => $sequencing_error,
+		read_size         => $read_size,
+		fragment_mean     => $fragment_mean,
+		fragment_stdd     => $fragment_stdd
+	);
+} else {
+	$fastq = Fastq::SingleEnd->new(
+		sequencing_system => $sequencing_system,
+		sequencing_error  => $sequencing_error,
+		read_size         => $read_size,
+	);
+}
+
+my $simulator = SimulateRead->new(
+	fastq           => $fastq,
+	prefix          => $prefix,
+	output_gzip     => $output_gzip,
+	fasta_file      => $fasta_file,
+	count_loops_by  => $count_loops_by,
+	number_of_reads => $number_of_reads,
+	coverage        => $coverage,
+	jobs            => $jobs,
+	strand_bias     => $strand_bias,
+	seqid_weight    => $seqid_weight,
+	weight_file     => $weight_file
+);
+
+#-------------------------------------------------------------------------------
+#  Let's simulate it!
+#-------------------------------------------------------------------------------
+$simulator->run_simulation;
 
 __END__
