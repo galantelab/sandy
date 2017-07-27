@@ -26,7 +26,7 @@ use Math::Random 'random_normal';
 use namespace::autoclean;
 
 use constant {
-	NUM_TRIES => 10
+	NUM_TRIES => 1000
 };
 
 extends 'Read';
@@ -49,8 +49,10 @@ has 'fragment_stdd' => (is => 'ro', isa => 'My:IntGt0', required => 1);
 #===============================================================================
 sub BUILD {
 	my $self = shift;
-	croak 'fragment_mean must be greater or equal to read_size'
-		unless $self->fragment_mean >= $self->read_size;
+	unless (($self->fragment_mean - $self->fragment_stdd) >= $self->read_size) {
+		croak "fragment_mean (" . $self->fragment_mean . ") minus fragment_stdd (" . $self->fragment_stdd .
+		      ") must be grater or equal to read_size (" . $self->read_size . ")\n";
+	}
 } ## --- end sub BUILD
 
 #===  CLASS METHOD  ============================================================
@@ -77,13 +79,12 @@ sub gen_read {
 		# fragment_size must be greater or equal to read_size
 		# As fragment_size is randomly calculated, try out NUM_TRIES times
 		if (++$random_tries == NUM_TRIES) {
-			croak "paired-end read fail: The constraints were not met:\n" .
-				"seq_size ($seq_size) >= fragment_size ($fragment_size) && fragment_size ($fragment_size) >= read_sizei (" .
-					$self->read_size . ")\n";
+			croak "Paired-end read fail: So many tries to calculate a fragment. the constraints were not met:\n" .
+			      "fragment_size <= seq_size ($seq_size) and fragment_size >= read_size (" . $self->read_size . ")\n";
 		}
 
 		$fragment_size = $self->_random_half_normal;
-	} while ($seq_size < $fragment_size) || ($fragment_size < $self->read_size);
+	} until ($fragment_size <= $seq_size) && ($fragment_size >= $self->read_size);
 
 	my ($fragment, $fragment_pos) = $self->subseq_rand($seq, $seq_size, $fragment_size);	
 

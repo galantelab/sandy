@@ -39,8 +39,8 @@ sub gen_read {
 	my ($self, $seq, $seq_size, $is_leader) = @_;
 	# seq_size must be greater or equal to read_size
 	if ($seq_size < $self->read_size) {
-		croak "single-end read fail: The constraints were not met:\n" .
-			"seq_size ($seq_size) >= read_size (" . $self->read_size . ")\n";
+		croak "Single-end read fail: The constraints were not met:\n" .
+			  "seq_size ($seq_size) >= read_size (" . $self->read_size . ")\n";
 	}
 
 	my ($read, $read_pos) = $self->subseq_rand($seq, $seq_size, $self->read_size);

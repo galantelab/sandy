@@ -19,6 +19,7 @@ package SimulateRead;
 
 use Moose;
 use MooseX::StrictConstructor;
+use MooseX::UndefTolerant;
 use My::Types;
 use Fastq::SingleEnd;
 use Fastq::PairedEnd;
@@ -35,9 +36,9 @@ with qw/My::Role::WeightedRaffle My::Role::IO/;
 #-------------------------------------------------------------------------------
 #  Moose attributes
 #-------------------------------------------------------------------------------
-has 'threads'         => (is => 'ro', isa => 'My:IntGt0',      required => 1);
+has 'jobs'            => (is => 'ro', isa => 'My:IntGt0',      required => 1);
 has 'prefix'          => (is => 'ro', isa => 'Str',            required => 1);
-has 'output_gzipped'  => (is => 'ro', isa => 'Bool',           required => 1);
+has 'output_gzip'     => (is => 'ro', isa => 'Bool',           required => 1);
 has 'fasta_file'      => (is => 'ro', isa => 'My:Fasta',       required => 1);
 has 'coverage'        => (is => 'ro', isa => 'My:NumGt0',      required => 0);
 has 'number_of_reads' => (is => 'ro', isa => 'My:IntGt0',      required => 0);
@@ -137,8 +138,10 @@ sub _build_strand {
 #   PARAMETERS: Void
 #      RETURNS: $indexed_fasta My:IdxFasta
 #  DESCRIPTION: Build _fasta attribute
-#       THROWS: If the read size required is greater than any genomic sequence,
-#               then throws an error
+#       THROWS: For single end read: If the read size required is greater than
+#               any genomic sequence, then throws an error. For paired end read:
+#               If fragment mean is greater than any genomic sequence, the throws
+#               an error.
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
@@ -149,9 +152,15 @@ sub _build_fasta {
 	my $err;
 	for my $id (keys %$indexed_fasta) {
 		my $index_size = $indexed_fasta->{$id}{size};
-		my $read_size = $self->fastq->read_size;
-		$err .= "seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n"
-			if $index_size < $read_size;
+		if (ref $self->fastq eq 'Fastq::SingleEnd') {
+			my $read_size = $self->fastq->read_size;
+			$err .= "seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n"
+				if $index_size < $read_size;
+		} else {
+			my $fragment_mean = $self->fastq->fragment_mean;
+			$err .= "seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)\n"
+				if $index_size < $fragment_mean;
+		}
 	}
 	
 	croak "Error parsing '" . $self->fasta_file . "':\n$err" if defined $err;
@@ -287,11 +296,11 @@ sub run_simulation {
 	my $file = $self->prefix . "_simulation_seq.fastq";
 
 	# Forks
-	my $number_of_threads = $self->threads;
+	my $number_of_jobs = $self->jobs;
 	my @tmp_files;
-	my $pm = Parallel::ForkManager->new($number_of_threads);
+	my $pm = Parallel::ForkManager->new($number_of_jobs);
 
-	for my $tid (1..$number_of_threads) {
+	for my $tid (1..$number_of_jobs) {
 		#-------------------------------------------------------------------------------
 		# Inside parent
 		#-------------------------------------------------------------------------------
@@ -306,9 +315,9 @@ sub run_simulation {
 		my $seed = time + $$;
 		srand($seed);
 
-		my $number_of_reads_t = int($number_of_reads/$number_of_threads);
+		my $number_of_reads_t = int($number_of_reads/$number_of_jobs);
 		# If it is the first thread, make it work on the leftover reads of int() truncation
-		$number_of_reads_t += $number_of_reads % $number_of_threads
+		$number_of_reads_t += $number_of_reads % $number_of_jobs
 			if $tid == 1;
 
 		# Temporary file
@@ -335,7 +344,7 @@ sub run_simulation {
 	$pm->wait_all_children;
 
 	# Concatenate all temporary files
-	my $fh = $self->my_open_w($file, $self->output_gzipped);
+	my $fh = $self->my_open_w($file, $self->output_gzip);
 	for my $file_t (@tmp_files) {
 		cat $file_t => $fh
 			or croak "Cannot concatenate $file_t to $file: $!";
