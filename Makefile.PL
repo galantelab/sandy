@@ -23,6 +23,7 @@ requires       'Storable'                  => 2.56;
 requires       'Parallel::ForkManager'     => 1.19;
 requires       'PerlIO::gzip'              => 0.19;
 requires       'Getopt::Long'              => 2.50;
+requires       'Pod::Usage'                => 1.69;
 test_requires  'Test::Most'                => 0.35;
 test_requires  'Test::Class'               => 0.50;
 
