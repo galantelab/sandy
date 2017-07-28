@@ -394,7 +394,7 @@ random - if you want to randomly calculte the strand for each read
 
 Sets the seqid (e.g. chromossome) raffle behavior. Valid options are length,
 same and file. If it is set to 'same', all seqid receives the same weight when
-raffling. If it is set to 'length', the seqis weight is calculated based on the
+raffling. If it is set to 'length', the seqid weight is calculated based on the
 seqid sequence length. And finally, if it is set to 'file', the user must set
 the option --weight-file. For details, see B<--weight-file>
 
