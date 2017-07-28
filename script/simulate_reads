@@ -22,6 +22,8 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Pod::Usage;
+use File::Basename 'basename';
+use Try::Tiny;
 use Fastq::SingleEnd;
 use Fastq::PairedEnd;
 use SimulateRead;
@@ -30,6 +32,7 @@ use SimulateRead;
 #  Default values, constants and definitions
 #-------------------------------------------------------------------------------
 use constant {
+	PROGNAME              => basename($0),
 	PREFIX                => 'out',
 	JOBS                  => 1,
 	OUTPUT_GZIP           => 1,
@@ -86,9 +89,10 @@ my $fasta_file;
 
 # Print error message to STDERR and die
 sub error($) {
-	my $err = "$0: ";
+	my $progname = PROGNAME;
+	my $err = "$progname: ";
 	$err .= shift;
-	$err .= "\nTry '$0 --help' for more information";
+	$err .= "\nTry '$progname --help' for more information";
 	die "$err\n";
 }
 
@@ -272,7 +276,11 @@ my $simulator = SimulateRead->new(
 #-------------------------------------------------------------------------------
 #  Let's simulate it!
 #-------------------------------------------------------------------------------
-$simulator->run_simulation;
+try {
+	$simulator->run_simulation;
+} catch {
+	error "$_";
+};
 
 __END__
 
