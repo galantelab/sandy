@@ -23,7 +23,7 @@ use MooseX::UndefTolerant;
 use My::Types;
 use Fastq::SingleEnd;
 use Fastq::PairedEnd;
-use Carp 'croak';
+use Carp qw/croak verbose/;
 use File::Cat 'cat';
 use Parallel::ForkManager;
 use Try::Tiny;
@@ -233,7 +233,7 @@ sub _build_seqid_raffle {
 #  DESCRIPTION: Calculates the number of reads to produce based on the coverage
 #               or the own value passed by the user
 #       THROWS: If count_loops_by is equal to 'coverage', it may accur that the
-#               genome size, or the coverage asked is too low, which results in
+#               fasta_file size, or the coverage asked is too low, which results in
 #               zero reads
 #     COMMENTS: count_loops_by can be: 'coverage' and 'number_of_reads'
 #     SEE ALSO: n/a
@@ -258,10 +258,10 @@ sub _calculate_number_of_reads {
 	my $read_type_factor = ref $class eq 'Fastq::PairedEnd' ? 2 : 1;
 	$number_of_reads /= $read_type_factor;
 
-	# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or genome_size
+	# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or fasta_file size
 	if ($number_of_reads <= 0 || ($class eq 'Fastq::PairedEnd' && $number_of_reads == 1)) {
-		croak "The computed number of reads is equal to zero: " . 
-		      "It may occur due to the low coverage, genome size or number of reads directly passed by the user\n";
+		croak "The computed number of reads is equal to zero.\n" . 
+		      "It may occur due to the low coverage, fasta-file sequence size or number of reads directly passed by the user\n";
 	}
 
 	return $number_of_reads;
@@ -349,7 +349,7 @@ sub run_simulation {
 	my $fh = $self->my_open_w($file, $self->output_gzip);
 	for my $file_t (@tmp_files) {
 		cat $file_t => $fh
-			or croak "Cannot concatenate $file_t to $file: $!";
+			or croak "Cannot concatenate $file_t to $file: $!\n";
 	}
 
 	$fh->close;
@@ -357,7 +357,7 @@ sub run_simulation {
 	# Clean up the mess
 	for my $file_t (@tmp_files) {
 		unlink $file_t
-			or croak "Cannot remove temporary file: $file_t: $!";
+			or croak "Cannot remove temporary file: $file_t: $!\n";
 	}
 } ## --- end sub run_simulation
 

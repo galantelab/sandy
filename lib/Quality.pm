@@ -23,7 +23,7 @@ use MooseX::StrictConstructor;
 use My::Types;
 use Storable qw/file_magic retrieve/;
 use Carp 'croak';
-use File::Basename;
+use File::Basename 'dirname';
 use File::Spec;
 
 use namespace::autoclean;
