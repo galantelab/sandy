@@ -184,6 +184,11 @@ if (defined $number_of_reads) {
 	if ($number_of_reads <= 0) {
 		croak "Option 'number-of-reads' requires a value greater than zero, not $number_of_reads\n";
 	}
+
+	# sequencing_type eq paired-end requires at least 2 reads
+	if ($number_of_reads < 2 && $sequencing_type eq 'paired-end') {
+		croak "Option 'number-of-reads' requires a value greater or equal to 2 for paired-end reads, not $number_of_reads\n";
+	}
 	$count_loops_by = 'number_of_reads';
 } else {
 	# coverage > 0
