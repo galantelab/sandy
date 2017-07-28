@@ -247,19 +247,21 @@ sub _calculate_number_of_reads {
 		my $fasta = $self->_fasta;
 		my $fasta_size = 0;
 		$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
-		# In case it is paired-end read, divide the number of reads by 2 because Fastq::PairedEnd class
-		# returns 2 reads at time
-		my $read_type_factor = ref $self->fastq eq 'Fastq::PairedEnd' ? 2 : 1;
-		$number_of_reads = int(($fasta_size * $self->coverage) / ($self->fastq->read_size * $read_type_factor));
-		# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or genome_size
-		if ($number_of_reads <= 0) {
-			croak "Number of reads is equal to zero: Check the variables:\n" .
-				"genome size: $fasta_size\n" .
-				"coverage: " . $self->coverage . "\n" .
-				"read size: " . $self->fastq->read_size . "\n";
-		}
+		$number_of_reads = int(($fasta_size * $self->coverage) / $self->fastq->read_size);
 	} else {
 		$number_of_reads = $self->number_of_reads;
+	}
+
+	# In case it is paired-end read, divide the number of reads by 2 because Fastq::PairedEnd class
+	# returns 2 reads at time
+	my $class = ref $self->fastq;
+	my $read_type_factor = ref $class eq 'Fastq::PairedEnd' ? 2 : 1;
+	$number_of_reads /= $read_type_factor;
+
+	# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or genome_size
+	if ($number_of_reads <= 0 || ($class eq 'Fastq::PairedEnd' && $number_of_reads == 1)) {
+		croak "The computed number of reads is equal to zero: " . 
+		      "It may occur due to the low coverage, genome size or number of reads directly passed by the user\n";
 	}
 
 	return $number_of_reads;
