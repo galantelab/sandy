@@ -23,11 +23,11 @@ use MooseX::UndefTolerant;
 use My::Types;
 use Fastq::SingleEnd;
 use Fastq::PairedEnd;
+use InterlaceProcesses;
 use Carp qw/croak verbose/;
 use File::Cat 'cat';
 use Parallel::ForkManager;
 use Try::Tiny;
-use feature 'state';
 
 use namespace::autoclean;
 
@@ -215,10 +215,9 @@ sub _build_seqid_raffle {
 	my $self = shift;
 	if ($self->seqid_weight eq 'same') {
 		my @seqids = keys %{ $self->_fasta };
+		my $seqids_size = scalar @seqids;
 		return sub { 
-			state @id;
-			@id = @seqids if not @id;
-			return $id[int(rand(scalar @id))];
+			return $seqids[int(rand($seqids_size))];
 		};
 	} else {
 		return sub { $self->weighted_raffle };
@@ -299,8 +298,22 @@ sub run_simulation {
 
 	# Forks
 	my $number_of_jobs = $self->jobs;
-	my @tmp_files;
 	my $pm = Parallel::ForkManager->new($number_of_jobs);
+	
+	# Parent child pids
+	my $parent_pid = $$;
+	my @child_pid;
+
+	# Temporary files tracker
+	my @tmp_files;
+
+	# Run in parent right after creating child processe
+	$pm->run_on_start(
+		sub {
+			my $pid = shift;
+			push @child_pid => $pid;
+		}
+	);
 
 	for my $tid (1..$number_of_jobs) {
 		#-------------------------------------------------------------------------------
@@ -313,6 +326,9 @@ sub run_simulation {
 		#-------------------------------------------------------------------------------
 		# Inside child 
 		#-------------------------------------------------------------------------------
+		# Intelace child/parent processes
+		my $sig = InterlaceProcesses->new(foreign_pid => [$parent_pid]);
+
 		# Set child seed
 		my $seed = time + $$;
 		srand($seed);
@@ -326,7 +342,7 @@ sub run_simulation {
 		my $fh = $self->my_open_w($file_t, 0);
 
 		# Run simualtion in child
-		for my $i (1..$number_of_reads_t) {
+		for (my $i = 1; $i <= $number_of_reads_t and not $sig->signal_catched; $i++) {
 			my $id = $seqid->();
 			my $entry;
 			try {
@@ -343,6 +359,8 @@ sub run_simulation {
 	}
 
 	# Back to parent
+	# Interlace parent/child(s) processes
+	my $sig = InterlaceProcesses->new(foreign_pid => \@child_pid);
 	$pm->wait_all_children;
 
 	# Concatenate all temporary files
