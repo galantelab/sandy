@@ -307,11 +307,12 @@ sub run_simulation {
 	# Temporary files tracker
 	my @tmp_files;
 
-	# Run in parent right after creating child processe
+	# Run in parent right after creating child process
 	$pm->run_on_start(
 		sub {
-			my $pid = shift;
+			my ($pid, $file_t) = @_;
 			push @child_pid => $pid;
+			push @tmp_files => $file_t;
 		}
 	);
 
@@ -320,8 +321,7 @@ sub run_simulation {
 		# Inside parent
 		#-------------------------------------------------------------------------------
 		my $file_t = "$file.${$}_$tid";
-		push @tmp_files => $file_t;
-		my $pid = $pm->start and next;	
+		my $pid = $pm->start($file_t) and next;	
 
 		#-------------------------------------------------------------------------------
 		# Inside child 
