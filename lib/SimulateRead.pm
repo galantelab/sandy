@@ -344,13 +344,13 @@ sub run_simulation {
 		# Run simualtion in child
 		for (my $i = 1; $i <= $number_of_reads_t and not $sig->signal_catched; $i++) {
 			my $id = $seqid->();
-			my $entry;
+			my $entry_ref;
 			try {
-				$entry = $self->get_fastq("SR${i}.$tid", $id, \$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
+				$entry_ref = $self->get_fastq("SR${i}.$tid", $id, \$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
 			} catch {
 				croak "Not defined entry for seqid '>$id' at job $tid: $_";
 			} finally {
-				$fh->say($entry) unless @_;
+				$fh->say($$entry_ref) unless @_;
 			};
 		}
 

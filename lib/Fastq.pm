@@ -58,23 +58,23 @@ sub _build_quality {
 #===  CLASS METHOD  ============================================================
 #        CLASS: Fast
 #       METHOD: sprintf_fastq
-#   PARAMETERS: $header Ref Str, $seq Ref Str
-#      RETURNS: $fastq Str
+#   PARAMETERS: $header_ref Ref Str, $seq_ref Ref Str
+#      RETURNS: $fastq Ref Str
 #  DESCRIPTION: Fastq entry template
 #       THROWS: no exceptions
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
 sub sprint_fastq {
-	my ($self, $header, $seq) = @_;
-	my $quality = $self->gen_quality;
+	my ($self, $header_ref, $seq_ref) = @_;
+	my $quality_ref = $self->gen_quality;
 
-	my $fastq = "\@$$header\n";
-	$fastq .= "$$seq\n";
+	my $fastq = "\@$$header_ref\n";
+	$fastq .= "$$seq_ref\n";
 	$fastq .= "+\n";
-	$fastq .= "$$quality";
+	$fastq .= "$$quality_ref";
 
-	return $fastq;
+	return \$fastq;
 } ## --- end sub sprintf_fastq
 
 __PACKAGE__->meta->make_immutable;

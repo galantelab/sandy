@@ -63,8 +63,9 @@ sub _build_read {
 #===  CLASS METHOD  ============================================================
 #        CLASS: Fastq::PairedEnd
 #       METHOD: fastq
-#   PARAMETERS: $id Str, $seq_name Str, $seq Ref Str, $seq_size Int > 0, $is_leader Bool
-#      RETURNS: $fastq Str
+#   PARAMETERS: $id Str, $seq_name Str, $seq_ref Ref Str, $seq_size Int > 0,
+#               $is_leader Bool
+#      RETURNS: $fastq Ref Str
 #  DESCRIPTION: Consumes sprint_fastq parent template, twice, to generate a 
 #               paired-end fastq entry
 #       THROWS: no exceptions
@@ -72,9 +73,9 @@ sub _build_read {
 #     SEE ALSO: n/a
 #===============================================================================
 sub fastq {
-	my ($self, $id, $seq_name, $seq, $seq_size, $is_leader) = @_;
+	my ($self, $id, $seq_name, $seq_ref, $seq_size, $is_leader) = @_;
 
-	my ($read1, $read2, $fragment_pos, $fragment_size) = $self->gen_read($seq, $seq_size, $is_leader);
+	my ($read1_ref, $read2_ref, $fragment_pos, $fragment_size) = $self->gen_read($seq_ref, $seq_size, $is_leader);
 
 	my ($seq_pos1, $seq_pos2) = (
 		"$seq_name:" . ($fragment_pos + 1) . "-" . ($fragment_pos + $self->read_size),
@@ -88,11 +89,11 @@ sub fastq {
 	my $header1 = "$id|$seq_pos1 1 simulation_read length=" . $self->read_size;
 	my $header2 = "$id|$seq_pos2 2 simulation_read length=" . $self->read_size;
 
-	my $fastq = $self->sprint_fastq(\$header1, \$read1);
-	$fastq .= "\n";
-	$fastq .= $self->sprint_fastq(\$header2, \$read2);
+	my $fastq1_ref = $self->sprint_fastq(\$header1, $read1_ref);
+	my $fastq2_ref = $self->sprint_fastq(\$header2, $read2_ref);
+	my $fastq = "$$fastq1_ref\n$$fastq2_ref";
 
-	return $fastq;
+	return \$fastq;
 } ## --- end sub fastq
 
 __PACKAGE__->meta->make_immutable;
