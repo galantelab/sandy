@@ -58,8 +58,9 @@ sub BUILD {
 #===  CLASS METHOD  ============================================================
 #        CLASS: Read::PairedEnd
 #       METHOD: gen_read
-#   PARAMETERS: $seq Ref Str, $seq_size Int > 0, $is_leader Bool
-#      RETURNS: $read1 Str, $read2 Str, $fragment_pos Int >= 0, $fragment_size Int > 0
+#   PARAMETERS: $seq_ref Ref Str, $seq_size Int > 0, $is_leader Bool
+#      RETURNS: $read1_ref Ref Str, $read2_ref Ref Str, $fragment_pos Int >= 0,
+#               $fragment_size Int > 0
 #  DESCRIPTION: Generate paired-end read
 #       THROWS: It complex, beacuse depending of the fragment_size, fragment_stdd
 #               and read_size the method may raffle a fragment lesser than read_size.
@@ -69,7 +70,7 @@ sub BUILD {
 #     SEE ALSO: n/a
 #===============================================================================
 sub gen_read {
-	my ($self, $seq, $seq_size, $is_leader) = @_;
+	my ($self, $seq_ref, $seq_size, $is_leader) = @_;
 
 	my $fragment_size;
 	my $random_tries = 0;
@@ -86,20 +87,20 @@ sub gen_read {
 		$fragment_size = $self->_random_half_normal;
 	} until ($fragment_size <= $seq_size) && ($fragment_size >= $self->read_size);
 
-	my ($fragment, $fragment_pos) = $self->subseq_rand($seq, $seq_size, $fragment_size);	
+	my ($fragment_ref, $fragment_pos) = $self->subseq_rand($seq_ref, $seq_size, $fragment_size);	
 
-	my $read1 = $self->subseq(\$fragment, $fragment_size, $self->read_size, 0);
+	my $read1_ref = $self->subseq($fragment_ref, $fragment_size, $self->read_size, 0);
 	$self->update_count_base($self->read_size);
-	$self->insert_sequencing_error(\$read1);
+	$self->insert_sequencing_error($read1_ref);
 
-	my $read2 = $self->subseq(\$fragment, $fragment_size, $self->read_size, $fragment_size - $self->read_size);
-	$self->reverse_complement(\$read2);
+	my $read2_ref = $self->subseq($fragment_ref, $fragment_size, $self->read_size, $fragment_size - $self->read_size);
+	$self->reverse_complement($read2_ref);
 	$self->update_count_base($self->read_size);
-	$self->insert_sequencing_error(\$read2);
+	$self->insert_sequencing_error($read2_ref);
 
 	return $is_leader ?
-		($read1, $read2, $fragment_pos, $fragment_size) :
-		($read2, $read1, $fragment_pos, $fragment_size);
+		($read1_ref, $read2_ref, $fragment_pos, $fragment_size) :
+		($read2_ref, $read1_ref, $fragment_pos, $fragment_size);
 } ## --- end sub gen_read
 
 #===  CLASS METHOD  ============================================================

@@ -59,17 +59,17 @@ sub _build_read {
 #===  CLASS METHOD  ============================================================
 #        CLASS: Fastq::SingleEnd
 #       METHOD: fastq
-#   PARAMETERS: $id Str, $seq_name Str, $seq Ref Str, $seq_size Int > 0, $is_leader Bool
-#      RETURNS: sprint_fastq Str
+#   PARAMETERS: $id Str, $seq_name Str, $seq_ref Ref Str, $seq_size Int > 0, $is_leader Bool
+#      RETURNS: sprint_fastq Ref Str
 #  DESCRIPTION: Consumes sprint_fastq parent template to generate a single-end fastq entry
 #       THROWS: no exceptions
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
 sub fastq {
-	my ($self, $id, $seq_name, $seq, $seq_size, $is_leader) = @_;
+	my ($self, $id, $seq_name, $seq_ref, $seq_size, $is_leader) = @_;
 
-	my ($read, $pos) = $self->gen_read($seq, $seq_size, $is_leader);
+	my ($read_ref, $pos) = $self->gen_read($seq_ref, $seq_size, $is_leader);
 
 	my $seq_pos = $is_leader ?
 		"$seq_name:" . ($pos + 1) . "-" . ($pos + $self->read_size) :
@@ -77,7 +77,7 @@ sub fastq {
 
 	my $header = "$id|$seq_pos simulation_read length=" . $self->read_size;
 
-	return $self->sprint_fastq(\$header, \$read);
+	return $self->sprint_fastq(\$header, $read_ref);
 } ## --- end sub fastq
 
 __PACKAGE__->meta->make_immutable;
