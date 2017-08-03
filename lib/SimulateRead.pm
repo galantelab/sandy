@@ -254,8 +254,8 @@ sub _calculate_number_of_reads {
 	# In case it is paired-end read, divide the number of reads by 2 because Fastq::PairedEnd class
 	# returns 2 reads at time
 	my $class = ref $self->fastq;
-	my $read_type_factor = ref $class eq 'Fastq::PairedEnd' ? 2 : 1;
-	$number_of_reads /= $read_type_factor;
+	my $read_type_factor = $class eq 'Fastq::PairedEnd' ? 2 : 1;
+	$number_of_reads = int($number_of_reads / $read_type_factor);
 
 	# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or fasta_file size
 	if ($number_of_reads <= 0 || ($class eq 'Fastq::PairedEnd' && $number_of_reads == 1)) {
@@ -293,8 +293,19 @@ sub run_simulation {
 	# Function that returns seqid by seqid_weight
 	my $seqid = $self->_seqid_raffle;
 
-	# File to be generated
-	my $file = $self->prefix . "_simulation_seq.fastq";
+	# Files to be generated
+	my %files = (
+		'Fastq::SingleEnd' => [
+			$self->prefix . '_simulation_read.fastq'
+		],
+		'Fastq::PairedEnd' => [
+			$self->prefix . '_simulation_read_R1.fastq',
+			$self->prefix . '_simulation_read_R2.fastq'
+		],
+	);
+
+	# Is it single-end or paired-end?
+	my $fastq_class = ref $self->fastq;
 
 	# Forks
 	my $number_of_jobs = $self->jobs;
@@ -310,9 +321,9 @@ sub run_simulation {
 	# Run in parent right after creating child process
 	$pm->run_on_start(
 		sub {
-			my ($pid, $file_t) = @_;
+			my ($pid, $files_ref) = @_;
 			push @child_pid => $pid;
-			push @tmp_files => $file_t;
+			push @tmp_files => @$files_ref;
 		}
 	);
 
@@ -320,8 +331,8 @@ sub run_simulation {
 		#-------------------------------------------------------------------------------
 		# Inside parent
 		#-------------------------------------------------------------------------------
-		my $file_t = "$file.${$}_$tid";
-		my $pid = $pm->start($file_t) and next;	
+		my @files_t = map { "$_.${parent_pid}_$tid" } @{ $files{$fastq_class} };
+		my $pid = $pm->start(\@files_t) and next;	
 
 		#-------------------------------------------------------------------------------
 		# Inside child 
@@ -338,23 +349,35 @@ sub run_simulation {
 		$number_of_reads_t += $number_of_reads % $number_of_jobs
 			if $tid == 1;
 
-		# Temporary file
-		my $fh = $self->my_open_w($file_t, 0);
+		# Create temporary files
+		my @fhs = map { $self->my_open_w($_, 0) } @files_t;
 
 		# Run simualtion in child
+		# TODO: Vou ter de printar o número do read: num_reads_t = tid * number_of_reads_t
+		# i = num_reads_t - number_of_reads_t + 1, por último num_reads_t += a % b, ou seja
+		# o último job recebe o resto!
 		for (my $i = 1; $i <= $number_of_reads_t and not $sig->signal_catched; $i++) {
 			my $id = $seqid->();
-			my $entry_ref;
+			my @fastq_entry;
 			try {
-				$entry_ref = $self->get_fastq("SR${i}.$tid", $id, \$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
+				@fastq_entry = $self->get_fastq("SR${i}.$tid", $id, \$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
 			} catch {
 				croak "Not defined entry for seqid '>$id' at job $tid: $_";
 			} finally {
-				$fh->say($$entry_ref) unless @_;
+				for my $fh_idx (0..$#fhs) {
+					$fhs[$fh_idx]->say(${$fastq_entry[$fh_idx]})
+						or croak "Cannot write to $files_t[$fh_idx]: $!\n" unless @_;
+				}
 			};
 		}
 
-		$fh->close;
+		# Close temporary files
+		for my $fh_idx (0..$#fhs) {
+			$fhs[$fh_idx]->close
+				or croak "Cannot write file $files_t[$fh_idx]: $!\n";
+		}
+
+		# Child exit
 		$pm->finish;
 	}
 
@@ -364,13 +387,18 @@ sub run_simulation {
 	$pm->wait_all_children;
 
 	# Concatenate all temporary files
-	my $fh = $self->my_open_w($file, $self->output_gzip);
-	for my $file_t (@tmp_files) {
-		cat $file_t => $fh
-			or croak "Cannot concatenate $file_t to $file: $!\n";
+	my @fh = map { $self->my_open_w($_, $self->output_gzip) } @{ $files{$fastq_class} };
+	for my $i (0..$#tmp_files) {
+		my $fh_idx = $i % scalar @fh;
+		cat $tmp_files[$i] => $fh[$fh_idx]
+			or croak "Cannot concatenate $tmp_files[$i] to $files{$fastq_class}[$fh_idx]: $!\n";
 	}
 
-	$fh->close;
+	# Close files
+	for my $fh_idx (0..$#fh) {
+		$fh[$fh_idx]->close
+			or croak "Cannot write file $files{$fastq_class}[$fh_idx]: $!\n";
+	}
 
 	# Clean up the mess
 	for my $file_t (@tmp_files) {
