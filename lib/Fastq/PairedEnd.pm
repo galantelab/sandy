@@ -91,9 +91,8 @@ sub fastq {
 
 	my $fastq1_ref = $self->sprint_fastq(\$header1, $read1_ref);
 	my $fastq2_ref = $self->sprint_fastq(\$header2, $read2_ref);
-	my $fastq = "$$fastq1_ref\n$$fastq2_ref";
 
-	return \$fastq;
+	return ($fastq1_ref, $fastq2_ref);
 } ## --- end sub fastq
 
 __PACKAGE__->meta->make_immutable;
