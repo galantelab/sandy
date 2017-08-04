@@ -86,8 +86,8 @@ sub fastq {
 		($seq_pos1, $seq_pos2) = ($seq_pos2, $seq_pos1);
 	}
 
-	my $header1 = "$id|$seq_pos1 1 simulation_read length=" . $self->read_size;
-	my $header2 = "$id|$seq_pos2 2 simulation_read length=" . $self->read_size;
+	my $header1 = "$id simulation_read length=" . $self->read_size . " position=$seq_pos1";
+	my $header2 = "$id simulation_read length=" . $self->read_size . " position=$seq_pos2";
 
 	my $fastq1_ref = $self->sprint_fastq(\$header1, $read1_ref);
 	my $fastq2_ref = $self->sprint_fastq(\$header2, $read2_ref);
