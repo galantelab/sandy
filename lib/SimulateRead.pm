@@ -50,7 +50,7 @@ has 'fastq'           => (
 	is         => 'ro',
 	isa        => 'Fastq::SingleEnd | Fastq::PairedEnd',
 	required   => 1,
-	handles    => { get_fastq => 'fastq' }
+	handles    => [ qw{ sprint_fastq } ]
 );
 has '_fasta'         => (
 	is         => 'ro',
@@ -365,7 +365,7 @@ sub run_simulation {
 			my $id = $seqid->();
 			my @fastq_entry;
 			try {
-				@fastq_entry = $self->get_fastq("SR${parent_pid}.$id.$i $i",
+				@fastq_entry = $self->sprint_fastq("SR${parent_pid}.$id.$i $i",
 					$id, \$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
 			} catch {
 				croak "Not defined entry for seqid '>$id' at job $tid: $_";

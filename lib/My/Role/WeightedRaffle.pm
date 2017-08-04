@@ -61,7 +61,7 @@ sub _build_num_weights {
 	my $weights = $self->weights;
 	croak "Not found a weights object\n" unless defined $weights;
 	return scalar @$weights;
-}
+} ## --- end sub _build_num_weights
 
 #===  CLASS METHOD  ============================================================
 #        CLASS: My::Role::WeightedRaffle (Role)
@@ -78,7 +78,7 @@ sub _build_max_weight {
 	my $weights = $self->weights;
 	croak "Not found a weights object\n" unless defined $weights;
 	return $weights->[-1]{up};
-}
+} ## --- end sub _build_max_weight
 
 #===  CLASS METHOD  ============================================================
 #        CLASS: My::Role::WeightedRaffle (Role)

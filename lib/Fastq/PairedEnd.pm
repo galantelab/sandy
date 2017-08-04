@@ -72,7 +72,7 @@ sub _build_read {
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
-sub fastq {
+sub sprint_fastq {
 	my ($self, $id, $seq_name, $seq_ref, $seq_size, $is_leader) = @_;
 
 	my ($read1_ref, $read2_ref, $fragment_pos, $fragment_size) = $self->gen_read($seq_ref, $seq_size, $is_leader);
@@ -89,11 +89,11 @@ sub fastq {
 	my $header1 = "$id simulation_read length=" . $self->read_size . " position=$seq_pos1";
 	my $header2 = "$id simulation_read length=" . $self->read_size . " position=$seq_pos2";
 
-	my $fastq1_ref = $self->sprint_fastq(\$header1, $read1_ref);
-	my $fastq2_ref = $self->sprint_fastq(\$header2, $read2_ref);
+	my $fastq1_ref = $self->fastq_template(\$header1, $read1_ref);
+	my $fastq2_ref = $self->fastq_template(\$header2, $read2_ref);
 
 	return ($fastq1_ref, $fastq2_ref);
-} ## --- end sub fastq
+} ## --- end sub sprint_fastq
 
 __PACKAGE__->meta->make_immutable;
 
