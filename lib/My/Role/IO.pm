@@ -108,7 +108,9 @@ sub index_fasta {
 		$indexed_fasta{$_}{size} = length $indexed_fasta{$_}{seq};
 	}
 
-	$fh->close;
+	$fh->close
+		or croak "Cannot close file $fasta: $!\n";
+
 	return \%indexed_fasta;
 } ## --- end sub index_fasta
 
@@ -139,7 +141,9 @@ sub index_weight_file {
 		$indexed_file{uc $fields[0]} = $fields[1];
 	}
 	
-	$fh->close;
+	$fh->close
+		or croak "Cannot close file $weight_file: $!\n";
+
 	return \%indexed_file;
 } ## --- end sub index_weight_file
 
