@@ -66,7 +66,7 @@ sub _build_read {
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
-sub fastq {
+sub sprint_fastq {
 	my ($self, $id, $seq_name, $seq_ref, $seq_size, $is_leader) = @_;
 
 	my ($read_ref, $pos) = $self->gen_read($seq_ref, $seq_size, $is_leader);
@@ -77,8 +77,8 @@ sub fastq {
 
 	my $header = "$id simulation_read length=" . $self->read_size . " position=$seq_pos";
 
-	return $self->sprint_fastq(\$header, $read_ref);
-} ## --- end sub fastq
+	return $self->fastq_template(\$header, $read_ref);
+} ## --- end sub sprint_fastq
 
 __PACKAGE__->meta->make_immutable;
 

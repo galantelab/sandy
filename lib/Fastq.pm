@@ -65,7 +65,7 @@ sub _build_quality {
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
-sub sprint_fastq {
+sub fastq_template {
 	my ($self, $header_ref, $seq_ref) = @_;
 	my $quality_ref = $self->gen_quality;
 
@@ -75,7 +75,7 @@ sub sprint_fastq {
 	$fastq .= "$$quality_ref";
 
 	return \$fastq;
-} ## --- end sub sprintf_fastq
+} ## --- end sub fastq_template
 
 __PACKAGE__->meta->make_immutable;
 
