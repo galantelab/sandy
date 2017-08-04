@@ -238,40 +238,54 @@ if ($seqid_weight eq 'file') {
 
 # TODO: I need to make a log interface. Firstly printing the argumtns passed by the user to
 #       the simulator and latter printing all arguments received by the simulator
+#       Maybe make an expection class
 
 #-------------------------------------------------------------------------------
 #  Construct the Fastq and SimulateRead classes
 #-------------------------------------------------------------------------------
-my $fastq;
+my ($fastq, $simulator);
+
 if ($sequencing_type eq 'paired-end') {
-	$fastq = Fastq::PairedEnd->new(
-		sequencing_system => $sequencing_system,
-		sequencing_error  => $sequencing_error,
-		read_size         => $read_size,
-		fragment_mean     => $fragment_mean,
-		fragment_stdd     => $fragment_stdd
-	);
+	try {
+		$fastq = Fastq::PairedEnd->new(
+			sequencing_system => $sequencing_system,
+			sequencing_error  => $sequencing_error,
+			read_size         => $read_size,
+			fragment_mean     => $fragment_mean,
+			fragment_stdd     => $fragment_stdd
+		);
+	} catch {
+		error "$_";
+	};
 } else {
-	$fastq = Fastq::SingleEnd->new(
-		sequencing_system => $sequencing_system,
-		sequencing_error  => $sequencing_error,
-		read_size         => $read_size,
-	);
+	try {
+		$fastq = Fastq::SingleEnd->new(
+			sequencing_system => $sequencing_system,
+			sequencing_error  => $sequencing_error,
+			read_size         => $read_size,
+		);
+	} catch {
+		error "$_";
+	};
 }
 
-my $simulator = SimulateRead->new(
-	fastq           => $fastq,
-	prefix          => $prefix,
-	output_gzip     => $output_gzip,
-	fasta_file      => $fasta_file,
-	count_loops_by  => $count_loops_by,
-	number_of_reads => $number_of_reads,
-	coverage        => $coverage,
-	jobs            => $jobs,
-	strand_bias     => $strand_bias,
-	seqid_weight    => $seqid_weight,
-	weight_file     => $weight_file
-);
+try {
+	$simulator = SimulateRead->new(
+		fastq           => $fastq,
+		prefix          => $prefix,
+		output_gzip     => $output_gzip,
+		fasta_file      => $fasta_file,
+		count_loops_by  => $count_loops_by,
+		number_of_reads => $number_of_reads,
+		coverage        => $coverage,
+		jobs            => $jobs,
+		strand_bias     => $strand_bias,
+		seqid_weight    => $seqid_weight,
+		weight_file     => $weight_file
+	);
+} catch {
+	error "$_";
+};
 
 #-------------------------------------------------------------------------------
 #  Let's simulate it!

@@ -148,6 +148,9 @@ sub _build_strand {
 sub _build_fasta {
 	my $self = shift;
 	my $indexed_fasta = $self->index_fasta($self->fasta_file);
+	croak "Error parsing " . $self->fasta_file . ". Maybe the file is empty\n"
+		unless %$indexed_fasta;
+
 	# Validate genome about the read size required
 	my $err;
 	for my $id (keys %$indexed_fasta) {
@@ -344,23 +347,26 @@ sub run_simulation {
 		my $seed = time + $$;
 		srand($seed);
 
+		# Calculate the number of reads to this job and correct this local index
+		# to the global index
 		my $number_of_reads_t = int($number_of_reads/$number_of_jobs);
-		# If it is the first thread, make it work on the leftover reads of int() truncation
-		$number_of_reads_t += $number_of_reads % $number_of_jobs
-			if $tid == 1;
+		my $last_read_idx = $number_of_reads_t * $tid;
+		my $idx = $last_read_idx - $number_of_reads_t + 1;
+
+		# If it is the last job, make it work on the leftover reads of int() truncation
+		$last_read_idx += $number_of_reads % $number_of_jobs
+			if $tid == $number_of_jobs;
 
 		# Create temporary files
 		my @fhs = map { $self->my_open_w($_, $self->output_gzip) } @files_t;
 
 		# Run simualtion in child
-		# TODO: Vou ter de printar o número do read: num_reads_t = tid * number_of_reads_t
-		# i = num_reads_t - number_of_reads_t + 1, por último num_reads_t += a % b, ou seja
-		# o último job recebe o resto!
-		for (my $i = 1; $i <= $number_of_reads_t and not $sig->signal_catched; $i++) {
+		for (my $i = $idx; $i <= $last_read_idx and not $sig->signal_catched; $i++) {
 			my $id = $seqid->();
 			my @fastq_entry;
 			try {
-				@fastq_entry = $self->get_fastq("SR${i}.$tid", $id, \$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
+				@fastq_entry = $self->get_fastq("SR${parent_pid}.$id.$i $i",
+					$id, \$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
 			} catch {
 				croak "Not defined entry for seqid '>$id' at job $tid: $_";
 			} finally {

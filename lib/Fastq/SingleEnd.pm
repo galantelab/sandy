@@ -75,7 +75,7 @@ sub fastq {
 		"$seq_name:" . ($pos + 1) . "-" . ($pos + $self->read_size) :
 		"$seq_name:" . ($pos + $self->read_size) . "-" . ($pos + 1);
 
-	my $header = "$id|$seq_pos simulation_read length=" . $self->read_size;
+	my $header = "$id simulation_read length=" . $self->read_size . " position=$seq_pos";
 
 	return $self->sprint_fastq(\$header, $read_ref);
 } ## --- end sub fastq

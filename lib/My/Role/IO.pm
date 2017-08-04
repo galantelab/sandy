@@ -96,7 +96,7 @@ sub index_fasta {
 			my @fields = split /\|/;
 			$id = (split / / => $fields[0])[0];
 			$id =~ s/^>//;
-			$id = lc $id;
+			$id = uc $id;
 		} else {
 			croak "Error reading fasta file '$fasta': Not defined id"
 				unless defined $id;
@@ -136,7 +136,7 @@ sub index_weight_file {
 		croak "Error parsing '$weight_file': weight (second column) not found at line $line\n" unless defined $fields[1];
 		croak "Error parsing '$weight_file': weight (second column) does not look like a number at line $line\n" if not looks_like_number($fields[1]);
 		croak "Error parsing '$weight_file': weight (second column) lesser or equal to zero at line $line\n" if $fields[1] <= 0;
-		$indexed_file{lc $fields[0]} = $fields[1];
+		$indexed_file{uc $fields[0]} = $fields[1];
 	}
 	
 	$fh->close;
