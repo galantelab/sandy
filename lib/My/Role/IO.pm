@@ -62,7 +62,6 @@ sub my_open_w {
 
 	if ($is_gzipped) {
 		$mode = ">:gzip";
-		$file .= '.gz';
 	} else {
 		$mode = ">";
 	}
