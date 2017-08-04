@@ -27,18 +27,64 @@ requires '_build_weights';
 #-------------------------------------------------------------------------------
 #  Moose attributes
 #-------------------------------------------------------------------------------
-has 'weights' => (
+has 'weights'     => (
 	is         => 'ro',
 	isa        => 'My:Weights',
 	builder    => '_build_weights',
 	lazy_build => 1
 );
+has 'num_weights' => (
+	is         => 'ro',
+	isa        => 'My:IntGt0',
+	builder    => '_build_num_weights',
+	lazy_build => 1
+);
+has 'max_weight'  => (
+	is         => 'ro',
+	isa        => 'My:IntGt0',
+	builder    => '_build_max_weight',
+	lazy_build => 1
+);
+
+#===  CLASS METHOD  ============================================================
+#        CLASS: My::Role::WeightedRaffle (Role)
+#       METHOD: _build_num_weights (BUILDER)
+#   PARAMETERS: Void
+#      RETURNS: Int > 0
+#  DESCRIPTION: Builds num_weights
+#       THROWS: If weights is not builded, throws an error
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
+sub _build_num_weights {
+	my $self = shift;
+	my $weights = $self->weights;
+	croak "Not found a weights object\n" unless defined $weights;
+	return scalar @$weights;
+}
+
+#===  CLASS METHOD  ============================================================
+#        CLASS: My::Role::WeightedRaffle (Role)
+#       METHOD: _build_max_weight (BUILDER)
+#   PARAMETERS: Void
+#      RETURNS: Int > 0
+#  DESCRIPTION: Builds max_weight
+#       THROWS: If weights is not builded, throws an error
+#     COMMENTS: none
+#     SEE ALSO: n/a
+#===============================================================================
+sub _build_max_weight {
+	my $self = shift;
+	my $weights = $self->weights;
+	croak "Not found a weights object\n" unless defined $weights;
+	return $weights->[-1]{up};
+}
 
 #===  CLASS METHOD  ============================================================
 #        CLASS: My::Role::WeightedRaffle (Role)
 #       METHOD: calculate_weights
 #   PARAMETERS: $line HashRef[Int]
-#      RETURNS: ????
+#      RETURNS: My:Weights
 #  DESCRIPTION: Calculates weight based in a hash -> key => weight, giving:
 #              	[ { down, up, feature }, { down, up, feature } .. ] 
 #       THROWS: no exceptions
@@ -79,8 +125,8 @@ sub calculate_weights {
 #===============================================================================
 sub weighted_raffle {
 	my $self = shift;
-	my $range = int(rand($self->weights->[-1]{up} + 1));
-	return $self->_search(0, $#{ $self->weights }, $range);
+	my $range = int(rand($self->max_weight + 1));
+	return $self->_search(0, $self->num_weights - 1, $range);
 } ## --- end sub weighted_raffle
  
 #===  CLASS METHOD  ============================================================
