@@ -331,7 +331,7 @@ sub run_simulation {
 		#-------------------------------------------------------------------------------
 		# Inside parent
 		#-------------------------------------------------------------------------------
-		my @files_t = map { "$_.${parent_pid}_$tid" } @{ $files{$fastq_class} };
+		my @files_t = map { "$_.${parent_pid}_part$tid" } @{ $files{$fastq_class} };
 		my $pid = $pm->start(\@files_t) and next;	
 
 		#-------------------------------------------------------------------------------
@@ -350,7 +350,7 @@ sub run_simulation {
 			if $tid == 1;
 
 		# Create temporary files
-		my @fhs = map { $self->my_open_w($_, 0) } @files_t;
+		my @fhs = map { $self->my_open_w($_, $self->output_gzip) } @files_t;
 
 		# Run simualtion in child
 		# TODO: Vou ter de printar o número do read: num_reads_t = tid * number_of_reads_t
@@ -387,7 +387,7 @@ sub run_simulation {
 	$pm->wait_all_children;
 
 	# Concatenate all temporary files
-	my @fh = map { $self->my_open_w($_, $self->output_gzip) } @{ $files{$fastq_class} };
+	my @fh = map { $self->my_open_w($self->output_gzip ? "$_.gz" : $_, 0) } @{ $files{$fastq_class} };
 	for my $i (0..$#tmp_files) {
 		my $fh_idx = $i % scalar @fh;
 		cat $tmp_files[$i] => $fh[$fh_idx]
