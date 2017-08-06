@@ -18,8 +18,7 @@
 
 package TestsFor;
 
-use Test::Most;
-use base qw(Test::Class Class::Data::Inheritable);
+use My::Base qw(test test_class_base);
 
 INIT {
 	__PACKAGE__->mk_classdata('class_to_test');
@@ -41,4 +40,4 @@ sub teardown : Tests(teardown) {}
 
 sub shutdown : Tests(shutdown) {}
 
-1;
+## --- end class TestsFor

@@ -17,11 +17,8 @@
 
 package Read;
 
-use Moose;
-use MooseX::StrictConstructor;
+use My::Base 'class';
 use My::Types;
-
-use namespace::autoclean;
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
@@ -153,6 +150,4 @@ sub _randb {
 	return $b;
 } ## --- end sub _randb
 
-__PACKAGE__->meta->make_immutable;
-
-1;  ## --- end class Read
+## --- end class Read

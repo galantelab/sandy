@@ -18,10 +18,7 @@
 
 package InterlaceProcesses;
 
-use Moose;
-use MooseX::StrictConstructor;
-
-use namespace::autoclean;
+use My::Base 'class';
 
 #-------------------------------------------------------------------------------
 #  Static variables
@@ -98,6 +95,4 @@ sub _handle_signal {
 	};
 } ## --- end sub _handle_signal
 
-__PACKAGE__->meta->make_immutable;
-
-1; ## --- end class InterlaceProcesses
+## --- end class InterlaceProcesses

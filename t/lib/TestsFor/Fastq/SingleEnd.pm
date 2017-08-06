@@ -17,9 +17,9 @@
 
 package TestsFor::Fastq::SingleEnd;
 
-use Test::Most;
-use autodie;
+use My::Base 'test';
 use base 'TestsFor::Fastq';
+use autodie;
 
 sub startup : Tests(startup) {
 	my $test = shift;
@@ -54,7 +54,7 @@ sub constructor : Tests(8) {
 	}
 }
 
-sub fastq : Tests(3) {
+sub sprint_fastq : Tests(3) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
@@ -64,34 +64,34 @@ sub fastq : Tests(3) {
 
 	my $id = "SR0001";
 	my $seq_name = "Chr1";
-	my $read = $fastq->fastq($id, $seq_name, \$seq, length $seq, 1);
+	my $read_ref = $fastq->sprint_fastq($id, $seq_name, \$seq, length $seq, 1);
 	my $read_size = $fastq->read_size;
 
-	my $header = qr/$id\|${seq_name}:\d+-\d+ simulation_read length=$read_size/;
+	my $header = qr/$id simulation_read length=$read_size position=${seq_name}:\d+-\d+/;
 	my $rg = qr/\@${header}\n.+\n\+\n.+/;
-	ok $read =~ $rg,
+	ok $$read_ref =~ $rg,
 		"read retuned by 'fastq' must be in fastq format";
 	
-	my @lines = split /\n/ => $read;
+	my @lines = split /\n/ => $$read_ref;
 	my $read_seq_l1 = substr $lines[1], 0, $fastq->read_size - 1;
 	my $index = index $seq, $read_seq_l1;
-	my $pos = $lines[0] =~ /\|(.+?) / ? $1 : undef;
+	my $pos = $lines[0] =~ /position=(.+)/ ? $1 : undef;
 	my $pos_t = "$seq_name:" . (1 + $index) . "-" . ($fastq->read_size + $index);
 
 	is $pos, $pos_t,
 		"The seq_name:start-end inside fastq header should be the correct relative position";
 
-	my $read2 = $fastq->fastq($id, $seq_name, \$seq, length $seq, 0);
+	my $read2_ref = $fastq->sprint_fastq($id, $seq_name, \$seq, length $seq, 0);
 
-	my @lines2 = split /\n/ => $read2;
+	my @lines2 = split /\n/ => $$read2_ref;
 	$fastq->_read->reverse_complement(\$lines2[1]);
 	my $read2_seq_f1 = substr $lines2[1], 1, $fastq->read_size;
 	my $index2 = index $seq, $read2_seq_f1;
-	my $pos2 = $lines2[0] =~ /\|(.+?) / ? $1 : undef;
+	my $pos2 = $lines2[0] =~ /position=(.+)/ ? $1 : undef;
 	my $pos2_t = "$seq_name:" . ($fastq->read_size + $index2 - 1) . "-" . ($index2);
 
 	is $pos2, $pos2_t,
 		"The seq_name:end-start inside fastq header should be the correct relative position";
 }
 
-1;
+## --- end class TestsFor::Fastq::SingleEnd;

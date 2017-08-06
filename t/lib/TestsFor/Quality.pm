@@ -17,7 +17,8 @@
  
 package TestsFor::Quality;
 
-use Test::Most;
+#use Test::Most;
+use My::Base 'test';
 use autodie;
 use base 'TestsFor';
 
@@ -81,4 +82,3 @@ sub gen_quality : Test(10) {
 	}
 }
 
-1;

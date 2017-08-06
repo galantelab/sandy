@@ -17,11 +17,7 @@
 
 package Read::SingleEnd;
 
-use Moose;
-use MooseX::StrictConstructor;
-use Carp 'croak';
-
-use namespace::autoclean;
+use My::Base 'class';
 
 extends 'Read';
 
@@ -54,6 +50,4 @@ sub gen_read {
 	return ($read_ref, $read_pos);
 } ## --- end sub gen_read
 
-__PACKAGE__->meta->make_immutable;
-
-1; ## --- end class Read::SingleEnd
+## --- end class Read::SingleEnd

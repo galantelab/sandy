@@ -17,7 +17,7 @@
 
 package TestsFor::Read;
 
-use Test::Most;
+use My::Base 'test';
 use base 'TestsFor';
 
 sub startup : Tests(startup) {
@@ -70,24 +70,24 @@ sub subseq_seq : Test(5) {
 	my $seq_len = $test->seq_len;
 	my $slice_len = $read->read_size;
 
-	my ($read_seq1, $pos1) = $read->subseq(\$seq, $seq_len, $slice_len, 0);
+	my ($read_seq1_ref, $pos1) = $read->subseq(\$seq, $seq_len, $slice_len, 0);
 
-	is length($read_seq1), 10,
+	is length($$read_seq1_ref), 10,
 		"Setting a slice_len ($slice_len) should return a seq ($slice_len) in subseq";
 
-	ok index($seq, $read_seq1) >= 0,
+	ok index($seq, $$read_seq1_ref) >= 0,
 		"Read sequence must be inside seq in subseq";
 
-	my ($read_seq2, $pos2) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
+	my ($read_seq2_ref, $pos2) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
 
-	is length($read_seq2), 10,
+	is length($$read_seq2_ref), 10,
 		"Setting a slice_len ($slice_len) should return a seq ($slice_len) in subseq_rand";
 
-	ok index($seq, $read_seq2) >= 0,
+	ok index($seq, $$read_seq2_ref) >= 0,
 		"Read sequence must be inside seq in subseq";
 
-	my ($read_seq3, $pos3) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
-	is index($seq, $read_seq3), $pos3,
+	my ($read_seq3_ref, $pos3) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
+	is index($seq, $$read_seq3_ref), $pos3,
 		"Position returned in subseq_rand ($pos3) should be equal to postion in index";
 }
 
@@ -100,25 +100,25 @@ sub subseq_err : Test(60) {
 	my $slice_len = $read->read_size;
 	
 	for my $i (0..9) {
-		my ($seq_t, $pos) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
+		my ($seq_t_ref, $pos) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
 		$read->update_count_base($read->read_size);
-		$read->insert_sequencing_error(\$seq_t);
+		$read->insert_sequencing_error($seq_t_ref);
 
-		ok index($seq, $seq_t) < 0,
+		ok index($seq, $$seq_t_ref) < 0,
 			"Sequence with error must be outside seq in subseq_rand Try $i";
-		my $seq_t_noerr = substr $seq_t, 0, $slice_len - 1;
+		my $seq_t_noerr = substr $$seq_t_ref, 0, $slice_len - 1;
 		ok index($seq, $seq_t_noerr) >= 0,
 			"Sequence with error (but last char -> err) must be inside seq in subseq_rand Try $i";
 	}
 
 	for my $i (0..9) {
-		my ($seq_t, $pos) = $read->subseq(\$seq, $seq_len, $slice_len, $i * 10);
+		my ($seq_t_ref, $pos) = $read->subseq(\$seq, $seq_len, $slice_len, $i * 10);
 		$read->update_count_base($read->read_size);
-		$read->insert_sequencing_error(\$seq_t);
+		$read->insert_sequencing_error($seq_t_ref);
 
-		ok index($seq, $seq_t) < 0,
+		ok index($seq, $$seq_t_ref) < 0,
 			"Sequence with error must be outside seq in subseq Try $i";
-		my $seq_t_noerr = substr $seq_t, 0, $slice_len - 1;
+		my $seq_t_noerr = substr $$seq_t_ref, 0, $slice_len - 1;
 		ok index($seq, $seq_t_noerr) >= 0,
 			"Sequence with error (but last char -> err) must be inside seq in subseq_rand Try $i";
 	}
@@ -129,18 +129,18 @@ sub subseq_err : Test(60) {
 	my $read2 = $test->class_to_test->new(%attr);
 
 	for my $i (0..9) {
-		my ($seq_t, $pos) = $read2->subseq_rand(\$seq, $seq_len, $slice_len);
+		my ($seq_t_ref, $pos) = $read2->subseq_rand(\$seq, $seq_len, $slice_len);
 		$read2->update_count_base($read2->read_size);
-		$read2->insert_sequencing_error(\$seq_t);
-		ok index($seq, $seq_t) >= 0,
+		$read2->insert_sequencing_error($seq_t_ref);
+		ok index($seq, $$seq_t_ref) >= 0,
 			"Sequence with sequencing_error = 0 must be inside seq in subseq_rand Try $i";
 	}
 
 	for my $i (0..9) {
-		my ($seq_t, $pos) = $read2->subseq(\$seq, $seq_len, $slice_len, $i * 10);
+		my ($seq_t_ref, $pos) = $read2->subseq(\$seq, $seq_len, $slice_len, $i * 10);
 		$read2->update_count_base($read2->read_size);
-		$read2->insert_sequencing_error(\$seq_t);
-		ok index($seq, $seq_t) >= 0,
+		$read2->insert_sequencing_error($seq_t_ref);
+		ok index($seq, $$seq_t_ref) >= 0,
 			"Sequence with sequencing_error = 0 must be inside seq in subseq Try $i";
 	}
 }
@@ -162,4 +162,4 @@ sub reverse_complement :Test(1) {
 		"The reverse_complement must return the reverse complement";
 }
 
-1;
+## --- end class TestsFor::Read

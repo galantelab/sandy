@@ -17,13 +17,9 @@
 
 package Read::PairedEnd;
 
-use Moose;
-use MooseX::StrictConstructor;
+use My::Base 'class';
 use My::Types;
-use Carp 'croak';
 use Math::Random 'random_normal';
-
-use namespace::autoclean;
 
 use constant {
 	NUM_TRIES => 1000
@@ -51,7 +47,7 @@ sub BUILD {
 	my $self = shift;
 	unless (($self->fragment_mean - $self->fragment_stdd) >= $self->read_size) {
 		croak "fragment_mean (" . $self->fragment_mean . ") minus fragment_stdd (" . $self->fragment_stdd .
-		      ") must be grater or equal to read_size (" . $self->read_size . ")\n";
+		      ") must be greater or equal to read_size (" . $self->read_size . ")\n";
 	}
 } ## --- end sub BUILD
 
@@ -119,6 +115,4 @@ sub _random_half_normal {
 	return abs(int(random_normal(1, $self->fragment_mean, $self->fragment_stdd)));
 } ## --- end sub _random_half_normal
 
-__PACKAGE__->meta->make_immutable;
-
-1; ## --- end class Read::PairedEnd
+## --- end class Read::PairedEnd

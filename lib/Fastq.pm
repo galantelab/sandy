@@ -17,12 +17,9 @@
 
 package Fastq;
 
-use Moose;
-use MooseX::StrictConstructor;
+use My::Base 'class';
 use My::Types;
 use Quality;
-
-use namespace::autoclean;
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
@@ -77,6 +74,4 @@ sub fastq_template {
 	return \$fastq;
 } ## --- end sub fastq_template
 
-__PACKAGE__->meta->make_immutable;
-
-1; ## --- end class Fastq
+## --- end class Fastq

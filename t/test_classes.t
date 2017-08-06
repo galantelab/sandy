@@ -15,7 +15,4 @@
 #     REVISION: ---
 #===============================================================================
 
-use strict;
-use warnings;
-use Test::Class::Load 't/lib';
-
+use My::Base 'test_class';

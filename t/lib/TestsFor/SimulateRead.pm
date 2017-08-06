@@ -17,20 +17,29 @@
 
 package TestsFor::SimulateRead;
 
-use Test::Most;
+use My::Base 'test';
+use base 'TestsFor';
 use Fastq::SingleEnd;
 use Fastq::PairedEnd;
 use autodie;
-use base 'TestsFor';
  
 use constant {
-	SEQ_SYS       => 'HiSeq',
-	QUALITY_SIZE  => 10,
-	GENOME        => '.data.fa',
-	GENOME_SIZE   => 1981,
-	COVERAGE      => 5,
-	PREFIX        => 'ponga',
-	OUTPUT        => 'ponga_simulation_seq.fastq'
+	COUNT_LOOPS_BY     => 'coverage',
+	COVERAGE           => 8,
+	STRAND_BIAS        => 'random',
+	SEQID_WEIGHT       => 'length',
+	SEQUENCING_TYPE    => 'paired-end',
+	SEQUENCING_SYSTEM  => 'hiseq',
+	JOBS               => 2,
+	OUTPUT_GZIP        => 0,
+	SEQ_SYS            => 'HiSeq',
+	QUALITY_SIZE       => 10,
+	GENOME             => '.data.fa',
+	GENOME_SIZE        => 1981,
+	COVERAGE           => 5,
+	PREFIX             => 'ponga',
+	OUTPUT_SINGLE_END  => 'ponga_simulation_read.fastq',
+	OUTPUT_PAIRED_END  => ['ponga_simulation_read_R1.fastq', 'ponga_simulation_read_R2.fastq']
 };
 
 sub startup : Tests(startup) {
@@ -91,10 +100,13 @@ sub setup : Tests(setup) {
 
 	my %default_attr = (
 		prefix         => PREFIX,
-		output_gzipped => 0,
+		output_gzip    => OUTPUT_GZIP,
 		fasta_file     => GENOME,
 		coverage       => COVERAGE,
-		threads        => 4
+		jobs           => JOBS,
+		seqid_weight   => 'length',
+		count_loops_by => 'coverage',
+		strand_bias    => 'random',
 	);
 	
 	my %sg_single_end = (
@@ -128,7 +140,7 @@ sub cleanup : Tests(shutdown) {
 	$test->SUPER::shutdown;
 }
 
-sub constructor : Tests(10) {
+sub constructor : Tests(16) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
@@ -141,20 +153,16 @@ sub constructor : Tests(10) {
 	}
 }
 
-sub run_simulation : Tests(6) {
+sub run_simulation : Tests(9) {
 	my $test = shift;
-	my $output = OUTPUT;
+	my $output_single_end = OUTPUT_SINGLE_END;
+	my $output_paired_end = OUTPUT_PAIRED_END;
 
-	for my $fun (qw/default_sg_single_end default_sg_paired_end/) {
-		my $sg = $test->$fun;
-		$sg->run_simulation;
-
-		ok -f OUTPUT,
-			"run_simulation must create a fastq file for $fun";
-		
+	my $fastq_count = sub {
+		my $file = shift;
 		my $entries = 0;
 		my %chr_acm;
-		open my $fh, "<" => $output;
+		open my $fh, "<" => $file;
 		my $mark = 4;
 		my $acm = 0;
 		while (<$fh>) {
@@ -162,24 +170,53 @@ sub run_simulation : Tests(6) {
 			if (++$acm == 1) {
 				$entries++;
 				my @tmp1 = split / /;
-				my @tmp2 = split /\|/ => $tmp1[0];
-				my @tmp3 = split /:/ => $tmp2[1];
-				$chr_acm{$tmp3[0]}++;
+				my @tmp2 = split /:/ => $tmp1[-1];
+				my @tmp3 = split /=/ => $tmp2[0];
+				$chr_acm{$tmp3[1]}++;
 			} elsif ($acm == $mark) {
 				$acm = 0;
 			}
 		}
 		close $fh;
+		return (\%chr_acm, $entries);
+	};
 
-		is int((GENOME_SIZE * $sg->coverage) / $sg->fastq->read_size), $entries,
-			"run_simulation must create a fastq with the right number of entries for $fun";
+	# Testing single-end
+	my $sg = $test->default_sg_single_end;
+	$sg->run_simulation;
+	ok -f $output_single_end,
+		"run_simulation must create a fastq file for single-end";
 
-		my $str_sort = join " " => sort { $chr_acm{$a} <=> $chr_acm{$b} } keys %chr_acm;
-		ok(($str_sort eq "Chr2 Chr3 Chr5 Chr1 Chr4" || $str_sort eq "Chr3 Chr2 Chr5 Chr1 Chr4"),
-			"chromossome frequency must follow a weighted raffle pattern for $fun");
+	my ($chr_acm, $entries) = $fastq_count->($output_single_end);
+
+	is int((GENOME_SIZE * $sg->coverage) / $sg->fastq->read_size), $entries,
+		"run_simulation must create a fastq with the right number of entries for single-end";
+
+	my $str_sort = join " " => sort { $chr_acm->{$a} <=> $chr_acm->{$b} } keys %$chr_acm;
+	ok((lc $str_sort eq lc "Chr2 Chr3 Chr5 Chr1 Chr4" || lc $str_sort eq lc "Chr3 Chr2 Chr5 Chr1 Chr4"),
+		"chromossome frequency must follow a weighted raffle pattern for single-end");
+		
+	unlink $output_single_end;
+
+	# Testing paired-end
+	$sg = $test->default_sg_paired_end;
+	$sg->run_simulation;
+
+	for my $i (0..1) {
+		ok -f $output_paired_end->[$i],
+			"run_simulation must create fastq file for paired-end $i";
+
+		($chr_acm, $entries) = $fastq_count->($output_paired_end->[$i]);
+
+		is int((GENOME_SIZE * $sg->coverage) / ($sg->fastq->read_size * 2)), $entries,
+			"run_simulation must create a fastq with the right number of entries for paired-end $i";
+
+		my $str_sort = join " " => sort { $chr_acm->{$a} <=> $chr_acm->{$b} } keys %$chr_acm;
+		ok((lc $str_sort eq lc "Chr2 Chr3 Chr5 Chr1 Chr4" || lc $str_sort eq lc "Chr3 Chr2 Chr5 Chr1 Chr4"),
+			"chromossome frequency must follow a weighted raffle pattern for paired-end $i");
 			
-		unlink OUTPUT;
+		unlink $output_paired_end->[$i];
 	}
 }
 
-1;
+## --- end class TestsFor::SimulateRead

@@ -17,9 +17,9 @@
  
 package TestsFor::Fastq;
 
-use Test::Most;
-use autodie;
+use My::Base 'test';
 use base 'TestsFor';
+use autodie;
 
 use constant {
 	SEQ_SYS       => 'HiSeq',
@@ -68,7 +68,7 @@ sub constructor : Tests(4) {
 	}
 }
 
-sub sprint_fastq : Tests(1) {
+sub fastq_template : Tests(1) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
@@ -79,8 +79,8 @@ sub sprint_fastq : Tests(1) {
 	
 	my $quality_size = QUALITY_SIZE;
 	my $rg = qr/\@${header}\n${seq}\n\+\n.{$quality_size}/;
-	ok $fastq->sprint_fastq(\$header, \$seq) =~ $rg,
+	ok ${ $fastq->fastq_template(\$header, \$seq) } =~ $rg,
 		"'fastq' should return an entry in fastq format";
 }
 
-1;
+## --- end class TestsFor::Fastq

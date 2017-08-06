@@ -17,10 +17,9 @@
 
 package My::Role::IO;
 
-use Moose::Role;
+use My::Base 'role';
 use PerlIO::gzip;
 use Scalar::Util 'looks_like_number';
-use Carp 'croak';
 
 #===  CLASS METHOD  ============================================================
 #        CLASS: My::Role::IO (Role)
@@ -147,4 +146,4 @@ sub index_weight_file {
 	return \%indexed_file;
 } ## --- end sub index_weight_file
 
-1; ## --- end class My::Role::IO
+## --- end class My::Role::IO
