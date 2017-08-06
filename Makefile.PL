@@ -12,6 +12,7 @@ requires       'Moose'                     => 2.2005;
 requires       'MooseX::StrictConstructor' => 0.21;
 requires       'MooseX::UndefTolerant'     => 0.21;
 requires       'namespace::autoclean'      => 0.28;
+requires       'true'                      => 0.18;
 requires       'Math::Random'              => 0.72;
 requires       'Try::Tiny'                 => 0.28;
 requires       'Carp'                      => 1.38;
