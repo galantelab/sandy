@@ -17,19 +17,13 @@
 
 package SimulateRead;
 
-use Moose;
-use MooseX::StrictConstructor;
-use MooseX::UndefTolerant;
+use My::Base 'class';
 use My::Types;
 use Fastq::SingleEnd;
 use Fastq::PairedEnd;
 use InterlaceProcesses;
-use Carp qw/croak verbose/;
 use File::Cat 'cat';
 use Parallel::ForkManager;
-use Try::Tiny;
-
-use namespace::autoclean;
 
 with qw/My::Role::WeightedRaffle My::Role::IO/;
 
@@ -147,6 +141,7 @@ sub _build_strand {
 #===============================================================================
 sub _build_fasta {
 	my $self = shift;
+	log_msg ":: Indexing fasta file '" . $self->fasta_file . "' ...";
 	my $indexed_fasta = $self->index_fasta($self->fasta_file);
 	croak "Error parsing " . $self->fasta_file . ". Maybe the file is empty\n"
 		unless %$indexed_fasta;
@@ -330,10 +325,14 @@ sub run_simulation {
 		}
 	);
 
+	log_msg sprintf ":: Creating %d child %s ...",
+		$number_of_jobs, $number_of_jobs == 1 ? "job" : "jobs";
+
 	for my $tid (1..$number_of_jobs) {
 		#-------------------------------------------------------------------------------
 		# Inside parent
 		#-------------------------------------------------------------------------------
+		log_msg ":: Creating job $tid ...";
 		my @files_t = map { "$_.${parent_pid}_part$tid" } @{ $files{$fastq_class} };
 		my $pid = $pm->start(\@files_t) and next;	
 
@@ -357,7 +356,10 @@ sub run_simulation {
 		$last_read_idx += $number_of_reads % $number_of_jobs
 			if $tid == $number_of_jobs;
 
+		log_msg "  => Job $tid: Working on reads from $idx to $last_read_idx";
+
 		# Create temporary files
+		log_msg "  => Job $tid: Creating temporary file: @files_t";
 		my @fhs = map { $self->my_open_w($_, $self->output_gzip) } @files_t;
 
 		# Run simualtion in child
@@ -370,13 +372,16 @@ sub run_simulation {
 			} catch {
 				croak "Not defined entry for seqid '>$id' at job $tid: $_";
 			} finally {
-				for my $fh_idx (0..$#fhs) {
-					$fhs[$fh_idx]->say(${$fastq_entry[$fh_idx]})
-						or croak "Cannot write to $files_t[$fh_idx]: $!\n" unless @_;
+				unless (@_) {
+					for my $fh_idx (0..$#fhs) {
+						$fhs[$fh_idx]->say(${$fastq_entry[$fh_idx]})
+							or croak "Cannot write to $files_t[$fh_idx]: $!\n";
+					}
 				}
 			};
 		}
 
+		log_msg "  => Job $tid: Writing and closing file: @files_t";
 		# Close temporary files
 		for my $fh_idx (0..$#fhs) {
 			$fhs[$fh_idx]->close
@@ -384,6 +389,7 @@ sub run_simulation {
 		}
 
 		# Child exit
+		log_msg "  => Job $tid is finished";
 		$pm->finish;
 	}
 
@@ -392,7 +398,14 @@ sub run_simulation {
 	my $sig = InterlaceProcesses->new(foreign_pid => \@child_pid);
 	$pm->wait_all_children;
 
+	if ($sig->signal_catched) {
+		log_msg ":: Termination signal received! Saving the work ...";
+	} else {
+		log_msg ":: Saving the work ...";
+	}
+
 	# Concatenate all temporary files
+	log_msg ":: Concatenating all temporary files ...";
 	my @fh = map { $self->my_open_w($self->output_gzip ? "$_.gz" : $_, 0) } @{ $files{$fastq_class} };
 	for my $i (0..$#tmp_files) {
 		my $fh_idx = $i % scalar @fh;
@@ -401,18 +414,18 @@ sub run_simulation {
 	}
 
 	# Close files
+	log_msg ":: Writing and closing output file: @{ $files{$fastq_class} }";
 	for my $fh_idx (0..$#fh) {
 		$fh[$fh_idx]->close
 			or croak "Cannot write file $files{$fastq_class}[$fh_idx]: $!\n";
 	}
 
 	# Clean up the mess
+	log_msg ":: Removing temporary files ...";
 	for my $file_t (@tmp_files) {
 		unlink $file_t
 			or croak "Cannot remove temporary file: $file_t: $!\n";
 	}
 } ## --- end sub run_simulation
 
-__PACKAGE__->meta->make_immutable;
-
-1; ## --- end class SimulateRead
+## --- end class SimulateRead

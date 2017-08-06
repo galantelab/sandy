@@ -18,15 +18,11 @@
 
 package Quality;
 
-use Moose;
-use MooseX::StrictConstructor;
+use My::Base 'class';
 use My::Types;
 use Storable qw/file_magic retrieve/;
-use Carp 'croak';
 use File::Basename 'dirname';
 use File::Spec;
-
-use namespace::autoclean;
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
@@ -122,6 +118,4 @@ sub gen_quality {
 	return \$quality;
 } ## --- end sub gen_quality
 
-__PACKAGE__->meta->make_immutable;
-
-1;
+## --- end class Quality

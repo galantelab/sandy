@@ -18,12 +18,10 @@
 #     REVISION: ---
 #===============================================================================
 
-use strict;
-use warnings;
+use My::Base;
 use Getopt::Long;
 use Pod::Usage;
 use File::Basename 'basename';
-use Try::Tiny;
 use Fastq::SingleEnd;
 use Fastq::PairedEnd;
 use SimulateRead;
@@ -33,11 +31,12 @@ use SimulateRead;
 #-------------------------------------------------------------------------------
 use constant {
 	PROGNAME              => basename($0),
+	VERBOSE               => 0,
 	PREFIX                => 'out',
 	JOBS                  => 1,
 	OUTPUT_GZIP           => 1,
 	COUNT_LOOPS_BY        => 'coverage',
-	COVERAGE              => 8,
+	COVERAGE              => 1,
 	STRAND_BIAS           => 'random',
 	SEQID_WEIGHT          => 'length',
 	SEQUENCING_TYPE       => 'paired-end',
@@ -92,16 +91,30 @@ sub error($) {
 	my $progname = PROGNAME;
 	my $err = "$progname: ";
 	$err .= shift;
+	chomp $err;
 	$err .= "\nTry '$progname --help' for more information";
 	die "$err\n";
+}
+
+sub log_msg_opt(%) {
+	my %opt = @_;
+	while (my ($key, $value) = each %opt) {
+		next if ref($value) =~ /Fastq/;
+		$value = "not defined" if not defined $value;
+		$key =~ s/_/ /g;
+		log_msg "  => $key $value";
+	}
 }
 
 #-------------------------------------------------------------------------------
 #  Parsing command-line arguments
 #-------------------------------------------------------------------------------
+my @ARGV_STORED = @ARGV;
+
 GetOptions(
 	'man'                 => \$man,
 	'help|?'              => \$help,
+	'verbose|s'           => \$LOG_VERBOSE,
 	'prefix=s'            => \$prefix,
 	'jobs=i'              => \$jobs,
 	'output-gzip!'        => \$output_gzip,
@@ -236,53 +249,74 @@ if ($seqid_weight eq 'file') {
 	}
 }
 
-# TODO: I need to make a log interface. Firstly printing the argumtns passed by the user to
-#       the simulator and latter printing all arguments received by the simulator
-#       Maybe make an expection class
+#-------------------------------------------------------------------------------
+#  Log presentation header
+#-------------------------------------------------------------------------------
+my $time_stamp = localtime;
+my $progname = PROGNAME;
+log_msg <<"HEADER";
+-------------------------------------------------------
+   $progname -- IEP Hsopital Sírio-Libanês
+   Date $time_stamp
+-------------------------------------------------------
+:: Parameters passed by the user: '@ARGV_STORED'
+HEADER
 
 #-------------------------------------------------------------------------------
 #  Construct the Fastq and SimulateRead classes
 #-------------------------------------------------------------------------------
-my ($fastq, $simulator);
+my %paired_end_param = (
+	sequencing_system => $sequencing_system,
+	sequencing_error  => $sequencing_error,
+	read_size         => $read_size,
+	fragment_mean     => $fragment_mean,
+	fragment_stdd     => $fragment_stdd
+);
 
+my %single_end_param = (
+	sequencing_system => $sequencing_system,
+	sequencing_error  => $sequencing_error,
+	read_size         => $read_size,
+);
+
+my $fastq;
 if ($sequencing_type eq 'paired-end') {
+	log_msg ":: Creating paired-end fastq generator ...";
+	log_msg_opt %paired_end_param;
 	try {
-		$fastq = Fastq::PairedEnd->new(
-			sequencing_system => $sequencing_system,
-			sequencing_error  => $sequencing_error,
-			read_size         => $read_size,
-			fragment_mean     => $fragment_mean,
-			fragment_stdd     => $fragment_stdd
-		);
+		$fastq = Fastq::PairedEnd->new(%paired_end_param);
 	} catch {
 		error "$_";
 	};
 } else {
+	log_msg ":: Creating single-end fastq generator ...";
+	log_msg_opt %single_end_param;
 	try {
-		$fastq = Fastq::SingleEnd->new(
-			sequencing_system => $sequencing_system,
-			sequencing_error  => $sequencing_error,
-			read_size         => $read_size,
-		);
+		$fastq = Fastq::SingleEnd->new(%single_end_param);
 	} catch {
 		error "$_";
 	};
 }
 
+my %simulator_param = (
+	fastq             => $fastq,
+	prefix            => $prefix,
+	output_gzip       => $output_gzip,
+	fasta_file        => $fasta_file,
+	count_loops_by    => $count_loops_by,
+	number_of_reads   => $number_of_reads,
+	coverage          => $coverage,
+	jobs              => $jobs,
+	strand_bias       => $strand_bias,
+	seqid_weight      => $seqid_weight,
+	weight_file       => $weight_file
+);
+
+my $simulator;
+log_msg ":: Creating simulator ...";
+log_msg_opt %simulator_param;
 try {
-	$simulator = SimulateRead->new(
-		fastq           => $fastq,
-		prefix          => $prefix,
-		output_gzip     => $output_gzip,
-		fasta_file      => $fasta_file,
-		count_loops_by  => $count_loops_by,
-		number_of_reads => $number_of_reads,
-		coverage        => $coverage,
-		jobs            => $jobs,
-		strand_bias     => $strand_bias,
-		seqid_weight    => $seqid_weight,
-		weight_file     => $weight_file
-	);
+	$simulator = SimulateRead->new(%simulator_param);
 } catch {
 	error "$_";
 };
@@ -290,11 +324,14 @@ try {
 #-------------------------------------------------------------------------------
 #  Let's simulate it!
 #-------------------------------------------------------------------------------
+log_msg ":: Running simulation ...";
 try {
 	$simulator->run_simulation;
 } catch {
 	error "$_";
 };
+
+log_msg ":: End simulation. So Long, and Thanks for All the Fish!";
 
 __END__
 
@@ -309,6 +346,7 @@ simulate_reads - Creates single-end and paired-end fastq reads for transcriptome
  Options:
   --help               brief help message
   --man                full documentation
+  --verbose            print log
   --prefix             prefix output	
   --jobs               number of jobs
   --output-gzip        compress output file
@@ -332,10 +370,11 @@ just set a mandatory fasta file and it is enough. These default options are:
  --------------------------------
   Option              Value
  --------------------------------
+  verbose             none 
   prefix              out
   jobs                1 
   output_gzip         none  
-  coverage            8 
+  coverage            1 
   strand-bias         random 
   seqid-weight        length
   sequencing_type     paired-end 
@@ -355,6 +394,10 @@ Print a brief help message and exits.
 =item B<--man>
 
 Prints the manual page and exits.
+
+=item B<--verbose>
+
+Prints log information to standard error
 
 =item B<--prefix>
 

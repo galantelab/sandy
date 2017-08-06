@@ -17,12 +17,9 @@
 
 package Fastq::SingleEnd;
 
-use Moose;
-use MooseX::StrictConstructor;
+use My::Base 'class';
 use My::Types;
 use Read::SingleEnd;
-
-use namespace::autoclean;
 
 extends 'Fastq';
 
@@ -80,6 +77,4 @@ sub sprint_fastq {
 	return $self->fastq_template(\$header, $read_ref);
 } ## --- end sub sprint_fastq
 
-__PACKAGE__->meta->make_immutable;
-
-1; ## --- end class Fastq::SingleEnd
+## --- end class Fastq::SingleEnd

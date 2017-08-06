@@ -18,9 +18,8 @@
 
 package My::Role::WeightedRaffle;
 
-use Moose::Role;
+use My::Base 'role';
 use My::Types;
-use Carp 'croak';
 
 requires '_build_weights';
 
@@ -162,4 +161,4 @@ sub _search {
 	}
 } ## --- end sub _search
 
-1; ## --- end class My::Role::WeightedRaffle
+## --- end class My::Role::WeightedRaffle

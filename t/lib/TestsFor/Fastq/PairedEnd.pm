@@ -17,9 +17,9 @@
 
 package TestsFor::Fastq::PairedEnd;
 
-use Test::Most;
-use autodie;
+use My::Base 'test';
 use base 'TestsFor::Fastq';
+use autodie;
 
 sub startup : Tests(startup) {
 	my $test = shift;
@@ -56,7 +56,7 @@ sub constructor : Tests(12) {
 	}
 }
 
-sub fastq : Tests(5) {
+sub sprint_fastq : Tests(6) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
@@ -66,52 +66,57 @@ sub fastq : Tests(5) {
 
 	my $id = "SR0001";
 	my $seq_name = "Chr1";
-	my $read = $fastq->fastq($id, $seq_name, \$seq, length $seq, 1);
+	my ($read1_ref, $read2_ref) = $fastq->sprint_fastq($id, $seq_name, \$seq, length $seq, 1);
 	my $read_size = $fastq->read_size;
-	my $header = qr/$id\|${seq_name}:\d+-\d+ [12] simulation_read length=$read_size/;
-	my $rg = qr/\@${header}\n.+\n\+\n.+\n\@${header}\n.+\n\+\n.+/;
-	ok $read =~ $rg,
-		"read retuned by 'fastq' must be in fastq format";
+	my $header = qr/$id simulation_read length=$read_size position=${seq_name}:\d+-\d+/;
+	my $rg = qr/\@${header}\n.+\n\+\n.+/;
+
+	for ($read1_ref, $read2_ref) {
+		ok $$_ =~ $rg,
+			"read retuned by 'fastq' must be in fastq format";
+	}
 	
 	# Testing leader strand paired-end fastq
-	my @lines = split /\n/ => $read;
-	my $read_seq1_l1 = substr $lines[1], 0, $fastq->read_size - 1;
+	my @lines1 = split /\n/ => $$read1_ref;
+	my $read_seq1_l1 = substr $lines1[1], 0, $fastq->read_size - 1;
 	my $index_s1 = index $seq, $read_seq1_l1;
-	my $pos_s1 = $lines[0] =~ /\|(.+?) / ? $1 : undef;
+	my $pos_s1 = $lines1[0] =~ /position=(.+)/ ? $1 : undef;
 	my $pos_s1_t = "$seq_name:" . (1 + $index_s1) . "-" . ($fastq->read_size + $index_s1);
 
 	is $pos_s1, $pos_s1_t,
 		"The seq_name:start-end inside read 1 fastq header should be the correct relative position";
 
-	$fastq->_read->reverse_complement(\$lines[5]);
-	my $read_seq2_f1 = substr $lines[5], 1, $fastq->read_size;
+	my @lines2 = split /\n/ => $$read2_ref;
+	$fastq->_read->reverse_complement(\$lines2[1]);
+	my $read_seq2_f1 = substr $lines2[1], 1, $fastq->read_size;
 	my $index_s2 = index $seq, $read_seq2_f1;
-	my $pos_s2 = $lines[4] =~ /\|(.+?) / ? $1 : undef;
+	my $pos_s2 = $lines2[0] =~ /position=(.+)/ ? $1 : undef;
 	my $pos_s2_t = "$seq_name:" . ($fastq->read_size + $index_s2 - 1) . "-" . ($index_s2);
 
 	is $pos_s2, $pos_s2_t,
 		"The seq_name:end-start inside read 2 fastq header should be the correct relative position";
 	
 	# Testing retarded strand paired-end fastq
-	my $read2 = $fastq->fastq($id, $seq_name, \$seq, length $seq, 0);
+	my ($read2_1_ref, $read2_2_ref) = $fastq->sprint_fastq($id, $seq_name, \$seq, length $seq, 0);
 
-	my @lines2 = split /\n/ => $read2;
-	$fastq->_read->reverse_complement(\$lines2[1]);
-	my $read2_seq1_f1 = substr $lines2[1], 1, $fastq->read_size;
+	my @lines3 = split /\n/ => $$read2_1_ref;
+	$fastq->_read->reverse_complement(\$lines3[1]);
+	my $read2_seq1_f1 = substr $lines3[1], 1, $fastq->read_size;
 	my $index2_s1 = index $seq, $read2_seq1_f1;
-	my $pos2_s1 = $lines2[0] =~ /\|(.+?) / ? $1 : undef;
+	my $pos2_s1 = $lines3[0] =~ /position=(.+)/ ? $1 : undef;
 	my $pos2_s1_t = "$seq_name:" . ($fastq->read_size + $index2_s1 - 1) . "-" . ($index2_s1);
 
 	is $pos2_s1, $pos2_s1_t,
 		"The seq_name:end-start inside read 1 fastq header (retarded strand) should be the correct relative position";
 
-	my $read2_seq2_l1 = substr $lines2[5], 0, $fastq->read_size - 1;
+	my @lines4 = split /\n/ => $$read2_2_ref;
+	my $read2_seq2_l1 = substr $lines4[1], 0, $fastq->read_size - 1;
 	my $index2_s2 = index $seq, $read2_seq2_l1;
-	my $pos2_s2 = $lines2[4] =~ /\|(.+?) / ? $1 : undef;
+	my $pos2_s2 = $lines4[0] =~ /position=(.+)/ ? $1 : undef;
 	my $pos2_s2_t = "$seq_name:" . ($index2_s2 + 1) . "-" . ($fastq->read_size + $index2_s2);
 
 	is $pos2_s2, $pos2_s2_t,
 		"The seq_name:start-end inside read 2 fastq header (retarded strand) should be the correct relative position";
 }
 
-1;
+## --- end class TestsFor::Fastq::PairedEnd

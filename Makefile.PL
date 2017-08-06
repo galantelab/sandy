@@ -15,17 +15,22 @@ requires       'namespace::autoclean'      => 0.28;
 requires       'Math::Random'              => 0.72;
 requires       'Try::Tiny'                 => 0.28;
 requires       'Carp'                      => 1.38;
-requires       'File::Basename'            => 2.85;
-requires       'File::Spec'                => 3.63;
+requires       'File::Basename'            => 2.84;
+requires       'File::Spec'                => 3.47;
 requires       'File::Cat'                 => 1.20;
-requires       'Scalar::Util'              => 1.48;
-requires       'Storable'                  => 2.56;
+requires       'Scalar::Util'              => 1.47;
+requires       'Storable'                  => 2.51;
 requires       'Parallel::ForkManager'     => 1.19;
 requires       'PerlIO::gzip'              => 0.19;
-requires       'Getopt::Long'              => 2.50;
+requires       'Getopt::Long'              => 2.39;
 requires       'Pod::Usage'                => 1.69;
+requires       'Hook::AfterRuntime'        => 0.005;
+requires       'Import::Into'              => 1.002005;
+requires       'Data::OptList'             => 0.110;
+requires       'Module::Runtime'           => 0.015;
 test_requires  'Test::Most'                => 0.35;
 test_requires  'Test::Class'               => 0.50;
+test_requires  'Class::Data::Inheritable'  => 0.08;
 
 # Install data
 install_script 'simulate_reads';

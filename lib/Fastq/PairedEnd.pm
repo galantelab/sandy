@@ -17,12 +17,9 @@
 
 package Fastq::PairedEnd;
 
-use Moose;
-use MooseX::StrictConstructor;
+use My::Base 'class';
 use My::Types;
 use Read::PairedEnd;
-
-use namespace::autoclean;
 
 extends 'Fastq';
 
@@ -95,6 +92,4 @@ sub sprint_fastq {
 	return ($fastq1_ref, $fastq2_ref);
 } ## --- end sub sprint_fastq
 
-__PACKAGE__->meta->make_immutable;
-
-1; ## --- end class Fastq::PairedEnd
+## --- end class Fastq::PairedEnd
