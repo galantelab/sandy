@@ -98,7 +98,7 @@ subtype 'My:SeqIdWeight'
 
 subtype 'My:CountLoopBy'
 	=> as      'Str'
-	=> where   { $_ eq 'coverage' || $_ eq 'number_of_reads' }
-	=> message { "$_ is not a valid count_loops_by: 'coverage' or 'number_of_reads'" };
+	=> where   { $_ eq 'coverage' || $_ eq 'number-of-reads' }
+	=> message { "$_ is not a valid count_loops_by: 'coverage' or 'number-of-reads'" };
 
 ## --- end class My::Types

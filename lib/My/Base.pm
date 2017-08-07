@@ -31,6 +31,7 @@ use Hook::AfterRuntime;
 use Import::Into;
 use Data::OptList;
 use Module::Runtime 'use_module';
+use Smart::Match ();
 
 our $LOG_VERBOSE = 0;
 
@@ -52,6 +53,7 @@ my ($class, @opts) = @_;
 	true->import;
 	Carp->import::into($caller);
 	Try::Tiny->import::into($caller);
+	Smart::Match->import({into=>$caller}, ':all');
 
 	# Custom handy function
 	do {
@@ -123,6 +125,7 @@ my ($class, @opts) = @_;
 	#This must come after anything else that might change warning
 	# levels in the caller (e.g. Moose)
 	warnings->import('FATAL'=>'all');
+	warnings->unimport('experimental::smartmatch');
 
     namespace::autoclean->import(
         -cleanee => $caller,
