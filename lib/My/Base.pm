@@ -66,9 +66,17 @@ my ($class, @opts) = @_;
 		)
 	};
 
+    my @no_clean;
 	for my $opt_spec (@opts) {
 		my ($opt, $opt_args) = @$opt_spec;		
 		given ($opt) {
+            when ('dont_clean') {
+                if (!$opt_args) {
+                    Carp::carp "ignoring dont_clean option without arrayref of subroutine names to keep";
+                    next;
+                }
+                push @no_clean, @$opt_args;
+            };
 			when ('class') {
 				require Moose;
 				require MooseX::StrictConstructor;
@@ -91,13 +99,20 @@ my ($class, @opts) = @_;
 			}
 			when ('test') {
 				use_module('Test::Most')->import::into($caller);
-			}
-			when ('test_class') {
-				use_module('Test::Class::Load')->import::into($caller, 't/lib');
-			}
-			when ('test_class_base') {
-				my @classes = qw(Test::Class Class::Data::Inheritable);
-				use_module('base')->import::into($caller, @classes);
+				if ($opt_args) {
+					for (@$opt_args) {
+						when ('class_load') {
+							use_module('Test::Class::Load')->import::into($caller, 't/lib');
+						}
+						when ('class_base') {
+							my @classes = qw(Test::Class Class::Data::Inheritable);
+							use_module('base')->import::into($caller, @classes);
+						}
+						default {
+							Carp::carp "Ignoring unknown test option '$_'";
+						}
+					}
+				}
 			}
 			default {
 				Carp::carp "Ignoring unknown import option '$_'";
@@ -109,9 +124,10 @@ my ($class, @opts) = @_;
 	# levels in the caller (e.g. Moose)
 	warnings->import('FATAL'=>'all');
 
-	namespace::autoclean->import(
-		-cleanee => $caller,
-	);
+    namespace::autoclean->import(
+        -cleanee => $caller,
+        -except  => \@no_clean,
+    );
 
 	return;
 }
