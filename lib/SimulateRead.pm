@@ -237,7 +237,7 @@ sub _build_seqid_raffle {
 			my $seqids_size = scalar @seqids;
 			$fun = sub { $seqids[int(rand($seqids_size))] };
 		}
-		when (any(qw/file length/)) {
+		when (/^(file|length)$/) {
 			$fun = sub { $self->weighted_raffle };
 		}
 		default {

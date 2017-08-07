@@ -29,7 +29,6 @@ requires       'Hook::AfterRuntime'        => 0.005;
 requires       'Import::Into'              => 1.002005;
 requires       'Data::OptList'             => 0.110;
 requires       'Module::Runtime'           => 0.015;
-requires       'Smart::Match'              => 0.008;
 test_requires  'Test::Most'                => 0.35;
 test_requires  'Test::Class'               => 0.50;
 test_requires  'Class::Data::Inheritable'  => 0.08;
