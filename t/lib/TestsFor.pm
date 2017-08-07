@@ -18,7 +18,7 @@
 
 package TestsFor;
 
-use My::Base qw(test test_class_base);
+use My::Base test => [qw(class_base)];
 
 INIT {
 	__PACKAGE__->mk_classdata('class_to_test');
