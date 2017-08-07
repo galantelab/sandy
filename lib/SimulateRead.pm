@@ -111,19 +111,20 @@ sub BUILD {
 #   PARAMETERS: Void
 #      RETURNS: Ref Code
 #  DESCRIPTION: Build _strand attribute. (dynamic linkage)
-#       THROWS: no exceptions
+#       THROWS: If it is given a unknown option, throws an error
 #     COMMENTS: Valid strand_bias: 'plus', 'minus' and 'random'
 #     SEE ALSO: n/a
 #===============================================================================
 sub _build_strand {
 	my $self = shift;
-	if ($self->strand_bias eq 'plus') {
-		return sub {1};
-	} elsif ($self->strand_bias eq 'minus') {
-		return sub {0};
-	} else {
-		return sub { int(rand(2)) };
+	my $fun;
+	given ($self->strand_bias) {
+		when ('plus')   { $fun = sub {1} }
+		when ('minus')  { $fun = sub {0} }
+		when ('random') { $fun = sub { int(rand(2)) }}
+		default         { croak "Unknown option '$_' for strand bias\n" }
 	}
+	return $fun;
 } ## --- end sub _build_strand
 
 #===  CLASS METHOD  ============================================================
@@ -150,14 +151,22 @@ sub _build_fasta {
 	my $err;
 	for my $id (keys %$indexed_fasta) {
 		my $index_size = $indexed_fasta->{$id}{size};
-		if (ref $self->fastq eq 'Fastq::SingleEnd') {
-			my $read_size = $self->fastq->read_size;
-			$err .= "seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n"
-				if $index_size < $read_size;
-		} else {
-			my $fragment_mean = $self->fastq->fragment_mean;
-			$err .= "seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)\n"
-				if $index_size < $fragment_mean;
+		given (ref $self->fastq) {
+			when ('Fastq::SingleEnd') {
+				my $read_size = $self->fastq->read_size;
+				if ($index_size < $read_size) {
+					$err .= "seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n";
+				}
+			}
+			when ('Fastq::PairedEnd') {
+				my $fragment_mean = $self->fastq->fragment_mean;
+				if ($index_size < $fragment_mean) {
+					$err .= "seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)\n";
+				}
+			}
+			default {
+				croak "Unknown option '$_' for sequencing type\n";
+			}
 		}
 	}
 	
@@ -173,29 +182,39 @@ sub _build_fasta {
 #  DESCRIPTION: Build weights. It is required by the WeightedRaffle role. 
 #               It verifies seqid_weight and sets the required weights matrix
 #       THROWS: If seqid_weight == 'file', then it needs to be validated
+#               If it is given a unknown option, throws an error
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
 sub _build_weights {
 	my $self = shift;
-	if ($self->seqid_weight eq 'length') {
-		my %chr_size = map { $_, $self->_fasta->{$_}{size} } keys %{ $self->_fasta };
-		return $self->calculate_weights(\%chr_size);
-	} elsif ($self->seqid_weight eq 'file') {
-		my $indexed_file = $self->index_weight_file($self->weight_file);
-		# Validate weight_file
-		croak "Error parsing '" . $self->weight_file . "': Maybe the file is empty\n"
-			unless %$indexed_file;
-		my $indexed_fasta = $self->_fasta;
-		my $err;
-		for my $id (keys %$indexed_file) {
-			if (not exists $indexed_fasta->{$id}) {
-				$err .= "seqid '$id' not found in '" . $self->fasta_file . "'\n";
-			}
+	given ($self->seqid_weight) {
+		when ('length') {
+			my %chr_size = map { $_, $self->_fasta->{$_}{size} } keys %{ $self->_fasta };
+			return $self->calculate_weights(\%chr_size);
 		}
-		croak "Error in validating '" . $self->weight_file . "':\n" . $err
-			if defined $err;
-		return $self->calculate_weights($indexed_file);
+		when ('file') {
+			my $indexed_file = $self->index_weight_file($self->weight_file);
+			# Validate weight_file
+			croak "Error parsing '" . $self->weight_file . "': Maybe the file is empty\n"
+				unless %$indexed_file;
+			my $indexed_fasta = $self->_fasta;
+			my $err;
+			for my $id (keys %$indexed_file) {
+				if (not exists $indexed_fasta->{$id}) {
+					$err .= "seqid '$id' not found in '" . $self->fasta_file . "'\n";
+				}
+			}
+			croak "Error in validating '" . $self->weight_file . "':\n" . $err
+				if defined $err;
+			return $self->calculate_weights($indexed_file);
+		}
+		when ('same') {
+			croak "Error: Cannot build raffle weights for 'seqid-weight=same'\n";
+		}
+		default {
+			croak "Unknown option '$_' for weighted raffle\n";
+		}
 	}
 } ## --- end sub _build_weights
 
@@ -205,21 +224,27 @@ sub _build_weights {
 #   PARAMETERS: Void
 #      RETURNS: Ref Code
 #  DESCRIPTION: Build _seqid_raffle attribute. (dynamic linkage) 
-#       THROWS: no exceptions
+#       THROWS: If it is given a unknown option, throws an error
 #     COMMENTS: seqid_weight can be: 'length', 'file' and 'same'
 #     SEE ALSO: n/a
 #===============================================================================
 sub _build_seqid_raffle {
 	my $self = shift;
-	if ($self->seqid_weight eq 'same') {
-		my @seqids = keys %{ $self->_fasta };
-		my $seqids_size = scalar @seqids;
-		return sub { 
-			return $seqids[int(rand($seqids_size))];
-		};
-	} else {
-		return sub { $self->weighted_raffle };
+	my $fun;
+	given ($self->seqid_weight) {
+		when ('same') {
+			my @seqids = keys %{ $self->_fasta };
+			my $seqids_size = scalar @seqids;
+			$fun = sub { $seqids[int(rand($seqids_size))] };
+		}
+		when (any(qw/file length/)) {
+			$fun = sub { $self->weighted_raffle };
+		}
+		default {
+			croak "Unknown option '$_' for seqid-raffle\n";
+		}
 	}
+	return $fun;
 } ## --- end sub _build_seqid_raffle
 
 #===  CLASS METHOD  ============================================================
@@ -232,6 +257,7 @@ sub _build_seqid_raffle {
 #       THROWS: If count_loops_by is equal to 'coverage', it may accur that the
 #               fasta_file size, or the coverage asked is too low, which results in
 #               zero reads
+#               If it is given a unknown option, throws an error
 #     COMMENTS: count_loops_by can be: 'coverage' and 'number_of_reads'
 #     SEE ALSO: n/a
 #===============================================================================
@@ -239,14 +265,20 @@ sub _calculate_number_of_reads {
 	my $self = shift;
 	my $number_of_reads = 0;
 
-	if ($self->count_loops_by eq 'coverage') {
-		# It is needed to calculate the genome size
-		my $fasta = $self->_fasta;
-		my $fasta_size = 0;
-		$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
-		$number_of_reads = int(($fasta_size * $self->coverage) / $self->fastq->read_size);
-	} else {
-		$number_of_reads = $self->number_of_reads;
+	given($self->count_loops_by) {
+		when ('coverage') {
+			# It is needed to calculate the genome size
+			my $fasta = $self->_fasta;
+			my $fasta_size = 0;
+			$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
+			$number_of_reads = int(($fasta_size * $self->coverage) / $self->fastq->read_size);
+		}
+		when ('number-of-reads') {
+			$number_of_reads = $self->number_of_reads;
+		}
+		default {
+			croak "Unknown option '$_' for calculating the number of reads\n";
+		}
 	}
 
 	# In case it is paired-end read, divide the number of reads by 2 because Fastq::PairedEnd class
