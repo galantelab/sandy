@@ -144,9 +144,9 @@ sub reverse_complement {
 #     SEE ALSO: n/a
 #===============================================================================
 sub _randb {
-	my ($self, $not_b) = @_;
-	my $b = $not_b;
-	$b = qw{A T C G}[int(rand(4))] while $b eq $not_b;
+	my ($self, $not_b) = ($_[0], uc $_[1]);
+	my $b;
+	do { $b = qw{A T C G}[int(rand(4))] } until ($b ne $not_b);
 	return $b;
 } ## --- end sub _randb
 
