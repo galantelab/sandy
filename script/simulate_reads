@@ -21,7 +21,9 @@
 use My::Base;
 use Getopt::Long;
 use Pod::Usage;
+use File::Spec;
 use File::Basename 'basename';
+use File::Path 'make_path';
 use Fastq::SingleEnd;
 use Fastq::PairedEnd;
 use SimulateRead;
@@ -33,6 +35,7 @@ use constant {
 	PROGNAME              => basename($0),
 	VERBOSE               => 0,
 	PREFIX                => 'out',
+	OUTPUT_DIR            => '.',
 	JOBS                  => 1,
 	OUTPUT_GZIP           => 1,
 	COUNT_LOOPS_BY        => 'coverage',
@@ -57,6 +60,7 @@ my $count_loops_by    = COUNT_LOOPS_BY;
 
 # Default values
 my $prefix            = PREFIX;
+my $output_dir        = OUTPUT_DIR;
 my $jobs              = JOBS;
 my $output_gzip       = OUTPUT_GZIP;
 my $coverage          = COVERAGE;
@@ -114,7 +118,8 @@ my @ARGV_STORED = @ARGV;
 GetOptions(
 	'man'                 => \$man,
 	'help|?'              => \$help,
-	'verbose|s'           => \$LOG_VERBOSE,
+	'verbose|v'           => \$LOG_VERBOSE,
+	'output-dir|o=s'      => \$output_dir,
 	'prefix=s'            => \$prefix,
 	'jobs=i'              => \$jobs,
 	'output-gzip!'        => \$output_gzip,
@@ -156,6 +161,20 @@ if (not -f $fasta_file) {
 if ($fasta_file !~ /.+\.(fasta|fa|fna|ffn)(\.gz)*$/) {
 	error "<$fasta_file> does not seem to be a fasta file. Please check the file extension";
 }
+
+# Create output directory if it not exist
+make_path($output_dir, {error => \my $err_list});
+my $err_dir;
+if (@$err_list) {
+	for (@$err_list) {
+		my ($dir, $message) = %$_;
+		$err_dir .= "Problem creating '$dir': $message\n";
+	}
+	error "$err_dir";
+}
+
+# Concatenate output-dir to prefix
+$prefix = File::Spec->catdir($output_dir, $prefix);
 
 # jobs > 0
 if ($jobs <= 0) {

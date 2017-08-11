@@ -431,10 +431,10 @@ sub run_simulation {
 	$pm->wait_all_children;
 
 	if ($sig->signal_catched) {
-		log_msg ":: Termination signal received! Saving the work ...";
-	} else {
-		log_msg ":: Saving the work ...";
+		log_msg ":: Termination signal received!";
 	}
+
+	log_msg ":: Saving the work ...";
 
 	# Concatenate all temporary files
 	log_msg ":: Concatenating all temporary files ...";
