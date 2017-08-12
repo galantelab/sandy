@@ -32,7 +32,8 @@ use Import::Into;
 use Data::OptList;
 use Module::Runtime 'use_module';
 
-our $LOG_VERBOSE = 0;
+binmode STDERR, ":encoding(utf8)";
+our $LOG_VERBOSE = 1;
 
 sub log_msg($) {
 	my ($msg) = @_;

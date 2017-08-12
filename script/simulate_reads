@@ -59,6 +59,7 @@ use constant {
 my $count_loops_by    = COUNT_LOOPS_BY;
 
 # Default values
+$LOG_VERBOSE          = VERBOSE;
 my $prefix            = PREFIX;
 my $output_dir        = OUTPUT_DIR;
 my $jobs              = JOBS;
@@ -116,24 +117,24 @@ sub log_msg_opt(%) {
 my @ARGV_STORED = @ARGV;
 
 GetOptions(
-	'man'                 => \$man,
-	'help|?'              => \$help,
-	'verbose|v'           => \$LOG_VERBOSE,
-	'output-dir|o=s'      => \$output_dir,
-	'prefix=s'            => \$prefix,
-	'jobs=i'              => \$jobs,
-	'output-gzip!'        => \$output_gzip,
-	'coverage=f'          => \$coverage,
-	'read-size=i'         => \$read_size,
-	'fragment-mean=i'     => \$fragment_mean,
-	'fragment-stdd=i'     => \$fragment_stdd,
-	'sequencing-error=f'  => \$sequencing_error,
-	'sequencing-type=s'   => \$sequencing_type,
-	'sequencing-system=s' => \$sequencing_system,
-	'strand-bias=s'       => \$strand_bias,
-	'seqid-weight=s'      => \$seqid_weight,
-	'number-of-reads=i'   => \$number_of_reads,
-	'weight-file=s'       => \$weight_file
+	'man|M'                 => \$man,
+	'help|h'                => \$help,
+	'verbose|v'             => \$LOG_VERBOSE,
+	'output-dir|o=s'        => \$output_dir,
+	'prefix|p=s'            => \$prefix,
+	'jobs|j=i'              => \$jobs,
+	'output-gzip|z'         => \$output_gzip,
+	'coverage|c=f'          => \$coverage,
+	'read-size|r=i'         => \$read_size,
+	'fragment-mean|m=i'     => \$fragment_mean,
+	'fragment-stdd|d=i'     => \$fragment_stdd,
+	'sequencing-error|e=f'  => \$sequencing_error,
+	'sequencing-type|t=s'   => \$sequencing_type,
+	'sequencing-system|s=s' => \$sequencing_system,
+	'strand-bias|b=s'       => \$strand_bias,
+	'seqid-weight|w=s'      => \$seqid_weight,
+	'number-of-reads|n=i'   => \$number_of_reads,
+	'weight-file|f=s'       => \$weight_file
 ) or error "Error in command line arguments";
 
 pod2usage(1) if $help;
@@ -174,6 +175,10 @@ if (@$err_list) {
 }
 
 # Concatenate output-dir to prefix
+if ($prefix =~ /([\/\\])/) {
+	error "Invalid character in 'prefix' option: $prefix => '$1'";
+}
+
 $prefix = File::Spec->catdir($output_dir, $prefix);
 
 # jobs > 0
@@ -275,7 +280,7 @@ my $time_stamp = localtime;
 my $progname = PROGNAME;
 log_msg <<"HEADER";
 -------------------------------------------------------
-   $progname -- IEP Hsopital Sírio-Libanês
+   $progname -- IEP Hospital Sírio-Libanês
    Date $time_stamp
 -------------------------------------------------------
 :: Parameters passed by the user: '@ARGV_STORED'
@@ -350,7 +355,7 @@ try {
 	error "$_";
 };
 
-log_msg ":: End simulation. So Long, and Thanks for All the Fish!";
+log_msg ":: End simulation. So long, and thanks for all the fish!";
 
 __END__
 
@@ -363,23 +368,24 @@ simulate_reads - Creates single-end and paired-end fastq reads for transcriptome
  simulate_reads [options] <fasta-file>
 
  Options:
-  --help               brief help message
-  --man                full documentation
-  --verbose            print log
-  --prefix             prefix output	
-  --jobs               number of jobs
-  --output-gzip        compress output file
-  --coverage           fasta-file coverage
-  --number-of-reads    directly set the number of reads
-  --sequencing-type    single-end or paired-end reads
-  --sequencing-system  illumina sequencing systems
-  --sequencing-error   sequencing error rate
-  --read-size          the read size
-  --fragment-mean      the mean size fragments for paired-end reads
-  --fragment-stdd      the standard deviation for fragment sizes
-  --strand-bias        which strand to be used: plus, minus and random
-  --seqid-weight       seqid raffle type: length, same, file
-  --weight-file        weight file when seqid-weight=file
+  -h, --help               brief help message
+  -M, --man                full documentation
+  -v, --verbose            print log
+  -p, --prefix             prefix output	
+  -o, --output-dir         output directory
+  -j, --jobs               number of jobs
+  -z, --output-gzip        compress output file
+  -c, --coverage           fasta-file coverage
+  -n, --number-of-reads    directly set the number of reads
+  -t, --sequencing-type    single-end or paired-end reads
+  -s, --sequencing-system  illumina sequencing systems
+  -e, --sequencing-error   sequencing error rate
+  -r, --read-size          the read size
+  -m, --fragment-mean      the mean size fragments for paired-end reads
+  -d, --fragment-stdd      the standard deviation for fragment sizes
+  -b, --strand-bias        which strand to be used: plus, minus and random
+  -w, --seqid-weight       seqid raffle type: length, same, file
+  -f, --weight-file        weight file when seqid-weight=file
 
 =head1 OPTIONS
 
@@ -391,6 +397,7 @@ just set a mandatory fasta file and it is enough. These default options are:
  --------------------------------
   verbose             none 
   prefix              out
+  output-dir          .
   jobs                1 
   output_gzip         none  
   coverage            1 
@@ -421,7 +428,11 @@ Prints log information to standard error
 =item B<--prefix>
 
 Concatenates the prefix to the output-file name.
-Useful for passing custom directory for output-file
+
+=item B<--output-dir>
+
+Creates output-file inside output-dir. If output-dir
+does not exist, it is created recursively
 
 =item B<--jobs>
 

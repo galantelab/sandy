@@ -19,6 +19,7 @@ requires       'Carp'                      => 1.38;
 requires       'File::Basename'            => 2.84;
 requires       'File::Spec'                => 3.47;
 requires       'File::Cat'                 => 1.20;
+requires       'File::Path'                => 2.09;
 requires       'Scalar::Util'              => 1.47;
 requires       'Storable'                  => 2.51;
 requires       'Parallel::ForkManager'     => 1.19;

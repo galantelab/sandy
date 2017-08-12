@@ -194,6 +194,7 @@ sub _build_weights {
 			return $self->calculate_weights(\%chr_size);
 		}
 		when ('file') {
+			log_msg ":: Indexing weight file '" . $self->weight_file . "' ...";
 			my $indexed_file = $self->index_weight_file($self->weight_file);
 			# Validate weight_file
 			croak "Error parsing '" . $self->weight_file . "': Maybe the file is empty\n"

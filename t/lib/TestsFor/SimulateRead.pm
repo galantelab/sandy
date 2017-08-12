@@ -24,6 +24,7 @@ use Fastq::PairedEnd;
 use autodie;
  
 use constant {
+	VERBOSE            => 0,
 	COUNT_LOOPS_BY     => 'coverage',
 	COVERAGE           => 8,
 	STRAND_BIAS        => 'random',
@@ -96,6 +97,7 @@ CAGGAGAAATGTATTAATGTGCCTTTCTAGTAACAGGTTTTTAGAAAGTCAAATATAAAC};
 
 sub setup : Tests(setup) {
 	my $test = shift;
+	$LOG_VERBOSE = VERBOSE;
 	$test->SUPER::setup;
 
 	my %default_attr = (
