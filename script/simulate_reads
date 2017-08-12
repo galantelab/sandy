@@ -123,7 +123,7 @@ GetOptions(
 	'output-dir|o=s'        => \$output_dir,
 	'prefix|p=s'            => \$prefix,
 	'jobs|j=i'              => \$jobs,
-	'output-gzip|z'         => \$output_gzip,
+	'output-gzip|z!'        => \$output_gzip,
 	'coverage|c=f'          => \$coverage,
 	'read-size|r=i'         => \$read_size,
 	'fragment-mean|m=i'     => \$fragment_mean,
