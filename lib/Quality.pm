@@ -23,17 +23,24 @@ use My::Types;
 use Storable qw/file_magic retrieve/;
 use File::Basename 'dirname';
 use File::Spec;
+use Math::CDF 'ppois';
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
 #-------------------------------------------------------------------------------
-has 'sequencing_system' => (is => 'ro', isa => 'My:SeqSys', required => 1, coerce => 1);
+has 'sequencing_system'  => (is => 'ro', isa => 'My:SeqSys', required => 1, coerce => 1);
 #TODO read_size will be limited according to the sequencing_system chosen
-has 'read_size'         => (is => 'ro', isa => 'My:IntGt0', required => 1);
-has '_quality'          => (
+has 'read_size'          => (is => 'ro', isa => 'My:IntGt0', required => 1);
+has '_quality_by_system' => (
 	is         => 'ro',
 	isa        => 'My:QualityH',
-	builder    => '_build_quality',
+	builder    => '_build_quality_by_system',
+	lazy_build => 1
+);
+has '_gen_quality'      => (
+	is         => 'ro',
+	isa        => 'CodeRef',
+	builder    => '_build_gen_quality',
 	lazy_build => 1
 );
 
@@ -51,7 +58,7 @@ my @QUALITY_MATRIX_PATH = (
 #                     -> { mtx } { len }
 #===  CLASS METHOD  ============================================================
 #        CLASS: Quality
-#       METHOD: _build_quality (BUILDER)
+#       METHOD: _build_quality_by_system (BUILDER)
 #   PARAMETERS: Void
 #      RETURNS: $quality_by_system My:QualityH
 #  DESCRIPTION: Searches into the paths for sequencing_system.perldata where is
@@ -61,7 +68,7 @@ my @QUALITY_MATRIX_PATH = (
 #     COMMENTS: none
 #     SEE ALSO: n/a
 #===============================================================================
-sub _build_quality {
+sub _build_quality_by_system {
 	my $self = shift;
 
 	my $quality_matrix;
@@ -87,7 +94,7 @@ sub _build_quality {
 	
 	my $quality_by_system = $quality->{$self->sequencing_system};
 	return $quality_by_system;
-} ## --- end sub _build_quality
+} ## --- end sub _build_quality_by_system
 
 #===  CLASS METHOD  ============================================================
 #        CLASS: Quality
@@ -105,17 +112,40 @@ sub _build_quality {
 #===============================================================================
 sub gen_quality {
 	my $self = shift;
-
-	my $quality_mtx = $self->_quality->{mtx};
-	my $quality_len = $self->_quality->{len};
-
+	my $gen_quality = $self->_gen_quality;
 	my $quality;
-	
 	for (my $i = 0; $i < $self->read_size; $i++) {
-		$quality .= $quality_mtx->[$i][int(rand($quality_len))];
+		$quality .= $gen_quality->($i);
 	}
-
 	return \$quality;
 } ## --- end sub gen_quality
+
+sub _build_gen_quality {
+	my $self = shift;
+	my $fun;
+	given ($self->sequencing_system) {
+		when ('poisson') {
+			$fun = sub { $self->_map_quality_by_poisson_dist };
+		}
+		default {
+			$fun = sub { $self->_map_quality_by_system };
+		}
+	}
+	return $fun;
+}
+
+sub _map_quality_by_system {
+	my ($self, $pos) = @_;
+	return $self->_quality_by_system->{mtx}[$pos][int(rand($self->_quality_by_system->{len}))];
+}
+
+sub _map_quality_by_poisson_dist {
+	my ($self, $pos) = @_;
+	my $prob = 0.00000001 + ppois($pos, $self->read_size);
+	my $score = (log($prob)/log(10)) * (-10);
+	my $rand_factor = rand($prob * 0.1);
+	my $ind = int(rand(2)) ? $score + $rand_factor : $score - $rand_factor;
+	return chr int($ind + 33);
+}
 
 ## --- end class Quality
