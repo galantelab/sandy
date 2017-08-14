@@ -63,12 +63,12 @@ subtype 'My:Weights'
 	=> as      'ArrayRef[My:Weight]'
 	=> message { "'$_' is not a Weight object array" };
 
-subtype 'My:SeqSys'
+subtype 'My:QualityP'
 	=> as      'Str'
-	=> where   { $_ eq 'hiseq' }
+	=> where   { $_ eq 'hiseq' || $_ eq 'poisson' }
 	=> message { "'$_' is not a valid sequencing system" };
 
-coerce 'My:SeqSys'
+coerce 'My:QualityP'
 	=> from    'Str'
 	=> via     { lc $_ };
 
