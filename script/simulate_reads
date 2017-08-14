@@ -47,12 +47,12 @@ use constant {
 	FRAGMENT_STDD         => 50,
 	SEQUENCING_ERROR      => 0.005,
 	READ_SIZE             => 101,
-	SEQUENCING_SYSTEM     => 'hiseq',
+	QUALITY_PROFILE       => 'hiseq',
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
 	STRAND_BIAS_OPT       => ['random', 'plus', 'minus'],
 	SEQID_WEIGHT_OPT      => ['length', 'same', 'file'],
 	SEQUENCING_TYPE_OPT   => ['single-end', 'paired-end'],
-	SEQUENCING_SYSTEM_OPT => ['hiseq']
+	QUALITY_PROFILE_OPT   => ['hiseq', 'poisson']
 };
 
 # Decisions
@@ -70,7 +70,7 @@ my $fragment_mean     = FRAGMENT_MEAN;
 my $fragment_stdd     = FRAGMENT_STDD;
 my $sequencing_error  = SEQUENCING_ERROR;
 my $sequencing_type   = SEQUENCING_TYPE;
-my $sequencing_system = SEQUENCING_SYSTEM;
+my $quality_profile   = QUALITY_PROFILE;
 my $strand_bias       = STRAND_BIAS;
 my $seqid_weight      = SEQID_WEIGHT;
 
@@ -83,10 +83,10 @@ my $man = 0;
 my $help = 0;
 
 # Possible alternatives
-my %STRAND_BIAS       = map { $_ => 1 } @{ &STRAND_BIAS_OPT       };
-my %SEQID_WEIGHT      = map { $_ => 1 } @{ &SEQID_WEIGHT_OPT      };
-my %SEQUENCING_TYPE   = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT   }; 
-my %SEQUENCING_SYSTEM = map { $_ => 1 } @{ &SEQUENCING_SYSTEM_OPT };
+my %STRAND_BIAS       = map { $_ => 1 } @{ &STRAND_BIAS_OPT     };
+my %SEQID_WEIGHT      = map { $_ => 1 } @{ &SEQID_WEIGHT_OPT    };
+my %SEQUENCING_TYPE   = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT }; 
+my %QUALITY_PROFILE   = map { $_ => 1 } @{ &QUALITY_PROFILE_OPT };
 
 # Mandatory arguments
 my $fasta_file;
@@ -130,7 +130,7 @@ GetOptions(
 	'fragment-stdd|d=i'     => \$fragment_stdd,
 	'sequencing-error|e=f'  => \$sequencing_error,
 	'sequencing-type|t=s'   => \$sequencing_type,
-	'sequencing-system|s=s' => \$sequencing_system,
+	'quality-profile|q=s'   => \$quality_profile,
 	'strand-bias|b=s'       => \$strand_bias,
 	'seqid-weight|w=s'      => \$seqid_weight,
 	'number-of-reads|n=i'   => \$number_of_reads,
@@ -191,9 +191,9 @@ if (0 > $sequencing_error || $sequencing_error > 1)  {
 	error "Option 'sequencing-error' requires a value between zero and one, not $sequencing_error";
 }
 
-# sequencing_system eq hiseq for now
-if (lc $sequencing_system ne SEQUENCING_SYSTEM) {
-	error "Option 'sequencing-system' has only one valid option for now: 'hiseq', not $sequencing_system";
+# quality_profile eq hiseq or poisson for now
+if (not exists $QUALITY_PROFILE{lc $quality_profile}) {
+	error "Option 'quality-profile' has only two valid options for now: 'hiseq' and 'poisson', not $quality_profile";
 }
 
 # strand_bias (STRAND_BIAS_OPT)
@@ -208,9 +208,14 @@ if (not exists $SEQUENCING_TYPE{$sequencing_type}) {
 	error "Option 'sequencing-type' requires one of these arguments: $opt not $sequencing_type";
 }
 
-# 0 < read_size <= 101. It will become more complex when sequencing_system increase
-if (0 > $read_size || $read_size > READ_SIZE) {
-	error "Option 'read-size' requires an integer greater than zero and lesser than " . READ_SIZE . ", not $read_size";
+# 0 < read_size <= 101. It will become more complex when quality_profile increase
+# # TODO: Parse quality_profile and read_size according to the constraints
+if (0 > $read_size) {
+	error "Option 'read-size' requires an integer greater than zero";
+}
+
+if ($read_size > READ_SIZE && $quality_profile eq 'hiseq') {
+	error "Option 'read-size' requires an integer lesser than " . READ_SIZE . ", not $read_size for 'hiseq' profile";
 }
 
 ## Dependently validated arguments
@@ -290,7 +295,7 @@ HEADER
 #  Construct the Fastq and SimulateRead classes
 #-------------------------------------------------------------------------------
 my %paired_end_param = (
-	sequencing_system => $sequencing_system,
+	quality_profile => $quality_profile,
 	sequencing_error  => $sequencing_error,
 	read_size         => $read_size,
 	fragment_mean     => $fragment_mean,
@@ -298,7 +303,7 @@ my %paired_end_param = (
 );
 
 my %single_end_param = (
-	sequencing_system => $sequencing_system,
+	quality_profile => $quality_profile,
 	sequencing_error  => $sequencing_error,
 	read_size         => $read_size,
 );
@@ -378,7 +383,7 @@ simulate_reads - Creates single-end and paired-end fastq reads for transcriptome
   -c, --coverage           fasta-file coverage
   -n, --number-of-reads    directly set the number of reads
   -t, --sequencing-type    single-end or paired-end reads
-  -s, --sequencing-system  illumina sequencing systems
+  -q, --quality-profile    illumina sequencing system profiles
   -e, --sequencing-error   sequencing error rate
   -r, --read-size          the read size
   -m, --fragment-mean      the mean size fragments for paired-end reads
@@ -408,7 +413,7 @@ just set a mandatory fasta file and it is enough. These default options are:
   fragment_stdd       50 
   sequencing_error    0.005
   read-size           101 
-  sequencing_system   hiseq 
+  quality-profile     hiseq 
  --------------------------------
 
 =over 8
@@ -476,9 +481,10 @@ fragment standard deviation
 
 Sets the sequencing error rate. Valid values are between zero and one
 
-=item B<--sequencing-system>
+=item B<--quality-profile>
 
-Sets the illumina sequencing system. For now, the unique valid value is hiseq
+Sets the illumina sequencing system profile for quality. For now, the unique
+valid values are hiseq and poisson
 
 =item B<--strand-bias>
 

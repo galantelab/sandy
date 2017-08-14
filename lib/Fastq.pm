@@ -24,8 +24,8 @@ use Quality;
 #-------------------------------------------------------------------------------
 #  Moose attributes
 #-------------------------------------------------------------------------------
-has 'sequencing_system' => (is => 'ro', isa => 'My:SeqSys', required => 1, coerce => 1);
-has 'read_size'         => (is => 'ro', isa => 'My:IntGt0', required => 1);
+has 'quality_profile'   => (is => 'ro', isa => 'My:QualityP', required => 1, coerce => 1);
+has 'read_size'         => (is => 'ro', isa => 'My:IntGt0',   required => 1);
 has '_quality'          => (
 	is         => 'ro',
 	isa        => 'Quality',
@@ -47,8 +47,8 @@ has '_quality'          => (
 sub _build_quality {
 	my $self = shift;
 	Quality->new(
-		sequencing_system => $self->sequencing_system,
-		read_size         => $self->read_size
+		quality_profile => $self->quality_profile,
+		read_size       => $self->read_size
 	);
 } ## --- end sub _build_quality
 
