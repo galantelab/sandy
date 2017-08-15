@@ -41,8 +41,8 @@ sub setup : Tests(setup) {
 	$test->SUPER::setup;
 
 	my %default_attr = (
-		sequencing_system => SEQ_SYS,
-		read_size         => QUALITY_SIZE,
+		quality_profile => SEQ_SYS,
+		read_size       => QUALITY_SIZE,
 		%child_arg
 	);
 

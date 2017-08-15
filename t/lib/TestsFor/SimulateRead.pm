@@ -114,7 +114,7 @@ sub setup : Tests(setup) {
 	my %sg_single_end = (
 		%default_attr,
 		fastq => Fastq::SingleEnd->new(
-			sequencing_system => 'HiSeq',
+			quality_profile   => 'HiSeq',
 			read_size         => QUALITY_SIZE,
 			sequencing_error  => 0.1,
 		)
@@ -123,7 +123,7 @@ sub setup : Tests(setup) {
 	my %sg_paired_end = (
 		%default_attr,
 		fastq => 	Fastq::PairedEnd->new(
-			sequencing_system => 'HiSeq',
+			quality_profile   => 'HiSeq',
 			read_size         => QUALITY_SIZE,
 			sequencing_error  => 0.1,
 			fragment_mean     => 50,
