@@ -19,7 +19,6 @@
 package Quality;
 
 use My::Base 'class';
-use My::Types;
 use Storable qw/file_magic retrieve/;
 use File::Basename 'dirname';
 use File::Spec;

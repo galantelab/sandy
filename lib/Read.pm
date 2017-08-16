@@ -18,7 +18,6 @@
 package Read;
 
 use My::Base 'class';
-use My::Types;
 
 #-------------------------------------------------------------------------------
 #  Moose attributes

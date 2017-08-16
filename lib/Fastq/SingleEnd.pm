@@ -18,7 +18,6 @@
 package Fastq::SingleEnd;
 
 use My::Base 'class';
-use My::Types;
 use Read::SingleEnd;
 
 extends 'Fastq';
