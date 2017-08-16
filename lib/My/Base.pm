@@ -16,7 +16,7 @@
 #===============================================================================
 
 package My::Base;
- 
+
 use 5.018;
 use strict;
 use warnings FATAL => 'all';
@@ -43,7 +43,7 @@ sub log_msg($) {
 }
 
 sub import {
-my ($class, @opts) = @_;
+	my ($class, @opts) = @_;
 	my $caller = caller;
 
 	# Import as in Moder::Perl
@@ -67,17 +67,17 @@ my ($class, @opts) = @_;
 		)
 	};
 
-    my @no_clean;
+	my @no_clean;
 	for my $opt_spec (@opts) {
 		my ($opt, $opt_args) = @$opt_spec;		
 		given ($opt) {
-            when ('dont_clean') {
-                if (!$opt_args) {
-                    Carp::carp "ignoring dont_clean option without arrayref of subroutine names to keep";
-                    next;
-                }
-                push @no_clean, @$opt_args;
-            };
+			when ('dont_clean') {
+				if (!$opt_args) {
+					Carp::carp "ignoring dont_clean option without arrayref of subroutine names to keep";
+					next;
+				}
+				push @no_clean, @$opt_args;
+			}
 			when ('class') {
 				require Moose;
 				require MooseX::StrictConstructor;
@@ -86,17 +86,16 @@ my ($class, @opts) = @_;
 				Moose->import({into=>$caller});
 				MooseX::StrictConstructor->import({into=>$caller});
 				MooseX::UndefTolerant->import({into=>$caller});
+				My::Types->import({into=>$caller});
 				after_runtime {
 					$caller->meta->make_immutable;
 				}
-			};
+			}
 			when ('role') {
 				require Moose::Role;
+				require My::Types;
 				Moose::Role->import({into=>$caller});
-			};
-			when ('types') {
-				require Moose::Util::TypeConstraints;
-				Moose::Util::TypeConstraints->import({into=>$caller});
+				My::Types->import({into=>$caller});
 			}
 			when ('test') {
 				use_module('Test::Most')->import::into($caller);
@@ -117,7 +116,7 @@ my ($class, @opts) = @_;
 			}
 			default {
 				Carp::carp "Ignoring unknown import option '$_'";
-			};
+			}
 		}
 	}
 
@@ -126,10 +125,10 @@ my ($class, @opts) = @_;
 	warnings->import('FATAL'=>'all');
 	warnings->unimport('experimental::smartmatch');
 
-    namespace::autoclean->import(
-        -cleanee => $caller,
-        -except  => \@no_clean,
-    );
+	namespace::autoclean->import(
+		-cleanee => $caller,
+		-except  => \@no_clean,
+	);
 
 	return;
 }

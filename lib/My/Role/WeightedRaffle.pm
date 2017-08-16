@@ -19,7 +19,6 @@
 package My::Role::WeightedRaffle;
 
 use My::Base 'role';
-use My::Types;
 
 requires '_build_weights';
 

@@ -18,7 +18,6 @@
 package SimulateRead;
 
 use My::Base 'class';
-use My::Types;
 use Fastq::SingleEnd;
 use Fastq::PairedEnd;
 use InterlaceProcesses;

@@ -17,7 +17,7 @@
 
 package My::Types;
  
-use My::Base 'types';
+use Moose::Util::TypeConstraints;
 
 subtype 'My:IntGt0'
 	=> as      'Int'
@@ -101,4 +101,4 @@ subtype 'My:CountLoopBy'
 	=> where   { $_ eq 'coverage' || $_ eq 'number-of-reads' }
 	=> message { "$_ is not a valid count_loops_by: 'coverage' or 'number-of-reads'" };
 
-## --- end class My::Types
+1; ## --- end class My::Types

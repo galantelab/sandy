@@ -18,7 +18,6 @@
 package Read::PairedEnd;
 
 use My::Base 'class';
-use My::Types;
 use Math::Random 'random_normal';
 
 use constant {

@@ -18,7 +18,6 @@
 package Fastq;
 
 use My::Base 'class';
-use My::Types;
 use Quality;
 
 #-------------------------------------------------------------------------------

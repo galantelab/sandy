@@ -18,7 +18,6 @@
 package Fastq::PairedEnd;
 
 use My::Base 'class';
-use My::Types;
 use Read::PairedEnd;
 
 extends 'Fastq';
