@@ -22,7 +22,7 @@ use My::Base;
 use My::Schema;
 use Path::Class 'file';
 use Getopt::Long;
-use Storable qw/freeze thaw/;
+use Storable qw/nfreeze thaw/;
 use Data::Dumper;
 
 my $progname = file(__FILE__)->basename;
@@ -95,7 +95,6 @@ my $quality_rs = $seq_sys_rs->create_related( qualities => {
 	size   => $size,
 	matrix => $bytes
 });
-
 
 log_msg ":: FINITO!";
 
