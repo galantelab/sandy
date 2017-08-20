@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS "sequencing_system" (
 	UNIQUE ("name")
 );
 
-CREATE TABLE IF NOT EXISTS"quality" (
+CREATE TABLE IF NOT EXISTS "quality" (
 	"id" INTEGER PRIMARY KEY,
 	"sequencing_system_id" INTEGER NOT NULL,
 	"source" TEXT DEFAULT "Not defined",
