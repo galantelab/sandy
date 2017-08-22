@@ -38,10 +38,15 @@ __PACKAGE__->table("quality");
 =head2 source
 
   data_type: 'text'
-  default_value: 'Not defined'
+  default_value: 'not defined'
   is_nullable: 1
 
 =head2 size
+
+  data_type: 'integer'
+  is_nullable: 0
+
+=head2 deepth
 
   data_type: 'integer'
   is_nullable: 0
@@ -59,8 +64,10 @@ __PACKAGE__->add_columns(
   "sequencing_system_id",
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "source",
-  { data_type => "text", default_value => "Not defined", is_nullable => 1 },
+  { data_type => "text", default_value => "not defined", is_nullable => 1 },
   "size",
+  { data_type => "integer", is_nullable => 0 },
+  "deepth",
   { data_type => "integer", is_nullable => 0 },
   "matrix",
   { data_type => "blob", is_nullable => 0 },
@@ -115,8 +122,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-08-20 17:28:40
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BuwTr5i9E1OqjlcMrBVb1g
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-08-22 15:42:00
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Zx+IzTQn9QrtCozqPBWYkw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -33,6 +33,12 @@ has '_quality'          => (
 	handles    => [qw{ gen_quality }]
 );
 
+sub BUILD {
+	my $self = shift;
+	## Just to ensure that the lazy attributes are built before &new returns
+	$self->_quality;
+}
+
 #===  CLASS METHOD  ============================================================
 #        CLASS: Fast
 #       METHOD: _build_quality (BUILDER)
