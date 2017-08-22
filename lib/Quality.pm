@@ -19,15 +19,12 @@
 package Quality;
 
 use My::Base 'class';
-use Storable qw/file_magic retrieve/;
-use File::Basename 'dirname';
-use File::Spec;
+use Quality::Handle;
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
 #-------------------------------------------------------------------------------
 has 'quality_profile'    => (is => 'ro', isa => 'My:QualityP', required => 1, coerce => 1);
-#TODO read_size will be limited according to the quality_profile chosen
 has 'read_size'          => (is => 'ro', isa => 'My:IntGt0',   required => 1);
 has '_quality_by_system' => (
 	is         => 'ro',
@@ -42,15 +39,11 @@ has '_gen_quality'      => (
 	lazy_build => 1
 );
 
-#-------------------------------------------------------------------------------
-#  Hardcoded paths for quality_profile
-#-------------------------------------------------------------------------------
-my $LIB_PATH            = dirname(__FILE__);
-my $QUALITY_MATRIX      = "quality_profile.perldata";
-my @QUALITY_MATRIX_PATH = (
-	File::Spec->catdir($LIB_PATH, "..", "share"),
-	File::Spec->catdir($LIB_PATH, "auto", "share", "dist", "Simulate-Reads")
-);
+sub BUILD {
+	my $self = shift;
+	## Just to ensure that the lazy attributes are built before &new returns
+	$self->_quality_by_system if $self->quality_profile ne 'poisson';
+}
 
 #-------------------------------------------------------------------------------
 #  Phred score table for poisson distribution simulation
@@ -104,8 +97,6 @@ sub _build_gen_quality {
 	return $fun;
 } ## --- end sub _build_gen_quality
 
-#TODO %quality { quality_profile } { size }
-#                     -> { mtx } { len }
 #===  CLASS METHOD  ============================================================
 #        CLASS: Quality
 #       METHOD: _build_quality_by_system (BUILDER)
@@ -120,30 +111,9 @@ sub _build_gen_quality {
 #===============================================================================
 sub _build_quality_by_system {
 	my $self = shift;
-
-	my $quality_matrix;
-
-	for my $path (@QUALITY_MATRIX_PATH) {
-		my $file = File::Spec->catfile($path, $QUALITY_MATRIX);
-		if (-f $file) {
-			$quality_matrix = $file;
-			last;
-		}
-	}
-	
-	croak "$QUALITY_MATRIX not found in @QUALITY_MATRIX_PATH" unless defined $quality_matrix;
-
-	my $info = file_magic $quality_matrix;
-	croak "$quality_matrix is not a perldata file" unless defined $info;
-
-	my $quality = retrieve $quality_matrix;
-	croak "Unable to retrieve from $quality_matrix!" unless defined $quality;
-
-	croak "Unable to retrieve " . $self->quality_profile . " from $quality_matrix"
-		unless exists $quality->{$self->quality_profile};
-	
-	my $quality_by_system = $quality->{$self->quality_profile};
-	return $quality_by_system;
+	my $db = Quality::Handle->new;
+	my ($matrix, $deepth) = $db->retrievedb($self->quality_profile, $self->read_size);
+	return { matrix => $matrix, deepth => $deepth };
 } ## --- end sub _build_quality_by_system
 
 sub gen_quality {
@@ -169,12 +139,12 @@ sub gen_quality {
 sub _gen_quality_by_system {
 	my $self = shift;
 
-	my $quality_mtx = $self->_quality_by_system->{mtx};
-	my $quality_len = $self->_quality_by_system->{len};
+	my $quality_matrix = $self->_quality_by_system->{matrix};
+	my $quality_deepth = $self->_quality_by_system->{deepth};
 	my $quality;
 
 	for (my $i = 0; $i < $self->read_size; $i++) {
-		$quality .= $quality_mtx->[$i][int(rand($quality_len))];
+		$quality .= $quality_matrix->[$i][int(rand($quality_deepth))];
 	}
 
 	return \$quality;

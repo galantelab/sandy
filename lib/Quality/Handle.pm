@@ -27,6 +27,9 @@ use List::Util 'shuffle';
 
 with 'My::Role::IO';
  
+#-------------------------------------------------------------------------------
+#  Hardcoded paths for quality_profile
+#-------------------------------------------------------------------------------
 my $DB = 'quality_profile.db';
 my @DB_PATH = (
 	file(__FILE__)->dir->parent->parent->file('share'),
@@ -60,11 +63,8 @@ sub insertdb {
 	my ($self, $file, $sequencing_system, $size, $source, $type) = @_;
 	my $schema = $self->schema;
 
-	log_msg ":: Checking if there is already a sequencing-system '$sequencing_system' ...";
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
 	if ($seq_sys_rs) {
-		log_msg ":: Found '$sequencing_system'";
-		log_msg ":: Searching for a quality entry '$sequencing_system:$size' ...";
 		my $quality_rs = $schema->resultset('Quality')->find(
 			{
 				'sequencing_system.name' => $sequencing_system,
@@ -75,51 +75,42 @@ sub insertdb {
 		if ($quality_rs) {
 			croak "There is already a quality entry for $sequencing_system:$size";
 		}
-		log_msg ":: Not found '$sequencing_system:$size'";
-	} else {
-		log_msg ":: sequencing-system '$sequencing_system' not found";
 	}
 
-	log_msg ":: Indexing '$file' ...";
-	my $arr;
+	my ($arr, $deepth);
 	given ($type) {
 		when ('raw') {
-			$arr = $self->_index_quality_raw($file, $size);
+			($arr, $deepth) = $self->_index_quality_raw($file, $size);
 		}
 		when ('fastq') {
-			$arr = $self->_index_quality_fastq($file, $size);
+			($arr, $deepth) = $self->_index_quality_fastq($file, $size);
 		}
 		default {
 			croak "Unknown indexing type '$type': Valids are 'raw' and 'fastq'";
 		}
 	}
 
-	log_msg ":: Converting array to bytes ...";
 	my $bytes = nfreeze $arr;
-	log_msg ":: Compressing bytes ...";
 	gzip \$bytes => \my $compressed;
 
 	unless ($seq_sys_rs) {
-		log_msg ":: Creating sequencing-system entry for '$sequencing_system' ...";
 		$seq_sys_rs = $schema->resultset('SequencingSystem')->create({ name => $sequencing_system });
 	}
 
-	log_msg ":: Storing quality matrix entry ...";
 	my $quality_rs = $seq_sys_rs->create_related( qualities => {
 		source => $source,
 		size   => $size,
+		deepth => $deepth,
 		matrix => $compressed
 	});
 }
 
 sub _index_quality {
 	my ($self, $quality_ref, $size) = @_;
-	my $number_of_quality_entries = 1000;
+	my $deepth_default = 1000;
 
-	my $number_of_entries = scalar @$quality_ref;
-	log_msg "entry: $number_of_entries";
-	my $slice = $number_of_entries < $number_of_quality_entries ? $number_of_entries : $number_of_quality_entries;
-	log_msg "slice: $slice";
+	my $deepth = scalar @$quality_ref;
+	my $slice = $deepth < $deepth_default ? $deepth : $deepth_default;
 	my @quality_shuffled = shuffle @$quality_ref;
 	my @quality_slice = splice(@quality_shuffled, 0, $slice);
 
@@ -131,13 +122,12 @@ sub _index_quality {
 		}
 	}
 
-	return \@arr;
+	return (\@arr, $slice);
 }
 
 sub _index_quality_raw {
 	my ($self, $file, $size) = @_;
 	my $fh = $self->my_open_r($file);
-	my $number_of_quality_entries = 1000;
 	my @arr;
 	my $line = 0;
 
@@ -158,7 +148,6 @@ sub _index_quality_raw {
 sub _index_quality_fastq {
 	my ($self, $file, $size) = @_;
 	my $fh = $self->my_open_r($file);
-	my $number_of_quality_entries = 1000;
 	my $line = 0;
 	my @quality;
 
@@ -207,9 +196,12 @@ sub retrievedb {
 	croak "Not found size '$size' for sequencing system '$sequencing_system'" unless defined $quality_rs;
 
 	my $compressed = $quality_rs->matrix;
+	my $deepth = $quality_rs->deepth;
 	croak "Quality profile not found for '$sequencing_system:$size'" unless defined $compressed;
+
 	gunzip \$compressed => \my $bytes;
-	return thaw $bytes;
+	my $matrix = thaw $bytes;
+	return ($matrix, $deepth);
 }
 
 sub make_report {
