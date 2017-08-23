@@ -62,6 +62,7 @@ unless ($size)              { die "size not defined\n"                => usage()
 unless ($size > 0)          { die "size must be a positive integer\n" => usage() }
 
 $db->insertdb($matrix_file, $sequencing_system, $size, $source, $type);
+#$db->deletedb($sequencing_system, $size);
 #my $q = $db->retrievedb($sequencing_system, $size);
 #print Dumper($q);
 

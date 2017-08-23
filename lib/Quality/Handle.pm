@@ -65,13 +65,7 @@ sub insertdb {
 
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
 	if ($seq_sys_rs) {
-		my $quality_rs = $schema->resultset('Quality')->find(
-			{
-				'sequencing_system.name' => $sequencing_system,
-				'me.size'                => $size 
-			},
-			{  prefetch => ['sequencing_system'] }
-		);
+		my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
 		if ($quality_rs) {
 			croak "There is already a quality entry for $sequencing_system:$size";
 		}
@@ -93,6 +87,9 @@ sub insertdb {
 	my $bytes = nfreeze $arr;
 	gzip \$bytes => \my $compressed;
 
+	# Begin transation
+	my $guard = $schema->txn_scope_guard;
+
 	unless ($seq_sys_rs) {
 		$seq_sys_rs = $schema->resultset('SequencingSystem')->create({ name => $sequencing_system });
 	}
@@ -103,6 +100,9 @@ sub insertdb {
 		deepth => $deepth,
 		matrix => $compressed
 	});
+
+	# End transation
+	$guard->commit;
 }
 
 sub _index_quality {
@@ -186,13 +186,7 @@ sub retrievedb {
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
 	croak "'$sequencing_system' not found into database" unless defined $seq_sys_rs;
 
-	my $quality_rs = $schema->resultset('Quality')->find(
-		{
-			'sequencing_system.name' => $sequencing_system,
-			'size'                   => $size
-		},
-		{ prefetch => ['sequencing_system'] }
-	); 
+	my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
 	croak "Not found size '$size' for sequencing system '$sequencing_system'" unless defined $quality_rs;
 
 	my $compressed = $quality_rs->matrix;
@@ -202,6 +196,26 @@ sub retrievedb {
 	gunzip \$compressed => \my $bytes;
 	my $matrix = thaw $bytes;
 	return ($matrix, $deepth);
+}
+
+sub deletedb {
+	my ($self, $sequencing_system, $size) = @_;
+	my $schema = $self->schema;
+
+	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
+	croak "'$sequencing_system' not found into database" unless defined $seq_sys_rs;
+	my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
+	croak "'$sequencing_system:$size' not found into database" unless defined $quality_rs;
+
+	# Begin transation
+	my $guard = $schema->txn_scope_guard;
+	
+	$quality_rs->delete;
+	$seq_sys_rs->search_related('qualities' => undef)->single
+		or $seq_sys_rs->delete;
+
+	# End transation
+	$guard->commit;
 }
 
 sub make_report {
