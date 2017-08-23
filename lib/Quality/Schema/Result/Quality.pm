@@ -41,6 +41,12 @@ __PACKAGE__->table("quality");
   default_value: 'not defined'
   is_nullable: 1
 
+=head2 is_user_provided
+
+  data_type: 'integer'
+  default_value: 1
+  is_nullable: 1
+
 =head2 size
 
   data_type: 'integer'
@@ -65,6 +71,8 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
   "source",
   { data_type => "text", default_value => "not defined", is_nullable => 1 },
+  "is_user_provided",
+  { data_type => "integer", default_value => 1, is_nullable => 1 },
   "size",
   { data_type => "integer", is_nullable => 0 },
   "deepth",
@@ -122,8 +130,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-08-22 15:42:00
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Zx+IzTQn9QrtCozqPBWYkw
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-08-23 14:13:04
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:h9gLajK6ar47Dwo5XqfoxQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

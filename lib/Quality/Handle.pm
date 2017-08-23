@@ -56,11 +56,20 @@ sub _build_schema {
 	}
 
 	croak "$DB not found in @DB_PATH" unless defined $db;
-	return Quality::Schema->connect("dbi:SQLite:$db", "", "", { RaiseError => 1, PrintError => 0 });
+	return Quality::Schema->connect(
+		"dbi:SQLite:$db",
+		"", 
+		"", 
+		{
+			RaiseError    => 1,
+			PrintError    => 0,
+			on_connect_do => 'PRAGMA foreign_keys = ON'
+		}
+	);
 }
 
 sub insertdb {
-	my ($self, $file, $sequencing_system, $size, $source, $type) = @_;
+	my ($self, $file, $sequencing_system, $size, $source, $is_user_provided, $type) = @_;
 	my $schema = $self->schema;
 
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
@@ -95,10 +104,11 @@ sub insertdb {
 	}
 
 	my $quality_rs = $seq_sys_rs->create_related( qualities => {
-		source => $source,
-		size   => $size,
-		deepth => $deepth,
-		matrix => $compressed
+		source           => $source,
+		is_user_provided => $is_user_provided,
+		size             => $size,
+		deepth           => $deepth,
+		matrix           => $compressed
 	});
 
 	# End transation
@@ -206,6 +216,7 @@ sub deletedb {
 	croak "'$sequencing_system' not found into database" unless defined $seq_sys_rs;
 	my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
 	croak "'$sequencing_system:$size' not found into database" unless defined $quality_rs;
+	croak "'$sequencing_system:$size' is not a user provided entry. Cannot be deleted" unless $quality_rs->is_user_provided;
 
 	# Begin transation
 	my $guard = $schema->txn_scope_guard;
@@ -213,6 +224,30 @@ sub deletedb {
 	$quality_rs->delete;
 	$seq_sys_rs->search_related('qualities' => undef)->single
 		or $seq_sys_rs->delete;
+
+	# End transation
+	$guard->commit;
+}
+
+sub restoredb {
+	my $self = shift;
+	my $schema = $self->schema;
+
+	# Begin transation
+	my $guard = $schema->txn_scope_guard;
+
+	my $seq_sys_rs = $schema->resultset('SequencingSystem')->search(
+		{ is_user_provided => 1  },
+		{ prefetch => ['qualities'] }
+	);
+
+	$seq_sys_rs->delete_all;
+
+	my $quality_rs = $schema->resultset('Quality')->search(
+		{ is_user_provided => 1 }
+	);
+
+	$quality_rs->delete;
 
 	# End transation
 	$guard->commit;
@@ -230,8 +265,9 @@ sub make_report {
 
 	while (my $quality = $quality_rs->next) {
 		my %hash = (
-			size   => $quality->size,
-			source => $quality->source
+			size     => $quality->size,
+			source   => $quality->source,
+			provider => $quality->is_user_provided ? "user" : "vendor"
 		);
 		push @{ $report{$quality->sequencing_system->name} } => \%hash;
 	}

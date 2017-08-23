@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS "quality" (
 	"id" INTEGER PRIMARY KEY,
 	"sequencing_system_id" INTEGER NOT NULL,
 	"source" TEXT DEFAULT "not defined",
+	"is_user_provided" INTEGER DEFAULT 1,
 	"size" INTEGER NOT NULL,
 	"deepth" INTEGER NOT NULL,
 	"matrix" BLOB NOT NULL,

@@ -34,6 +34,7 @@ my $progname = file(__FILE__)->basename;
 my ($sequencing_system, $size, $source);
 my $type = 'raw';
 my $help = 0;
+my $is_user_provided = 0,
 $LOG_VERBOSE = 0;
 
 unless (@ARGV) {
@@ -47,7 +48,8 @@ GetOptions (
 	'sequencing-system|q=s' => \$sequencing_system,
 	'size|s=i'              => \$size,
 	'source|f=s'            => \$source,
-    'type|t=s'              => \$type
+    'type|t=s'              => \$type,
+	'is_user_provided|u'    => \$is_user_provided
 ) or die "Error in command line arguments";
 
 usage() && exit 0 if $help;
@@ -61,7 +63,8 @@ unless ($source)            { die "source not defined\n"              => usage()
 unless ($size)              { die "size not defined\n"                => usage() }
 unless ($size > 0)          { die "size must be a positive integer\n" => usage() }
 
-$db->insertdb($matrix_file, $sequencing_system, $size, $source, $type);
+#$db->insertdb($matrix_file, $sequencing_system, $size, $source, $is_user_provided, $type);
+$db->restoredb;
 #$db->deletedb($sequencing_system, $size);
 #my $q = $db->retrievedb($sequencing_system, $size);
 #print Dumper($q);
@@ -74,14 +77,14 @@ sub print_report {
 	my $report_ref = shift;
 	return if not defined $report_ref;
 
-	my $format = "\t%*s\t%*s\t%*s\n";
-	my ($s1, $s2, $s3) = map {length} qw/sequencing_system/x3;
-	printf $format => $s1, "sequencing system", $s2, "size", $s3, "source";
+	my $format = "\t%*s\t%*s\t%*s\t%*s\n";
+	my ($s1, $s2, $s3, $s4) = map {length} qw/sequencing_system/x4;
+	printf $format => $s1, "sequencing system", $s2, "size", $s3, "source", $s4, "provider";
 
 	for my $sequencing_system (sort keys %$report_ref) {
 		my $attr = $report_ref->{$sequencing_system};
 		for my $entry (sort { $a->{size} <=> $b->{size} } @$attr) {
-			printf $format => $s1, $sequencing_system, $s2, $entry->{size}, $s3, $entry->{source};
+			printf $format => $s1, $sequencing_system, $s2, $entry->{size}, $s3, $entry->{source}, $s4, $entry->{provider};
 		}
 	}
 }
