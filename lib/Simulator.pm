@@ -1,7 +1,7 @@
 #
 #===============================================================================
 #
-#         FILE: SimulateRead.pm
+#         FILE: Simulator.pm
 #
 #  DESCRIPTION: Simulates single-end and pair-end reads
 #
@@ -15,7 +15,7 @@
 #     REVISION: ---
 #===============================================================================
 
-package SimulateRead;
+package Simulator;
 
 use My::Base 'class';
 use Fastq::SingleEnd;
@@ -65,7 +65,7 @@ has '_seqid_raffle'  => (
 );
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateRead
+#        CLASS: Simulator
 #       METHOD: BUILD (Moose)
 #   PARAMETERS: Void
 #      RETURNS: Void
@@ -105,7 +105,7 @@ sub BUILD {
 } ## --- end sub BUILD
  
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateRead
+#        CLASS: Simulator
 #       METHOD: _build_strand (BUILDER)
 #   PARAMETERS: Void
 #      RETURNS: Ref Code
@@ -127,7 +127,7 @@ sub _build_strand {
 } ## --- end sub _build_strand
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateRead
+#        CLASS: Simulator
 #       METHOD: _build_fasta (BUILDER)
 #   PARAMETERS: Void
 #      RETURNS: $indexed_fasta My:IdxFasta
@@ -174,7 +174,7 @@ sub _build_fasta {
 } ## --- end sub _build_fasta
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateRead
+#        CLASS: Simulator
 #       METHOD: _build_weights (BUILDER)
 #   PARAMETERS: Void
 #      RETURNS: My:Weights
@@ -219,7 +219,7 @@ sub _build_weights {
 } ## --- end sub _build_weights
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateRead
+#        CLASS: Simulator
 #       METHOD: _build_seqid_raffle (BUILDER)
 #   PARAMETERS: Void
 #      RETURNS: Ref Code
@@ -248,7 +248,7 @@ sub _build_seqid_raffle {
 } ## --- end sub _build_seqid_raffle
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateRead
+#        CLASS: Simulator
 #       METHOD: _calculate_number_of_reads (PRIVATE)
 #   PARAMETERS: Void
 #      RETURNS: $number_of_reads Int > 0
@@ -297,7 +297,7 @@ sub _calculate_number_of_reads {
 } ## --- end sub _calculate_number_of_reads
 
 #===  CLASS METHOD  ============================================================
-#        CLASS: SimulateRead
+#        CLASS: Simulator
 #       METHOD: run_simulation
 #   PARAMETERS: Void
 #      RETURNS: Void
@@ -460,4 +460,4 @@ sub run_simulation {
 	}
 } ## --- end sub run_simulation
 
-## --- end class SimulateRead
+## --- end class Simulator
