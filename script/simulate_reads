@@ -26,7 +26,7 @@ use File::Basename 'basename';
 use File::Path 'make_path';
 use Fastq::SingleEnd;
 use Fastq::PairedEnd;
-use SimulateRead;
+use Simulator;
 
 #-------------------------------------------------------------------------------
 #  Default values, constants and definitions
@@ -292,7 +292,7 @@ log_msg <<"HEADER";
 HEADER
 
 #-------------------------------------------------------------------------------
-#  Construct the Fastq and SimulateRead classes
+#  Construct the Fastq and Simulator classes
 #-------------------------------------------------------------------------------
 my %paired_end_param = (
 	quality_profile => $quality_profile,
@@ -345,7 +345,7 @@ my $simulator;
 log_msg ":: Creating simulator ...";
 log_msg_opt %simulator_param;
 try {
-	$simulator = SimulateRead->new(%simulator_param);
+	$simulator = Simulator->new(%simulator_param);
 } catch {
 	error "$_";
 };

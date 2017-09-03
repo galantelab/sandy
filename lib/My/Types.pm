@@ -22,27 +22,27 @@ use Moose::Util::TypeConstraints;
 subtype 'My:IntGt0'
 	=> as      'Int'
 	=> where   { $_ > 0 } 
-	=> message { "Value must be greater than zero, not $_" };
+	=> message { "Value must be an integer greater than zero, not '$_'" };
 
 subtype 'My:IntGe0'
 	=> as      'Int'
 	=> where   { $_ >= 0 } 
-	=> message { "Value must be greater or equal to zero, not $_" };
+	=> message { "Value must be an integer greater or equal to zero, not '$_'" };
 
 subtype 'My:NumGt0'
 	=> as      'Num'
 	=> where   { $_ > 0 } 
-	=> message { "Value must be greater than zero, not $_" };
+	=> message { "Value must be a number greater than zero, not '$_'" };
 
 subtype 'My:NumGe0'
 	=> as      'Num'
 	=> where   { $_ >= 0 } 
-	=> message { "Value must be greater or equal to zero, not $_" };
+	=> message { "Value must be a number greater or equal to zero, not '$_'" };
 
 subtype 'My:NumHS'
 	=> as      'Num'
 	=> where   { $_ >= 0 && $_ <= 1 }
-	=> message { "Value must be between zero and one, not $_" };
+	=> message { "Value must be a number between zero and one, not '$_'" };
 
 subtype 'My:File'
 	=> as      'Str'
@@ -75,30 +75,35 @@ coerce 'My:QualityP'
 subtype 'My:QualityH'
 	=> as      'HashRef'
 	=> where   { exists $_->{matrix} && exists $_->{deepth} }
-	=> message { "$_ is not a valid quality hash" };
+	=> message { "'$_' is not a valid quality hash" };
 
 subtype 'My:IdFa'
 	=> as      'HashRef'
 	=> where   { exists $_->{seq} && exists $_->{size} }
-	=> message { "$_ is not a valid fasta id" };
+	=> message { "'$_' is not a valid fasta id" };
 
 subtype 'My:IdxFasta'
 	=> as      'HashRef[My:IdFa]'
-	=> message { "$_ is not a valid indexed fasta" };
+	=> message { "'$_' is not a valid indexed fasta" };
 
 subtype 'My:StrandBias'
 	=> as      'Str'
 	=> where   { $_ eq 'plus' || $_ eq 'minus' || $_ eq 'random' }
-	=> message { "$_ is not a valid strand_bias: 'plus', 'minus' or 'random'" };
+	=> message { "'$_' is not a valid strand-bias: 'plus', 'minus' or 'random'" };
 
 subtype 'My:SeqIdWeight'
 	=> as      'Str'
 	=> where   { $_ eq 'length' || $_ eq 'same' || $_ eq 'file' }
-	=> message { "$_ is not a valid seqid_weight: 'length', 'same' or 'file'" };
+	=> message { "'$_' is not a valid seqid-weight: 'length', 'same' or 'file'" };
+
+subtype 'My:SeqType'
+	=> as      'Str'
+	=> where   { $_ eq 'single-end' || $_ eq 'paired-end' }
+	=> message { "'$_' is not a valid sequencing-type: 'single-end' or 'paired-end'" };
 
 subtype 'My:CountLoopBy'
 	=> as      'Str'
 	=> where   { $_ eq 'coverage' || $_ eq 'number-of-reads' }
-	=> message { "$_ is not a valid count_loops_by: 'coverage' or 'number-of-reads'" };
+	=> message { "'$_' is not a valid count_loops_by: 'coverage' or 'number-of-reads'" };
 
 1; ## --- end class My::Types
