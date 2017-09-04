@@ -22,4 +22,8 @@ use strict;
 use warnings;
 use utf8;
 
+use SimulateReads;
+my $app = SimulateReads->new;
+#my $app = SimulateReads->new(argv => \@ARGV);
+$app->run;
 
