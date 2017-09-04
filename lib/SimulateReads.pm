@@ -40,12 +40,38 @@ sub error {
 	my ($self, $error_msg) = @_;
 	my $progname = $self->progname;
 	chomp $error_msg;
-	die "$progname: $error_msg\nTry '$progname --help' for more information\n";
+	die "$progname: $error_msg\n";
+}
+
+sub _try_msg {
+	my $self = shift;
+	return sprintf "Try '%s --help' for more information" => $self->progname;
+}
+
+sub command_loading {
+	my ($self, $command_class) = @_;
+	eval "require $command_class";
+	die $@ if $@;
+
+	my $command_class_path = $INC{ file(split /::/ => "$command_class.pm") }
+		or die "$command_class not found in \%INC";
+
+	return $command_class_path;
 }
 
 sub opt_spec {
 	'help|h',
 	'man|M'
+}
+
+sub command_map {
+	digest    => 'SimulateReads::Command::Digest',
+	qualitydb => 'SimulateReads::Command::QualityDB'
+}
+
+sub command_map_bultin {
+	help      => \&help_command,
+	man       => \&man_command
 }
 
 sub help_text {
@@ -60,31 +86,62 @@ sub man_text {
 	pod2usage(-input => $path, -verbose => 2, -exitval => 0);
 }
 
-sub command_map {
-	digest    => 'SimulateReads::Command::Digest',
-	qualitydb => 'SimulateReads::Command::QualityDB'
+sub help_command {
+	my ($self, $command_path, $argv) = @_;
+	$self->error("Too many arguments: '@$argv'") if @$argv;
+	my $path = $self->command_loading($command_path) if defined $command_path;
+	return $self->help_text($path);
+}
+
+sub man_command {
+	my ($self, $command_path, $argv) = @_;
+	$self->error("Too many arguments: '@$argv'") if @$argv;
+	my $path = $self->command_loading($command_path) if defined $command_path;
+	return $self->man_text($path);
+}
+
+sub run_command_builtin {
+	my ($self, $command_name, $command_method, $argv) = @_;
+	$self->progname($self->progname . " $command_name");
+
+	my %command_map = $self->command_map;
+	my %command_map_bultin = $self->command_map_bultin;
+	my $arg_path;
+
+	if (@$argv) {
+		my $arg = shift @$argv;
+		given ($arg) {
+			when (%command_map_bultin) {
+				# Do nothing. It prints tha app help/man
+			}
+			when (%command_map) {
+				$arg_path = $command_map{$arg};
+			}
+			default {
+				$self->error("Unknown argument: '$arg'");
+			}
+		}
+	}
+
+	$self->$command_method($arg_path, $argv);
 }
 
 sub run_command {
 	my ($self, $command_name, $command_class, $argv) = @_;
 	$self->progname($self->progname . " $command_name");	
 
-	eval "require $command_class";
-	die $@ if $@;
-
-	my $command_class_path = $INC{ file(split /::/ => "$command_class.pm") }
-		or die "$command_class not found in \%INC";
-
+	my $command_class_path = $self->command_loading($command_class);
 	my $o = $command_class->new;
 	die "Not defined method 'execute' to $command_class" unless $o->can('execute');
 
+	# $args has at least $argv if no opt has been passed
 	my ($opts, $args) = (undef, $argv);
 
 	if ($o->can('opt_spec')) {
 		try	{
 			($opts, $args) = $self->parser($argv, $o->opt_spec);	
 		} catch  {
-			$self->error($_);	
+			$self->error("$_" . $self->_try_msg);	
 		};
 	}
 
@@ -92,7 +149,7 @@ sub run_command {
 		try {
 			$o->validate($opts, $args);
 		} catch {
-			$self->error($_);	
+			$self->error("$_" . $self->_try_msg);	
 		};
 	}
 
@@ -110,15 +167,15 @@ sub run {
 	my $self = shift;
 	my @argv = @{ $self->argv };
 	my %command_map = $self->command_map;
+	my %command_map_bultin = $self->command_map_bultin;
 
 	$self->help_text unless scalar @argv;
 
 	given ($argv[0]) {
-		when ('help') {
-			say "help command";
-		}
-		when ('command') {
-			say 'command';
+		when (%command_map_bultin) {
+			my $command_name = shift @argv;	
+			my $command_method = $command_map_bultin{$command_name};
+			$self->run_command_builtin($command_name, $command_method, \@argv);
 		}
 		when (%command_map) {
 			my $command_name = shift @argv;	
@@ -130,14 +187,14 @@ sub run {
 			try {
 				($opts, $args) = $self->parser(\@argv, $self->opt_spec);
 			} catch {
-				$self->error($_);
+				$self->error("$_" . $self->_try_msg);
 			};
 			$self->error("Too many arguments: '@$args'") if @$args;
 			$self->help_text if $opts->{help};
 			$self->man_text if $opts->{man};
 		}
 		default {
-			$self->error("Unknown argument '$argv[0]'");
+			$self->error("Unknown argument '$argv[0]'\n" . $self->_try_msg);
 		}
 	}
 }
@@ -159,6 +216,7 @@ simulate_reads - Creates single-end and paired-end fastq reads for transcriptome
  
  Commands:
   help                     show application or command-specific help
+  man                      show application or command-specific documentation
   digest                   digest a fasta file into single|paired-end reads 
   qualitydb                manage quality profile database
 
