@@ -25,7 +25,7 @@ sub parser {
 	my @argv = @{ $argv };
 	my %opts;
 
-	Getopt::Long::Configure("bundling");
+	Getopt::Long::Configure('gnu_getopt');
 
 	GetOptionsFromArray(
 		\@argv,
