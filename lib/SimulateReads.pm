@@ -50,10 +50,12 @@ sub _try_msg {
 
 sub command_loading {
 	my ($self, $command_class) = @_;
-	eval "require $command_class";
+	my $command_pm = file(split /::/ => "$command_class.pm");
+
+	eval { require $command_pm };
 	die $@ if $@;
 
-	my $command_class_path = $INC{ file(split /::/ => "$command_class.pm") }
+	my $command_class_path = $INC{ $command_pm }
 		or die "$command_class not found in \%INC";
 
 	return $command_class_path;
@@ -89,14 +91,16 @@ sub man_text {
 sub help_command {
 	my ($self, $command_path, $argv) = @_;
 	$self->error("Too many arguments: '@$argv'") if @$argv;
-	my $path = $self->command_loading($command_path) if defined $command_path;
+	my $path;
+	$path = $self->command_loading($command_path) if defined $command_path;
 	return $self->help_text($path);
 }
 
 sub man_command {
 	my ($self, $command_path, $argv) = @_;
 	$self->error("Too many arguments: '@$argv'") if @$argv;
-	my $path = $self->command_loading($command_path) if defined $command_path;
+	my $path;
+	$path = $self->command_loading($command_path) if defined $command_path;
 	return $self->man_text($path);
 }
 
@@ -145,6 +149,9 @@ sub run_command {
 		};
 	}
 
+	$self->help_text($command_class_path) if $opts->{help};
+	$self->man_text($command_class_path) if $opts->{man};
+
 	# Deep copy the arguments, just in case the user
 	# manages to mess with
 	my %opts_copy = %$opts;
@@ -165,9 +172,6 @@ sub run_command {
 			$self->error("$_" . $self->_try_msg);	
 		};
 	}
-
-	$self->help_text($command_class_path) if $opts->{help};
-	$self->man_text($command_class_path) if $opts->{man};
 
 	try {
 		$o->execute($opts, $args);
