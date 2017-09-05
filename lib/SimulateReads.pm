@@ -145,9 +145,22 @@ sub run_command {
 		};
 	}
 
-	if ($o->can('validate')) {
+	# Deep copy the arguments, just in case the user
+	# manages to mess with
+	my %opts_copy = %$opts;
+	my @args_copy = @$args;
+
+	if ($o->can('validate_args')) {
 		try {
-			$o->validate($opts, $args);
+			$o->validate_args(\@args_copy);
+		} catch {
+			$self->error("$_" . $self->_try_msg);	
+		};
+	}
+
+	if ($o->can('validate_opts')) {
+		try {
+			$o->validate_opts(\%opts_copy);
 		} catch {
 			$self->error("$_" . $self->_try_msg);	
 		};
@@ -208,15 +221,18 @@ simulate_reads - Creates single-end and paired-end fastq reads for transcriptome
 =head1 SYNOPSIS
 
  simulate_reads [options]
- simulate_reads <command> --help
+ simulate_reads help <command>
+ simulate_reads <command> ...
 
  Options:
   -h, --help               brief help message
   -M, --man                full documentation
  
- Commands:
+ Help commands
   help                     show application or command-specific help
   man                      show application or command-specific documentation
+
+ Main commands:
   digest                   digest a fasta file into single|paired-end reads 
   qualitydb                manage quality profile database
 
