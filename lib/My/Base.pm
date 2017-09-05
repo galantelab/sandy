@@ -35,7 +35,7 @@ use Module::Runtime 'use_module';
 binmode STDERR, ":encoding(utf8)";
 our $LOG_VERBOSE = 1;
 
-sub log_msg($) {
+sub log_msg {
 	my ($msg) = @_;
 	return if not defined $msg;
 	chomp $msg;
@@ -56,7 +56,7 @@ sub import {
 
 	# Custom handy function
 	do {
-		no strict 'refs';
+		no strict 'refs'; ## no critic
 		*{"${caller}\:\:log_msg"} = \&log_msg;
 		*{"${caller}\:\:LOG_VERBOSE"} = \$LOG_VERBOSE;
 	};

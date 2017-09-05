@@ -21,6 +21,7 @@ use My::Base 'class';
 use Path::Class 'file';
 use File::Path 'make_path';
 use Pod::Usage;
+use Quality::Handle;
 use Fastq::SingleEnd;
 use Fastq::PairedEnd;
 use Simulator;
@@ -29,8 +30,7 @@ use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
 	STRAND_BIAS_OPT       => ['random', 'plus', 'minus'],
 	SEQID_WEIGHT_OPT      => ['length', 'same', 'file'],
-	SEQUENCING_TYPE_OPT   => ['single-end', 'paired-end'],
-	QUALITY_PROFILE_OPT   => ['hiseq', 'poisson']
+	SEQUENCING_TYPE_OPT   => ['single-end', 'paired-end']
 };
 
 sub opt_spec {
@@ -91,6 +91,11 @@ sub _log_msg_opt {
 	}
 }
 
+sub _quality_profile_report {
+	my $quality = Quality::Handle->new;
+	return $quality->make_report;
+}
+
 sub validate_args {
 	my ($self, $args) = @_;
 	my $fasta_file = shift @$args;
@@ -121,7 +126,7 @@ sub validate_opts {
 	my %STRAND_BIAS       = map { $_ => 1 } @{ &STRAND_BIAS_OPT     };
 	my %SEQID_WEIGHT      = map { $_ => 1 } @{ &SEQID_WEIGHT_OPT    };
 	my %SEQUENCING_TYPE   = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT }; 
-	my %QUALITY_PROFILE   = map { $_ => 1 } @{ &QUALITY_PROFILE_OPT };
+	my %QUALITY_PROFILE   = %{ $self->_quality_profile_report };
 
 	#  prefix
 	if ($opts->{prefix} =~ /([\/\\])/) {
@@ -138,15 +143,29 @@ sub validate_opts {
 		die "Option 'sequencing-error' requires a value between zero and one, not $opts->{'sequencing-error'}\n";
 	}
 
-	# quality_profile eq hiseq or poisson for now TODO update for qualitydb
-	if (not exists $QUALITY_PROFILE{$opts->{'quality-profile'}}) {
-		die "Option 'quality-profile' has only two valid options for now: 'hiseq' and 'poisson', not $opts->{'quality-profile'}\n";
+	# quality_profile
+	if ((not exists $QUALITY_PROFILE{$opts->{'quality-profile'}}) && ($opts->{'quality-profile'} ne 'poisson')) {
+		my $opt = join ', ' => keys %QUALITY_PROFILE;
+		die "Option 'quality-profile' requires one of these arguments: $opt and poisson. Not $opts->{'quality-profile'}\n";
+	}
+
+	# 0 < read-size <= 101
+	if (0 > $opts->{'read-size'}) {
+		die "Option 'read-size' requires an integer greater than zero, not $opts->{'read-size'}\n";
+	}
+
+	# read-size if quality-profile is not poisson, test for available sizes
+	my $quality_entry = $QUALITY_PROFILE{$opts->{'quality-profile'}};
+	my %sizes = map { $_->{size} => 1 } @$quality_entry;
+	if ((not $sizes{$opts->{'read-size'}}) && ($opts->{'quality-profile'} ne 'poisson')) {
+		my $opt = join ', ' => keys %sizes;
+		die "Option 'read-size' requires one of these arguments for $opts->{'quality-profile'}: $opt. Not $opts->{'read-size'}\n";
 	}
 
 	# strand_bias (STRAND_BIAS_OPT)
 	if (not exists $STRAND_BIAS{$opts->{'strand-bias'}}) {
 		my $opt = join ', ' => keys %STRAND_BIAS;
-		die "Option 'strand-bias' requires one of these arguments: $opt not $opts->{'strand-bias'}\n";
+		die "Option 'strand-bias' requires one of these arguments: $opt. Not $opts->{'strand-bias'}\n";
 	}
 
 	# sequencing_type (SEQUENCING_TYPE_OPT)
@@ -154,16 +173,6 @@ sub validate_opts {
 		my $opt = join ', ' => keys %SEQUENCING_TYPE;
 		die "Option 'sequencing-type' requires one of these arguments: $opt not $opts->{'sequencing-type'}\n";
 	}
-
-	# 0 < read_size <= 101. It will become more complex when quality_profile increase
-	# # TODO: Parse quality_profile and read_size according to the constraints
-	if ($opts->{'read-size'} && 0 > $opts->{'read-size'}) {
-		die "Option 'read-size' requires an integer greater than zero, not $opts->{'read-size'}\n";
-	}
-
-#	if ($read_size > READ_SIZE && $quality_profile eq 'hiseq') {
-#		error "Option 'read-size' requires an integer lesser than " . READ_SIZE . ", not $read_size for 'hiseq' profile";
-#	}
 
 	## Dependently validated arguments
 	# fragment_mean and fragment_stdd
@@ -228,6 +237,11 @@ sub execute {
 	my ($self, $opts, $args) = @_;
 	my $fasta_file = shift @$args;
 	$self->_fill_opts($opts);
+
+	# Set if user wants a verbose log
+	$LOG_VERBOSE = $opts->{verbose};
+
+	# Set default count-loop-by behavior
 	$opts->{'count-loops-by'} = 'number-of-reads' if exists $opts->{'number-of-reads'};
 
 	# Create output directory if it not exist
@@ -249,12 +263,13 @@ sub execute {
 	#  Log presentation header
 	#-------------------------------------------------------------------------------
 	my $time_stamp = localtime;
-	my $progname = 'ponga';
+	my $progname   = file($0)->basename;
 log_msg <<"HEADER";
--------------------------------------------------------
-   $progname -- IEP Hospital Sírio-Libanês
-   Date $time_stamp
--------------------------------------------------------
+-------------------------------------------------------------
+ Date $time_stamp
+ Teaching and Research Institute from Sírio-Libanês Hospital
+ $progname Copyright (C) 2017 Thiago L. A. Miller
+-------------------------------------------------------------
 HEADER
 
 	#-------------------------------------------------------------------------------
@@ -270,7 +285,7 @@ HEADER
 
 	my %single_end_param = (
 		quality_profile   => $opts->{'quality-profile'},
-		sequencing_error  => $opts->{'sequencing-type'},
+		sequencing_error  => $opts->{'sequencing-error'},
 		read_size         => $opts->{'read-size'}
 	);
 
@@ -288,12 +303,12 @@ HEADER
 	my %simulator_param = (
 		fastq             => $fastq,
 		fasta_file        => $fasta_file,
-		prefix            => $opts->{prefix},
-		output_gzip       => $opts->{gzip},
+		prefix            => $opts->{'prefix'},
+		output_gzip       => $opts->{'gzip'},
 		count_loops_by    => $opts->{'count-loops-by'},
 		number_of_reads   => $opts->{'number-of-reads'},
-		coverage          => $opts->{coverage},
-		jobs              => $opts->{jobs},
+		coverage          => $opts->{'coverage'},
+		jobs              => $opts->{'jobs'},
 		strand_bias       => $opts->{'strand-bias'},
 		seqid_weight      => $opts->{'seqid-weight'},
 		weight_file       => $opts->{'weight-file'}
@@ -333,7 +348,7 @@ simulate_reads - Creates single-end and paired-end fastq reads for transcriptome
   -p, --prefix             prefix output [default:"out"]	
   -o, --output-dir         output directory [default:"."]
   -j, --jobs               number of jobs [default:"1"; Integer]
-  -z, --output-gzip        compress output file
+  -z, --gzip               compress output file
   -c, --coverage           fastq-file coverage [default:"1", Number]
   -n, --number-of-reads    directly set the number of reads
                            [default:"1", Integer]
@@ -383,10 +398,10 @@ does not exist, it is created recursively
 
 Sets the number of child jobs to be created
 
-=item B<--output-gzip>
+=item B<--gzip>
 
 Compress the output-file with gzip algorithm. It is
-possible to pass --no-output-gzip if one wants
+possible to pass --no-gzip if one wants
 uncompressed output-file
 
 =item B<--read-size>
