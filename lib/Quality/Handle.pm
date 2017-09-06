@@ -33,7 +33,7 @@ with 'My::Role::IO';
 my $DB = 'quality_profile.db';
 my @DB_PATH = (
 	file(__FILE__)->dir->parent->parent->file('share'),
-	file(__FILE__)->dir->file('auto', 'share', 'dist', 'Simulate-Reads')
+	file(__FILE__)->dir->parent->file('auto', 'share', 'dist', 'Simulate-Reads')
 );
 
 has 'schema' => (
