@@ -121,8 +121,13 @@ sub _index_quality {
 
 	my $deepth = scalar @$quality_ref;
 	my $slice = $deepth < $deepth_default ? $deepth : $deepth_default;
-	my @quality_shuffled = shuffle @$quality_ref;
-	my @quality_slice = splice(@quality_shuffled, 0, $slice);
+
+	# Shuffled list of indexes into @$quality_ref
+	my @shuffled_indexes = shuffle 0 .. $#{ $quality_ref };
+	# Get just $slice of them.
+	my @pick_indexes = @shuffled_indexes[0 .. $slice - 1];
+	# Pick centries from @$quality_ref
+	my @quality_slice = @$quality_ref[@pick_indexes];
 
 	my @arr;
 	for (@quality_slice) {
