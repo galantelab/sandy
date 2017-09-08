@@ -31,35 +31,23 @@ has 'argv' => (
 );
 
 has 'progname' => (
-	is      => 'rw',
+	is      => 'ro',
 	isa     => 'Str',
 	default => file($0)->basename
 );
 
-sub error {
-	my ($self, $error_msg) = @_;
-	my $progname = $self->progname;
-	chomp $error_msg;
-	die "$progname: $error_msg\n";
-}
-
-sub _try_msg {
-	my $self = shift;
-	return sprintf "Try '%s --help' for more information" => $self->progname;
-}
-
-sub command_loading {
-	my ($self, $command_class) = @_;
-	my $command_pm = file(split /::/ => "$command_class.pm");
-
-	eval { require $command_pm };
-	die $@ if $@;
-
-	my $command_class_path = $INC{ $command_pm }
-		or die "$command_class not found in \%INC";
-
-	return $command_class_path;
-}
+has 'command_stack' => (
+	traits  => ['Array'],
+	is      => 'ro',
+	isa     => 'ArrayRef[HashRef]',
+	default => sub { [] },
+	handles => {
+		add_command    => 'push',
+		get_command    => 'get',
+		map_command    => 'map',
+		has_no_command => 'is_empty'
+	}
+);
 
 sub opt_spec {
 	'help|h',
@@ -76,6 +64,26 @@ sub command_map_bultin {
 	man       => \&man_command
 }
 
+sub error {
+	my ($self, $error_msg) = @_;
+	my $sender = $self->_whois;
+	chomp $error_msg;
+	die "$sender: $error_msg\n";
+}
+
+sub _whois {
+	my $self = shift;
+	my $sender = $self->progname;
+	my @commands = $self->map_command(sub { $_->{name} });
+	$sender .= " @commands" unless $self->has_no_command;
+	return $sender;
+}
+
+sub _try_msg {
+	my $self = shift;
+	return sprintf "Try '%s --help' for more information" => $self->_whois;
+}
+
 sub help_text {
 	my ($self, $path) = @_;
 	$path ||= __FILE__;
@@ -89,54 +97,46 @@ sub man_text {
 }
 
 sub help_command {
-	my ($self, $command_path, $argv) = @_;
+	my ($self, $argv) = @_;
+	my %command_map = $self->command_map;
+	$self->_dispatcher(\%command_map, $argv);
 	$self->error("Too many arguments: '@$argv'") if @$argv;
 	my $path;
-	$path = $self->command_loading($command_path) if defined $command_path;
+	$path = $self->get_command(-1)->{path} unless $self->has_no_command;
 	return $self->help_text($path);
 }
 
 sub man_command {
 	my ($self, $command_path, $argv) = @_;
+	my %command_map = $self->command_map;
+	$self->_dispatcher(\%command_map, $argv);
 	$self->error("Too many arguments: '@$argv'") if @$argv;
 	my $path;
-	$path = $self->command_loading($command_path) if defined $command_path;
+	$path = $self->get_command(-1)->{path} unless $self->has_no_command;
 	return $self->man_text($path);
 }
 
-sub run_command_builtin {
-	my ($self, $command_name, $command_method, $argv) = @_;
-	$self->progname($self->progname . " $command_name");
+sub run_no_command {
+	my ($self, $argv) = @_;
+	my ($opts, $args);
 
-	my %command_map = $self->command_map;
-	my %command_map_bultin = $self->command_map_bultin;
-	my $arg_path;
+	try {
+		($opts, $args) = $self->parser($argv, $self->opt_spec);
+	} catch {
+		$self->error("$_" . $self->_try_msg);
+	};
 
-	if (@$argv) {
-		my $arg = shift @$argv;
-		given ($arg) {
-			when (%command_map_bultin) {
-				# Do nothing. It prints tha app help/man
-			}
-			when (%command_map) {
-				$arg_path = $command_map{$arg};
-			}
-			default {
-				$self->error("Unknown argument: '$arg'");
-			}
-		}
-	}
-
-	$self->$command_method($arg_path, $argv);
+	$self->help_text if $opts->{help};
+	$self->man_text if $opts->{man};
 }
 
 sub run_command {
-	my ($self, $command_name, $command_class, $argv) = @_;
-	$self->progname($self->progname . " $command_name");	
+	my ($self, $argv) = @_;
+	my %command_map = $self->command_map;
+	$self->_dispatcher(\%command_map, $argv);
 
-	my $command_class_path = $self->command_loading($command_class);
-	my $o = $command_class->new;
-	die "Not defined method 'execute' to $command_class" unless $o->can('execute');
+	my $command = $self->get_command(-1);
+	my $o = $command->{class}->new;
 
 	# $args has at least $argv if no opt has been passed
 	my ($opts, $args) = (undef, $argv);
@@ -149,8 +149,8 @@ sub run_command {
 		};
 	}
 
-	$self->help_text($command_class_path) if $opts->{help};
-	$self->man_text($command_class_path) if $opts->{man};
+	$self->help_text($command->{path}) if $opts->{help};
+	$self->man_text($command->{path}) if $opts->{man};
 
 	# Deep copy the arguments, just in case the user
 	# manages to mess with
@@ -180,6 +180,44 @@ sub run_command {
 	};
 }
 
+sub _command_loading {
+	my ($self, $command_class) = @_;
+	my $command_pm = file(split /::/ => "$command_class.pm");
+
+	eval { require $command_pm };
+	die $@ if $@;
+
+	my $command_class_path = $INC{ $command_pm }
+		or die "$command_class not found in \%INC";
+
+	return $command_class_path;
+}
+
+sub _dispatcher {
+	my ($self, $command_map, $argv) = @_;
+
+	if (@$argv && exists $command_map->{$argv->[0]}) {
+		my $command_name = shift @$argv;
+		my $command_class = $command_map->{$command_name};
+		my $command_class_path = $self->_command_loading($command_class);
+
+		$self->add_command({
+			'name'  => $command_name,
+			'class' => $command_class,
+			'path'  => $command_class_path
+		});
+
+		unless ($command_class->can('execute')) {
+			die "Not defined method 'execute' for $command_class";
+		}
+
+		if ($command_class->can('subcommand_map')) {
+			my %command_map = $command_class->subcommand_map;
+			return $self->_dispatcher(\%command_map, $argv);
+		}
+	}
+}
+
 sub run {
 	my $self = shift;
 	my @argv = @{ $self->argv };
@@ -192,26 +230,16 @@ sub run {
 		when (%command_map_bultin) {
 			my $command_name = shift @argv;	
 			my $command_method = $command_map_bultin{$command_name};
-			$self->run_command_builtin($command_name, $command_method, \@argv);
+			$self->$command_method(\@argv);
 		}
 		when (%command_map) {
-			my $command_name = shift @argv;	
-			my $command_class = $command_map{$command_name};
-			$self->run_command($command_name, $command_class, \@argv);
+			$self->run_command(\@argv);
 		}
 		when (/^-/) {
-			my ($opts, $args);
-			try {
-				($opts, $args) = $self->parser(\@argv, $self->opt_spec);
-			} catch {
-				$self->error("$_" . $self->_try_msg);
-			};
-			$self->error("Too many arguments: '@$args'") if @$args;
-			$self->help_text if $opts->{help};
-			$self->man_text if $opts->{man};
+			$self->run_no_command(\@argv);
 		}
 		default {
-			$self->error("Unknown argument '$argv[0]'\n" . $self->_try_msg);
+			$self->error("Unknown command '$argv[0]'\n" . $self->_try_msg);
 		}
 	}
 }

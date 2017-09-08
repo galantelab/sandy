@@ -179,12 +179,12 @@ sub validate_opts {
 	if ($opts->{'sequencing-type'} eq 'paired-end') {
 		# fragment_mean > 0
 		if ($opts->{'fragment-mean'} <= 0) {
-			die "Option 'fragment-mean' requires a value greater than zero, not $opts->{'fragment-mean'}\n";
+			die "Option 'fragment-mean' requires an integer greater than zero, not $opts->{'fragment-mean'}\n";
 		}
 
 		# fragment_stdd > 0
-		if ($opts->{'fragment-stdd'} <= 0) {
-			die "Option 'fragment-stdd' requires a value greater than zero, not $opts->{'fragment-stdd'}\n";
+		if ($opts->{'fragment-stdd'} < 0) {
+			die "Option 'fragment-stdd' requires an integer greater or equal to zero, not $opts->{'fragment-stdd'}\n";
 		}
 
 		# (fragment_mean - fragment_stdd) >= read_size
@@ -359,10 +359,10 @@ simulate_reads - Creates single-end and paired-end fastq reads for transcriptome
   -e, --sequencing-error   sequencing error rate
                            [default:"0.005"; Number]
   -r, --read-size          the read size [default:"101"; Integer]
-  -m, --fragment-mean      the mean size fragments for paired-end reads
+  -m, --fragment-mean      the fragment mean size for paired-end reads
                            [default:"300"; Integer]
-  -d, --fragment-stdd      the standard deviation for fragment sizes
-                           [default:"50"; Integer]
+  -d, --fragment-stdd      the fragment standard deviation size for
+                           paired-end reads [default:"50"; Integer]
   -b, --strand-bias        which strand to be used: plus, minus and random
                            [default:"random"]
   -w, --seqid-weight       seqid raffle type: length, same, file
