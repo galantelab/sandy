@@ -30,7 +30,7 @@ extends 'Read';
 #  Moose attributes
 #-------------------------------------------------------------------------------
 has 'fragment_mean' => (is => 'ro', isa => 'My:IntGt0', required => 1);
-has 'fragment_stdd' => (is => 'ro', isa => 'My:IntGt0', required => 1);
+has 'fragment_stdd' => (is => 'ro', isa => 'My:IntGe0', required => 1);
 
 #===  CLASS METHOD  ============================================================
 #        CLASS: Read::PairedEnd
