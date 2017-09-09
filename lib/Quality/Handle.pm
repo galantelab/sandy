@@ -87,19 +87,13 @@ sub insertdb {
 	}
 
 	my ($arr, $deepth);
-	given ($type) {
-		when ('raw') {
-			log_msg ":: Indexing quality matrix '$file' ...";
-			($arr, $deepth) = $self->_index_quality_raw($file, $size);
-		}
-		when ('fastq') {
-			log_msg ":: Indexing fastq '$file'. It may take a while ...";
-			($arr, $deepth) = $self->_index_quality_fastq($file, $size);
-		}
-		default {
-			croak "Unknown indexing type '$type': Valids are 'raw' and 'fastq'";
-		}
+
+	if ($type !~ /^(fastq|raw)$/) {
+		croak "Unknown indexing type '$type': Valids are 'raw' and 'fastq'";
 	}
+
+	log_msg ":: Indexing '$file'. It may take several minutes ...";
+	($arr, $deepth) = $self->_index_quality_type($file, $size, $type);
 
 	log_msg ":: Converting array to bytes ...";
 	my $bytes = nfreeze $arr;
@@ -129,17 +123,7 @@ sub insertdb {
 
 sub _index_quality {
 	my ($self, $quality_ref, $size) = @_;
-#	my $deepth_default = 1000;
-
 	my $deepth = scalar @$quality_ref;
-#	my $slice = $deepth < $deepth_default ? $deepth : $deepth_default;
-
-#	# Shuffled list of indexes into @$quality_ref
-#	my @shuffled_indexes = shuffle 0 .. $#{ $quality_ref };
-#	# Get just $slice of them.
-#	my @pick_indexes = @shuffled_indexes[0 .. $slice - 1];
-#	# Pick centries from @$quality_ref
-#	my @quality_slice = @$quality_ref[@pick_indexes];
 
 	my @arr;
 	for (@$quality_ref) {
@@ -152,68 +136,71 @@ sub _index_quality {
 	return (\@arr, $deepth);
 }
 
-sub _index_quality_raw {
-	my ($self, $file, $size) = @_;
-	my $fh = $self->my_open_r($file);
-	my @arr;
-	my $line = 0;
+sub _index_quality_type {
+	# ALgorithm based in perlfaq:
+	# How do I select a random line from a file?
+	# "The Art of Computer Programming,
 
-	while (<$fh>) {
-		$line++;
-		chomp;
-		if (length $_ != $size) {
-			croak "Error parsing '$file': Line $line do not have length $size";
-		}
-		push @arr => $_;
-	}
-
-	close $fh
-		or croak "Cannot close file '$file'";
-	return $self->_index_quality(\@arr, $size);
-}
-
-sub _index_quality_fastq {
-	my ($self, $file, $size) = @_;
+	my ($self, $file, $size, $type) = @_;
 	my $fh = $self->my_open_r($file);
 
 	log_msg ":: Counting number of lines in '$file' ...";
 	my $num_lines = $self->_wcl($file);
+	my $num_left = $num_lines;
 	log_msg ":: Number of lines: $num_lines";
 
 	log_msg ":: Calculating the  number of entries to pick ...";
-	my $num_left = int($num_lines / 4);
 	my $picks = $num_left < 1000 ? $num_left : 1000;
-
 	my $picks_left = $picks;
-	my ($line, $entry) = (0, 0);
+
+	my ($line, $acm) = (0, 0);
 	my @quality;
 
-	log_msg ":: Picking $picks random entries in '$file' ...";
+	my $getter;
+	given ($type) {
+		when ('fastq') {
+			log_msg ":: Setting fastq validation and getter";
+			$getter = sub {
+				my @stack;
+				for (1..4) {
+					$line++;
+					defined(my $entry = <$fh>)
+						or croak "Truncated fastq entry in '$file' at line $line";
+					push @stack => $entry;
+				}
+				chomp @stack;
+				if ($stack[0] !~ /^\@/ || $stack[2] !~ /^\+/) {
+					croak "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read";	
+				}
+				if (length $stack[3] != $size) {
+					croak "Fastq entry in '$file' at line '$line' do not have length $size";
+				}
+				return $stack[3];
+			}
+		}
+		default {
+			log_msg ":: Setting raw validation and getter";
+			$getter = sub {
+				chomp(my $entry = <$fh>);
+				if (length $entry != $size) {
+					croak "Error parsing '$file': Line $line do not have length $size";
+				}
+				return $entry;
+			}
+		}
+	}
+
+	log_msg ":: Picking $picks entries in '$file' ...";
 	while ($picks_left > 0) {
-		my @stack;
-		for (1..4) {
-			$line++;
-			defined(my $entry = <$fh>)
-				or croak "Truncated fastq entry in '$file' at line $line";
-			push @stack => $entry;
-		}
+		$line++;
+		my $entry = $getter->();
 
-		chomp @stack;
-
-		if ($stack[0] !~ /^\@/ || $stack[2] !~ /^\+/) {
-			croak "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read";	
-		}
-
-		if (length $stack[3] != $size) {
-			croak "Fastq entry in '$file' at line '$line' do not have length $size";
-		}
-		
 		my $rand = int(rand($num_left));
 		if ($rand < $picks_left) {
-			push @quality => $stack[3];
+			push @quality => $entry;
 			$picks_left--;
-			if (++$entry % int($picks/10) == 0) {
-				log_msg sprintf "   ==> %d%% processed\n", ($entry / $picks) * 100;
+			if (++$acm % int($picks/10) == 0) {
+				log_msg sprintf "   ==> %d%% processed\n", ($acm / $picks) * 100;
 			}
 		}
 
