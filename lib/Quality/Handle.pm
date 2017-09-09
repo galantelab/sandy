@@ -72,20 +72,28 @@ sub insertdb {
 	my ($self, $file, $sequencing_system, $size, $source, $is_user_provided, $type) = @_;
 	my $schema = $self->schema;
 
+	log_msg ":: Checking if there is already a sequencing-system '$sequencing_system' ...";
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
 	if ($seq_sys_rs) {
+		log_msg ":: Found '$sequencing_system'";
+		log_msg ":: Searching for a quality entry '$sequencing_system:$size' ...";
 		my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
 		if ($quality_rs) {
 			croak "There is already a quality entry for $sequencing_system:$size";
 		}
+		log_msg ":: Not found '$sequencing_system:$size'";
+	} else {
+		log_msg ":: sequencing-system '$sequencing_system' not found";
 	}
 
 	my ($arr, $deepth);
 	given ($type) {
 		when ('raw') {
+			log_msg ":: Indexing quality matrix '$file' ...";
 			($arr, $deepth) = $self->_index_quality_raw($file, $size);
 		}
 		when ('fastq') {
+			log_msg ":: Indexing fastq '$file'. It may take a while ...";
 			($arr, $deepth) = $self->_index_quality_fastq($file, $size);
 		}
 		default {
@@ -93,16 +101,20 @@ sub insertdb {
 		}
 	}
 
+	log_msg ":: Converting array to bytes ...";
 	my $bytes = nfreeze $arr;
+	log_msg ":: Compressing bytes ...";
 	gzip \$bytes => \my $compressed;
 
 	# Begin transation
 	my $guard = $schema->txn_scope_guard;
 
 	unless ($seq_sys_rs) {
+		log_msg ":: Creating sequencing-system entry for '$sequencing_system' ...";
 		$seq_sys_rs = $schema->resultset('SequencingSystem')->create({ name => $sequencing_system });
 	}
 
+	log_msg ":: Storing quality matrix entry at '$sequencing_system:$size'...";
 	my $quality_rs = $seq_sys_rs->create_related( qualities => {
 		source           => $source,
 		is_user_provided => $is_user_provided,
@@ -117,27 +129,27 @@ sub insertdb {
 
 sub _index_quality {
 	my ($self, $quality_ref, $size) = @_;
-	my $deepth_default = 1000;
+#	my $deepth_default = 1000;
 
 	my $deepth = scalar @$quality_ref;
-	my $slice = $deepth < $deepth_default ? $deepth : $deepth_default;
+#	my $slice = $deepth < $deepth_default ? $deepth : $deepth_default;
 
-	# Shuffled list of indexes into @$quality_ref
-	my @shuffled_indexes = shuffle 0 .. $#{ $quality_ref };
-	# Get just $slice of them.
-	my @pick_indexes = @shuffled_indexes[0 .. $slice - 1];
-	# Pick centries from @$quality_ref
-	my @quality_slice = @$quality_ref[@pick_indexes];
+#	# Shuffled list of indexes into @$quality_ref
+#	my @shuffled_indexes = shuffle 0 .. $#{ $quality_ref };
+#	# Get just $slice of them.
+#	my @pick_indexes = @shuffled_indexes[0 .. $slice - 1];
+#	# Pick centries from @$quality_ref
+#	my @quality_slice = @$quality_ref[@pick_indexes];
 
 	my @arr;
-	for (@quality_slice) {
+	for (@$quality_ref) {
 		my @tmp = split //;
 		for (my $i = 0; $i < $size; $i++) {
 			push @{ $arr[$i] } => $tmp[$i];
 		}
 	}
 
-	return (\@arr, $slice);
+	return (\@arr, $deepth);
 }
 
 sub _index_quality_raw {
@@ -163,35 +175,64 @@ sub _index_quality_raw {
 sub _index_quality_fastq {
 	my ($self, $file, $size) = @_;
 	my $fh = $self->my_open_r($file);
-	my $line = 0;
+
+	log_msg ":: Counting number of lines in '$file' ...";
+	my $num_lines = $self->_wcl($file);
+	log_msg ":: Number of lines: $num_lines";
+
+	log_msg ":: Calculating the  number of entries to pick ...";
+	my $num_left = int($num_lines / 4);
+	my $picks = $num_left < 1000 ? $num_left : 1000;
+
+	my $picks_left = $picks;
+	my ($line, $entry) = (0, 0);
 	my @quality;
 
-	while (1) {
+	log_msg ":: Picking $picks random entries in '$file' ...";
+	while ($picks_left > 0) {
 		my @stack;
 		for (1..4) {
 			$line++;
 			defined(my $entry = <$fh>)
-				or croak "Truncated fastq entry at '$file' line $line";
+				or croak "Truncated fastq entry in '$file' at line $line";
 			push @stack => $entry;
 		}
 
 		chomp @stack;
+
 		if ($stack[0] !~ /^\@/ || $stack[2] !~ /^\+/) {
 			croak "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read";	
 		}
 
 		if (length $stack[3] != $size) {
-			croak "Fastq entry at '$file' line '", $line - 3, "' do not have length $size";
+			croak "Fastq entry in '$file' at line '$line' do not have length $size";
 		}
 		
-		push @quality => $stack[3];
-		last if eof;
+		my $rand = int(rand($num_left));
+		if ($rand < $picks_left) {
+			push @quality => $stack[3];
+			$picks_left--;
+			if (++$entry % int($picks/10) == 0) {
+				log_msg sprintf "   ==> %d%% processed\n", ($entry / $picks) * 100;
+			}
+		}
+
+		$num_left--;
 	}
 
-	close $fh
+	$fh->close
 		or croak "Cannot close file '$file'";
 
 	return $self->_index_quality(\@quality, $size);
+}
+
+sub _wcl {
+	my ($self, $file) = @_;
+	my $fh = $self->my_open_r($file);
+	my $num_lines = 0;
+	$num_lines++ while <$fh>;
+	$fh->close;
+	return $num_lines;
 }
 
 sub retrievedb {
