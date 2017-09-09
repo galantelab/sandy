@@ -64,9 +64,7 @@ subtype 'My:Weights'
 	=> message { "'$_' is not a Weight object array" };
 
 subtype 'My:QualityP'
-	=> as      'Str'
-	=> where   { $_ eq 'hiseq' || $_ eq 'poisson' }
-	=> message { "'$_' is not a valid sequencing system" };
+	=> as      'Str';
 
 coerce 'My:QualityP'
 	=> from    'Str'
