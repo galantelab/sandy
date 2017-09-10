@@ -107,7 +107,7 @@ sub help_command {
 }
 
 sub man_command {
-	my ($self, $command_path, $argv) = @_;
+	my ($self, $argv) = @_;
 	my %command_map = $self->command_map;
 	$self->_dispatcher(\%command_map, $argv);
 	$self->error("Too many arguments: '@$argv'") if @$argv;
