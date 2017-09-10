@@ -23,7 +23,6 @@ use Path::Class 'file';
 use IO::Compress::Gzip 'gzip';
 use IO::Uncompress::Gunzip 'gunzip';
 use Storable qw/nfreeze thaw/;
-use List::Util 'shuffle';
 
 with 'My::Role::IO';
  
@@ -146,20 +145,17 @@ sub _index_quality_type {
 
 	log_msg ":: Counting number of lines in '$file' ...";
 	my $num_lines = $self->_wcl($file);
-	my $num_left = $num_lines;
 	log_msg ":: Number of lines: $num_lines";
 
-	log_msg ":: Calculating the  number of entries to pick ...";
-	my $picks = $num_left < 1000 ? $num_left : 1000;
-	my $picks_left = $picks;
-
-	my ($line, $acm) = (0, 0);
-	my @quality;
+	my $num_left = 0;
+	my $line = 0;
+	my $acm = 0;
 
 	my $getter;
 	given ($type) {
 		when ('fastq') {
 			log_msg ":: Setting fastq validation and getter";
+			$num_left = int($num_lines / 4);
 			$getter = sub {
 				my @stack;
 				for (1..4) {
@@ -180,7 +176,9 @@ sub _index_quality_type {
 		}
 		default {
 			log_msg ":: Setting raw validation and getter";
+			$num_left = $num_lines;
 			$getter = sub {
+				$line++;
 				chomp(my $entry = <$fh>);
 				if (length $entry != $size) {
 					croak "Error parsing '$file': Line $line do not have length $size";
@@ -190,9 +188,14 @@ sub _index_quality_type {
 		}
 	}
 
+	log_msg ":: Calculating the  number of entries to pick ...";
+	my $picks = $num_left < 1000 ? $num_left : 1000;
+	my $picks_left = $picks;
+
+	my @quality;
+
 	log_msg ":: Picking $picks entries in '$file' ...";
 	while ($picks_left > 0) {
-		$line++;
 		my $entry = $getter->();
 
 		my $rand = int(rand($num_left));
