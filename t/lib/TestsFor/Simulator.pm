@@ -1,9 +1,9 @@
 #
 #===============================================================================
 #
-#         FILE: SimulateRead.pm
+#         FILE: Simulator.pm
 #
-#  DESCRIPTION: Tests for 'SimulateRead' class
+#  DESCRIPTION: Tests for 'Simulator' class
 #
 #        FILES: ---
 #         BUGS: ---
@@ -15,7 +15,7 @@
 #     REVISION: ---
 #===============================================================================
 
-package TestsFor::SimulateRead;
+package TestsFor::Simulator;
 
 use My::Base 'test';
 use base 'TestsFor';
@@ -33,7 +33,7 @@ use constant {
 	SEQUENCING_SYSTEM  => 'hiseq',
 	JOBS               => 2,
 	OUTPUT_GZIP        => 0,
-	SEQ_SYS            => 'HiSeq',
+	SEQ_SYS            => 'poisson',
 	QUALITY_SIZE       => 10,
 	GENOME             => '.data.fa',
 	GENOME_SIZE        => 1981,
@@ -114,7 +114,7 @@ sub setup : Tests(setup) {
 	my %sg_single_end = (
 		%default_attr,
 		fastq => Fastq::SingleEnd->new(
-			quality_profile   => 'HiSeq',
+			quality_profile   => 'poisson',
 			read_size         => QUALITY_SIZE,
 			sequencing_error  => 0.1,
 		)
@@ -123,7 +123,7 @@ sub setup : Tests(setup) {
 	my %sg_paired_end = (
 		%default_attr,
 		fastq => 	Fastq::PairedEnd->new(
-			quality_profile   => 'HiSeq',
+			quality_profile   => 'poisson',
 			read_size         => QUALITY_SIZE,
 			sequencing_error  => 0.1,
 			fragment_mean     => 50,
@@ -221,4 +221,4 @@ sub run_simulation : Tests(9) {
 	}
 }
 
-## --- end class TestsFor::SimulateRead
+## --- end class TestsFor::Simulator

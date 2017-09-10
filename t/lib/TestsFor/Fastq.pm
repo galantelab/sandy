@@ -22,7 +22,7 @@ use base 'TestsFor';
 use autodie;
 
 use constant {
-	SEQ_SYS       => 'HiSeq',
+	SEQ_SYS       => 'poisson',
 	QUALITY_SIZE  => 10,
 };
 

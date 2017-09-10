@@ -17,13 +17,12 @@
  
 package TestsFor::Quality;
 
-#use Test::Most;
 use My::Base 'test';
 use autodie;
 use base 'TestsFor';
 
 use constant {
-	SEQ_SYS       => "HiSeq", 
+	SEQ_SYS       => "poisson", 
 	QUALITY_SIZE  => 10
 };
 
@@ -65,7 +64,7 @@ sub constructor : Tests(5) {
 	my %attrs = %default_attr;
 	$attrs{read_size} = 0;
 	throws_ok { $class->new(%attrs) }
-	qr/must be greater than zero/,
+	qr/must be an integer greater than zero/,
 		"Setting read_size to less than zero should fail";
 }
 
