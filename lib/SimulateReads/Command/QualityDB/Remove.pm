@@ -49,7 +49,9 @@ sub validate_opts {
 sub execute {
 	my ($self, $opts, $args) = @_;
 	$LOG_VERBOSE = exists $opts->{verbose} ? $opts->{verbose} : 0;
+	log_msg "Attempting to remove $opts->{'quality-profile'}:$opts->{'read-size'}";
 	$self->deletedb($opts->{'quality-profile'}, $opts->{'read-size'});
+	log_msg "Done!";
 }
 
 __END__
