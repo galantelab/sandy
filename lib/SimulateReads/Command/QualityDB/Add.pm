@@ -120,7 +120,7 @@ simulate_reads - Creates single-end and paired-end fastq reads for transcriptome
  simulate_reads qualitydb add -q <entry name> -r <size> [-s <source>] FILE
 
  Arguments:
-  a quality-profile file (fastq or a matrix with only qualities entries)
+  a quality-profile file (fastq or a matrix with only quality entries)
 
  Options:
   -h, --help               brief help message

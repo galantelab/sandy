@@ -37,7 +37,9 @@ sub validate_opts {}
 sub execute {
 	my ($self, $opts, $args) = @_;
 	$LOG_VERBOSE = exists $opts->{verbose} ? $opts->{verbose} : 0;
+	log_msg "Restoring quality database to vendor state ...";
 	$self->restoredb;
+	log_msg "Done!";
 }
 
 __END__

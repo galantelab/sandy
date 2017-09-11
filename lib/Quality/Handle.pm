@@ -138,7 +138,7 @@ sub _index_quality {
 sub _index_quality_type {
 	# ALgorithm based in perlfaq:
 	# How do I select a random line from a file?
-	# "The Art of Computer Programming,
+	# "The Art of Computer Programming"
 
 	my ($self, $file, $size, $type) = @_;
 	my $fh = $self->my_open_r($file);
@@ -248,11 +248,17 @@ sub deletedb {
 	my ($self, $sequencing_system, $size) = @_;
 	my $schema = $self->schema;
 
+	log_msg ":: Checking if there is a sequencing-system '$sequencing_system' ...";
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
 	croak "'$sequencing_system' not found into database" unless defined $seq_sys_rs;
+	log_msg ":: Found '$sequencing_system'";
+
+	log_msg ":: Searching for a quality entry '$sequencing_system:$size' ...";
 	my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
 	croak "'$sequencing_system:$size' not found into database" unless defined $quality_rs;
 	croak "'$sequencing_system:$size' is not a user provided entry. Cannot be deleted" unless $quality_rs->is_user_provided;
+
+	log_msg ":: Found. Removing '$sequencing_system:$size' entry ...";
 
 	# Begin transation
 	my $guard = $schema->txn_scope_guard;
@@ -269,20 +275,48 @@ sub restoredb {
 	my $self = shift;
 	my $schema = $self->schema;
 
+	log_msg ":: Searching for user-provided entries ...";
+	my $user_provided = $schema->resultset('Quality')->search(
+		{ is_user_provided => 1 },
+		{ prefetch => ['sequencing_system'] }
+	);
+
+	my $entry = $user_provided->next;
+	if ($entry) {
+		log_msg ":: Found:";
+		do {
+			log_msg '   ==> ' . $entry->sequencing_system->name . ':' . $entry->size;
+		} while ($entry = $user_provided->next);
+	} else {
+		croak "Not found user-provided entries. There is no need to restoring\n";
+	}
+
+	log_msg ":: Removing all user-provided entries ...";
+
 	# Begin transation
 	my $guard = $schema->txn_scope_guard;
 
-	my $seq_sys_rs = $schema->resultset('SequencingSystem')->search(
-		{ is_user_provided => 1  },
-		{ prefetch => ['qualities'] }
+	# Select all vendor qualities
+	my $inside_rs = $schema->resultset('Quality')->search(
+		{ is_user_provided => 0 }
 	);
 
+	# Select all sequencing_system that is not vendor-provided
+	my $seq_sys_rs = $schema->resultset('SequencingSystem')->search(
+		{ 'me.id' => { -not_in => $inside_rs->get_column('sequencing_system_id')->as_query } }
+	);
+
+	# Remove all sequencing_system that is not vendor-provided
+	# It will trigger delete casacade
 	$seq_sys_rs->delete_all;
 
+	# Select all qualities that is user-provided
 	my $quality_rs = $schema->resultset('Quality')->search(
 		{ is_user_provided => 1 }
 	);
 
+	# Remove all user-provided qualities that is inside a vendor-provided
+	# sequencing_system but with a custom user-provided size
 	$quality_rs->delete;
 
 	# End transation
