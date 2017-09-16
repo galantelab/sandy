@@ -5,6 +5,8 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Command::QualityDB';
 
+# VERSION
+
 use constant {
 	TYPE_OPT => ['raw', 'fastq']
 };

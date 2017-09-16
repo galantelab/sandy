@@ -5,6 +5,8 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Command::QualityDB';
 
+# VERSION
+
 sub opt_spec {
 	'help|h',
 	'man|M',

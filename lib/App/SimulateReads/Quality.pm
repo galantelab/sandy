@@ -4,6 +4,8 @@ package App::SimulateReads::Quality;
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::Quality::Handle;
 
+# VERSION
+
 #-------------------------------------------------------------------------------
 #  Moose attributes
 #-------------------------------------------------------------------------------

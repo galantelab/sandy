@@ -6,6 +6,8 @@ use Math::Random 'random_normal';
 
 extends 'App::SimulateReads::Read';
 
+# VERSION
+
 use constant {
 	NUM_TRIES => 1000
 };

@@ -3,6 +3,8 @@ package App::SimulateReads::Types;
  
 use Moose::Util::TypeConstraints;
 
+# VERSION
+
 subtype 'My:IntGt0'
 	=> as      'Int'
 	=> where   { $_ > 0 } 

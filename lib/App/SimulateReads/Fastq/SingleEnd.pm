@@ -6,6 +6,8 @@ use App::SimulateReads::Read::SingleEnd;
 
 extends 'App::SimulateReads::Fastq';
 
+# VERSION
+
 #-------------------------------------------------------------------------------
 #  Moose attributes
 #-------------------------------------------------------------------------------

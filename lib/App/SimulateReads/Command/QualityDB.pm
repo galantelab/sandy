@@ -4,6 +4,8 @@ package App::SimulateReads::Command::QualityDB;
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::Quality::Handle;
 
+# VERSION
+
 has 'db' => (
 	is         => 'ro',
 	isa        => 'App::SimulateReads::Quality::Handle',

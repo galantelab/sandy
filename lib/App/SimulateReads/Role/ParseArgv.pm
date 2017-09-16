@@ -4,6 +4,8 @@ package App::SimulateReads::Role::ParseArgv;
 use App::SimulateReads::Base 'role';
 use Getopt::Long 'GetOptionsFromArray';
 
+# VERSION
+
 sub parser {
 	my ($self, $argv, @opt_spec) = @_;
 	my @argv = @{ $argv };

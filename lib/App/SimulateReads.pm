@@ -8,6 +8,8 @@ use Try::Tiny;
 
 with 'App::SimulateReads::Role::ParseArgv';
 
+# VERSION
+
 has 'argv' => (
 	is      => 'ro',
 	isa     => 'ArrayRef',

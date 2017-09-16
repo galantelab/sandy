@@ -10,6 +10,8 @@ use Path::Class 'file';
 use File::Path 'make_path';
 use Pod::Usage;
 
+# VERSION
+
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
 	STRAND_BIAS_OPT       => ['random', 'plus', 'minus'],

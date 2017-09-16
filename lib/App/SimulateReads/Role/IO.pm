@@ -5,6 +5,8 @@ use App::SimulateReads::Base 'role';
 use PerlIO::gzip;
 use Scalar::Util 'looks_like_number';
 
+# VERSION
+
 #===  CLASS METHOD  ============================================================
 #        CLASS: My::Role::IO (Role)
 #       METHOD: my_open_r

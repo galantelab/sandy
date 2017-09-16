@@ -9,6 +9,8 @@ use IO::Uncompress::Gunzip 'gunzip';
 use Storable qw/nfreeze thaw/;
 
 with 'App::SimulateReads::Role::IO';
+
+# VERSION
  
 #-------------------------------------------------------------------------------
 #  Hardcoded paths for quality_profile

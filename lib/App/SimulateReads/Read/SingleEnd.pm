@@ -5,6 +5,8 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Read';
 
+# VERSION
+
 #===  CLASS METHOD  ============================================================
 #        CLASS: Read::SingleEnd
 #       METHOD: gen_read

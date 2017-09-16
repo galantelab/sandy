@@ -3,6 +3,8 @@ package App::SimulateReads::InterlaceProcesses;
 
 use App::SimulateReads::Base 'class';
 
+# VERSION
+
 #-------------------------------------------------------------------------------
 #  Static variables
 #-------------------------------------------------------------------------------

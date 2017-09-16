@@ -1,20 +1,3 @@
-#
-#===============================================================================
-#
-#         FILE: PairedEnd.pm
-#
-#  DESCRIPTION: Fastq::PairedEnd class
-#
-#        FILES: ---
-#         BUGS: ---
-#        NOTES: ---
-#       AUTHOR: Thiago Miller (tmiller), tmiller@mochsl.org.br
-# ORGANIZATION: Group of Bioinformatics
-#      VERSION: 1.0
-#      CREATED: 05/12/2017 05:06:32 PM
-#     REVISION: ---
-#===============================================================================
-
 package App::SimulateReads::Fastq::PairedEnd;
 # ABSTRACT: App::SimulateReads::Fastq subclass for simulate paired-end fastq entries.
 
@@ -22,6 +5,8 @@ use App::SimulateReads::Base 'class';
 use App::SimulateReads::Read::PairedEnd;
 
 extends 'App::SimulateReads::Fastq';
+
+# VERSION
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
