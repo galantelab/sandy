@@ -1,4 +1,0 @@
-#!/bin/sh
-
-perl Makefile.PL
-make manifest && make

@@ -1,5 +1,0 @@
-[TestingAndDebugging::RequireUseStrict]
-equivalent_modules = My::Base
-
-[TestingAndDebugging::RequireUseWarnings]
-equivalent_modules = My::Base
