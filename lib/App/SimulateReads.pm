@@ -8,7 +8,7 @@ use Try::Tiny;
 
 with 'App::SimulateReads::Role::ParseArgv';
 
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.02'; # VERSION
 
 has 'argv' => (
 	is      => 'ro',
@@ -242,7 +242,7 @@ App::SimulateReads - App builder that simulates single-end and paired-end reads.
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 SYNOPSIS
 

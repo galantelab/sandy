@@ -3,7 +3,7 @@ package App::SimulateReads::InterlaceProcesses;
 
 use App::SimulateReads::Base 'class';
 
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.02'; # VERSION
 
 #-------------------------------------------------------------------------------
 #  Static variables
@@ -92,7 +92,7 @@ App::SimulateReads::InterlaceProcesses - Interlaces the processe id for differen
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 AUTHOR
 

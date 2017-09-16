@@ -10,7 +10,7 @@ use Storable qw/nfreeze thaw/;
 
 with 'App::SimulateReads::Role::IO';
 
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.02'; # VERSION
  
 #-------------------------------------------------------------------------------
 #  Hardcoded paths for quality_profile
@@ -353,7 +353,7 @@ App::SimulateReads::Quality::Handle - Class to handle database schemas.
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 AUTHOR
 

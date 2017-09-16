@@ -71,7 +71,14 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.01",
+   "resources" : {
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/galantelab/simulate_reads.git",
+         "web" : "https://github.com/galantelab/simulate_reads"
+      }
+   },
+   "version" : "0.02",
    "x_serialization_backend" : "Cpanel::JSON::XS version 3.0239"
 }
 
