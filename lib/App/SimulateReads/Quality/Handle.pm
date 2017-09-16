@@ -135,42 +135,52 @@ sub _index_quality_type {
 	my $line = 0;
 	my $acm = 0;
 
-	my $getter;
-	given ($type) {
-		when ('fastq') {
-			log_msg ":: Setting fastq validation and getter";
-			$num_left = int($num_lines / 4);
-			$getter = sub {
-				my @stack;
-				for (1..4) {
+	my $getter = do {
+		given ($type) {
+			when ('fastq') {
+				log_msg ":: Setting fastq validation and getter";
+				$num_left = int($num_lines / 4);
+
+				sub {
+					my @stack;
+
+					for (1..4) {
+						$line++;
+						defined(my $entry = <$fh>)
+							or croak "Truncated fastq entry in '$file' at line $line";
+						push @stack => $entry;
+					}
+
+					chomp @stack;
+
+					if ($stack[0] !~ /^\@/ || $stack[2] !~ /^\+/) {
+						croak "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read";	
+					}
+
+					if (length $stack[3] != $size) {
+						croak "Fastq entry in '$file' at line '$line' do not have length $size";
+					}
+
+					return $stack[3];
+				}
+			}
+			default {
+				log_msg ":: Setting raw validation and getter";
+				$num_left = $num_lines;
+
+				sub {
 					$line++;
-					defined(my $entry = <$fh>)
-						or croak "Truncated fastq entry in '$file' at line $line";
-					push @stack => $entry;
+					chomp(my $entry = <$fh>);
+
+					if (length $entry != $size) {
+						croak "Error parsing '$file': Line $line do not have length $size";
+					}
+
+					return $entry;
 				}
-				chomp @stack;
-				if ($stack[0] !~ /^\@/ || $stack[2] !~ /^\+/) {
-					croak "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read";	
-				}
-				if (length $stack[3] != $size) {
-					croak "Fastq entry in '$file' at line '$line' do not have length $size";
-				}
-				return $stack[3];
 			}
 		}
-		default {
-			log_msg ":: Setting raw validation and getter";
-			$num_left = $num_lines;
-			$getter = sub {
-				$line++;
-				chomp(my $entry = <$fh>);
-				if (length $entry != $size) {
-					croak "Error parsing '$file': Line $line do not have length $size";
-				}
-				return $entry;
-			}
-		}
-	}
+	};
 
 	log_msg ":: Calculating the  number of entries to pick ...";
 	my $picks = $num_left < 1000 ? $num_left : 1000;

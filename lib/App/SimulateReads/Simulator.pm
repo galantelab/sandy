@@ -100,14 +100,14 @@ sub BUILD {
 #===============================================================================
 sub _build_strand {
 	my $self = shift;
-	my $fun;
-	given ($self->strand_bias) {
-		when ('plus')   { $fun = sub {1} }
-		when ('minus')  { $fun = sub {0} }
-		when ('random') { $fun = sub { int(rand(2)) }}
-		default         { croak "Unknown option '$_' for strand bias\n" }
-	}
-	return $fun;
+	return do {
+		given ($self->strand_bias) {
+			when ('plus')   { sub {1} }
+			when ('minus')  { sub {0} }
+			when ('random') { sub { int(rand(2)) }}
+			default         { croak "Unknown option '$_' for strand bias\n" }
+		}
+	};
 } ## --- end sub _build_strand
 
 #===  CLASS METHOD  ============================================================
@@ -171,35 +171,40 @@ sub _build_fasta {
 #===============================================================================
 sub _build_weights {
 	my $self = shift;
-	given ($self->seqid_weight) {
-		when ('length') {
-			my %chr_size = map { $_, $self->_fasta->{$_}{size} } keys %{ $self->_fasta };
-			return $self->calculate_weights(\%chr_size);
-		}
-		when ('file') {
-			log_msg ":: Indexing weight file '" . $self->weight_file . "' ...";
-			my $indexed_file = $self->index_weight_file($self->weight_file);
-			# Validate weight_file
-			croak "Error parsing '" . $self->weight_file . "': Maybe the file is empty\n"
-				unless %$indexed_file;
-			my $indexed_fasta = $self->_fasta;
-			my $err;
-			for my $id (keys %$indexed_file) {
-				if (not exists $indexed_fasta->{$id}) {
-					$err .= "seqid '$id' not found in '" . $self->fasta_file . "'\n";
-				}
+	return do {
+		given ($self->seqid_weight) {
+			when ('length') {
+				my %chr_size = map { $_, $self->_fasta->{$_}{size} } keys %{ $self->_fasta };
+				$self->calculate_weights(\%chr_size);
 			}
-			croak "Error in validating '" . $self->weight_file . "':\n" . $err
-				if defined $err;
-			return $self->calculate_weights($indexed_file);
+			when ('file') {
+				log_msg ":: Indexing weight file '" . $self->weight_file . "' ...";
+				my $indexed_file = $self->index_weight_file($self->weight_file);
+
+				# Validate weight_file
+				croak "Error parsing '" . $self->weight_file . "': Maybe the file is empty\n"
+					unless %$indexed_file;
+
+				my $indexed_fasta = $self->_fasta;
+				my $err;
+				for my $id (keys %$indexed_file) {
+					if (not exists $indexed_fasta->{$id}) {
+						$err .= "seqid '$id' not found in '" . $self->fasta_file . "'\n";
+					}
+				}
+				croak "Error in validating '" . $self->weight_file . "':\n" . $err
+					if defined $err;
+
+				$self->calculate_weights($indexed_file);
+			}
+			when ('same') {
+				croak "Error: Cannot build raffle weights for 'seqid-weight=same'\n";
+			}
+			default {
+				croak "Unknown option '$_' for weighted raffle\n";
+			}
 		}
-		when ('same') {
-			croak "Error: Cannot build raffle weights for 'seqid-weight=same'\n";
-		}
-		default {
-			croak "Unknown option '$_' for weighted raffle\n";
-		}
-	}
+	};
 } ## --- end sub _build_weights
 
 #===  CLASS METHOD  ============================================================
@@ -214,21 +219,21 @@ sub _build_weights {
 #===============================================================================
 sub _build_seqid_raffle {
 	my $self = shift;
-	my $fun;
-	given ($self->seqid_weight) {
-		when ('same') {
-			my @seqids = keys %{ $self->_fasta };
-			my $seqids_size = scalar @seqids;
-			$fun = sub { $seqids[int(rand($seqids_size))] };
+	return do {
+		given ($self->seqid_weight) {
+			when ('same') {
+				my @seqids = keys %{ $self->_fasta };
+				my $seqids_size = scalar @seqids;
+				sub { $seqids[int(rand($seqids_size))] };
+			}
+			when (/^(file|length)$/) {
+				sub { $self->weighted_raffle };
+			}
+			default {
+				croak "Unknown option '$_' for seqid-raffle\n";
+			}
 		}
-		when (/^(file|length)$/) {
-			$fun = sub { $self->weighted_raffle };
-		}
-		default {
-			croak "Unknown option '$_' for seqid-raffle\n";
-		}
-	}
-	return $fun;
+	};
 } ## --- end sub _build_seqid_raffle
 
 #===  CLASS METHOD  ============================================================
@@ -247,23 +252,23 @@ sub _build_seqid_raffle {
 #===============================================================================
 sub _calculate_number_of_reads {
 	my $self = shift;
-	my $number_of_reads = 0;
-
-	given($self->count_loops_by) {
-		when ('coverage') {
-			# It is needed to calculate the genome size
-			my $fasta = $self->_fasta;
-			my $fasta_size = 0;
-			$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
-			$number_of_reads = int(($fasta_size * $self->coverage) / $self->fastq->read_size);
+	my $number_of_reads = do {
+		given($self->count_loops_by) {
+			when ('coverage') {
+				# It is needed to calculate the genome size
+				my $fasta = $self->_fasta;
+				my $fasta_size = 0;
+				$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
+				int(($fasta_size * $self->coverage) / $self->fastq->read_size);
+			}
+			when ('number-of-reads') {
+				$self->number_of_reads;
+			}
+			default {
+				croak "Unknown option '$_' for calculating the number of reads\n";
+			}
 		}
-		when ('number-of-reads') {
-			$number_of_reads = $self->number_of_reads;
-		}
-		default {
-			croak "Unknown option '$_' for calculating the number of reads\n";
-		}
-	}
+	};
 
 	# In case it is paired-end read, divide the number of reads by 2 because App::SimulateReads::Fastq::PairedEnd class
 	# returns 2 reads at time
