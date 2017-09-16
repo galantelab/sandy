@@ -1,0 +1,77 @@
+{
+   "abstract" : "Creates single-end and paired-end fastq reads for transcriptome and genome simulation",
+   "author" : [
+      "Thiago L. A. Miller <tmiller@mochsl.org.br>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 6.010, CPAN::Meta::Converter version 2.150010",
+   "license" : [
+      "gpl_3"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "App-SimulateReads",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0",
+            "File::ShareDir::Install" : "0.06"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Carp" : "0",
+            "DBIx::Class::Core" : "0",
+            "DBIx::Class::Schema" : "0",
+            "Data::OptList" : "0",
+            "File::Cat" : "0",
+            "File::Path" : "0",
+            "Getopt::Long" : "0",
+            "Hook::AfterRuntime" : "0",
+            "IO::Compress::Gzip" : "0",
+            "IO::Uncompress::Gunzip" : "0",
+            "Import::Into" : "0",
+            "Math::Random" : "0.72",
+            "Module::Runtime" : "0",
+            "Moose" : "0",
+            "Moose::Role" : "0",
+            "Moose::Util::TypeConstraints" : "0",
+            "MooseX::StrictConstructor" : "0",
+            "MooseX::UndefTolerant" : "0",
+            "Parallel::ForkManager" : "1.19",
+            "Path::Class" : "0",
+            "PerlIO::gzip" : "0.19",
+            "Pod::Usage" : "0",
+            "Scalar::Util" : "0",
+            "Storable" : "2.51",
+            "Try::Tiny" : "0",
+            "base" : "0",
+            "constant" : "0",
+            "feature" : "0",
+            "namespace::autoclean" : "0",
+            "perl" : "5.018",
+            "strict" : "0",
+            "true" : "0",
+            "utf8" : "0",
+            "warnings" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Class::Data::Inheritable" : "0.08",
+            "Statistics::Normality" : "0",
+            "Test::Class" : "0.50",
+            "Test::Most" : "0.35",
+            "Test::Perl::Critic" : "1.03",
+            "Test::UseAllModules" : "0",
+            "autodie" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "0.01",
+   "x_serialization_backend" : "Cpanel::JSON::XS version 3.0239"
+}
+
