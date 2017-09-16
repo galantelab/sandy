@@ -10,7 +10,7 @@ use Path::Class 'file';
 use File::Path 'make_path';
 use Pod::Usage;
 
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.02'; # VERSION
 
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
@@ -326,7 +326,7 @@ App::SimulateReads::Command::Digest - digest command class. Simulate single-end 
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 SYNOPSIS
 

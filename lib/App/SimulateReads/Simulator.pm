@@ -10,7 +10,7 @@ use Parallel::ForkManager;
 
 with qw/App::SimulateReads::Role::WeightedRaffle App::SimulateReads::Role::IO/;
 
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.02'; # VERSION
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
@@ -463,7 +463,7 @@ App::SimulateReads::Simulator - Class responsible to make the simulation
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 AUTHOR
 

@@ -3,7 +3,7 @@ package App::SimulateReads::Read;
 
 use App::SimulateReads::Base 'class';
 
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.02'; # VERSION
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
@@ -147,7 +147,7 @@ App::SimulateReads::Read - Base class to simulate reads
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 AUTHOR
 
