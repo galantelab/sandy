@@ -2,6 +2,10 @@ Revision history for App-SimulateReads
 
 {{$NEXT}}
 
+0.02      2017-09-16 02:18:05-03:00 America/Sao_Paulo
+
+	- Fix README.md issue with PodWeaver by using ReadmeAnyFromPod
+
 0.01      2017-09-15 23:03:14-03:00 America/Sao_Paulo
 
 	- Initial version
