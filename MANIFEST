@@ -10,6 +10,9 @@ README.md
 dist.ini
 lib/App/SimulateReads.pm
 lib/App/SimulateReads/Base.pm
+lib/App/SimulateReads/CLI.pm
+lib/App/SimulateReads/CLI/App.pm
+lib/App/SimulateReads/CLI/Command.pm
 lib/App/SimulateReads/Command/Digest.pm
 lib/App/SimulateReads/Command/QualityDB.pm
 lib/App/SimulateReads/Command/QualityDB/Add.pm
@@ -33,7 +36,6 @@ lib/App/SimulateReads/Role/WeightedRaffle.pm
 lib/App/SimulateReads/Simulator.pm
 lib/App/SimulateReads/Types.pm
 perlcritic.ini
-schema.conf
 script/simulate_reads
 share/quality_profile.db
 share/quality_profile.sql
@@ -50,3 +52,4 @@ t/lib/TestsFor/App/SimulateReads/Read/PairedEnd.pm
 t/lib/TestsFor/App/SimulateReads/Read/SingleEnd.pm
 t/lib/TestsFor/App/SimulateReads/Simulator.pm
 t/test_classes.t
+weaver.ini

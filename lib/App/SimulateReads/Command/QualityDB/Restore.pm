@@ -5,13 +5,12 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Command::QualityDB';
 
-our $VERSION = '0.02'; # VERSION
+our $VERSION = '0.03'; # VERSION
 
-sub opt_spec {
-	'help|h',
-	'man|M',
+override 'opt_spec' => sub {
+	super,
 	'verbose|v'
-}
+};
 
 sub validate_args {
 	my ($self, $args) = @_;
@@ -40,7 +39,7 @@ App::SimulateReads::Command::QualityDB::Restore - qualitydb subcommand class. Re
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 SYNOPSIS
 

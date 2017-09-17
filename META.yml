@@ -56,6 +56,7 @@ requires:
   utf8: '0'
   warnings: '0'
 resources:
+  bugtracker: https://github.com/galantelab/simulate_reads/issues
   repository: git://github.com/galantelab/simulate_reads.git
-version: '0.02'
+version: '0.03'
 x_serialization_backend: 'YAML::Tiny version 1.70'
