@@ -11,28 +11,18 @@ use constant {
 	TYPE_OPT => ['raw', 'fastq']
 };
 
-sub opt_spec {
-	'help|h',
-	'man|M',
+override 'opt_spec' => sub {
+	super,
 	'verbose|v',
 	'quality-profile|q=s',
 	'read-size|r=i',
 	'source|s=s'
-}
+};
 
 sub _default_opt {
 	'verbose' => 0,
 	'type'    => 'fastq',
 	'source'  => 'not defined'
-}
-
-sub _fill_opts {
-	my ($self, $opts) = @_;
-	my %default_opt = $self->_default_opt;
-
-	for my $opt (keys %default_opt) {
-		$opts->{$opt} = $default_opt{$opt} if not exists $opts->{$opt};
-	}
 }
 
 sub validate_args {
@@ -54,7 +44,8 @@ sub validate_args {
 
 sub validate_opts {
 	my ($self, $opts) = @_;
-	$self->_fill_opts($opts);
+	my %default_opt = $self->_default_opt;
+	$self->fill_opts($opts, \%default_opt);
 
 	if (not exists $opts->{'quality-profile'}) {
 		die "Option 'quality-profile' not defined\n";
@@ -72,7 +63,9 @@ sub validate_opts {
 sub execute {
 	my ($self, $opts, $args) = @_;
 	my $file = shift @$args;
-	$self->_fill_opts($opts);
+
+	my %default_opt = $self->_default_opt;
+	$self->fill_opts($opts, \%default_opt);
 
 	# Set if user wants a verbose log
 	$LOG_VERBOSE = $opts->{verbose};

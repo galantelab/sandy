@@ -4,6 +4,8 @@ package App::SimulateReads::Command::QualityDB;
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::Quality::Handle;
 
+extends 'App::SimulateReads::CLI::Command';
+
 # VERSION
 
 has 'db' => (
@@ -18,10 +20,9 @@ sub _build_db {
 	return App::SimulateReads::Quality::Handle->new;
 }
 
-sub opt_spec {
-	'help|h',
-	'man|M'
-}
+override 'opt_spec' => sub {
+	super
+};
 
 sub subcommand_map {
 	add     => 'App::SimulateReads::Command::QualityDB::Add',

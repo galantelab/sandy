@@ -7,13 +7,12 @@ extends 'App::SimulateReads::Command::QualityDB';
 
 # VERSION
 
-sub opt_spec {
-	'help|h',
-	'man|M',
+override 'opt_spec' => sub {
+	super,
 	'verbose|v',
 	'quality-profile|q=s',
 	'read-size|r=i'
-}
+};
 
 sub validate_args {
 	my ($self, $args) = @_;

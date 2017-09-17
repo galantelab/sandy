@@ -10,6 +10,8 @@ use Path::Class 'file';
 use File::Path 'make_path';
 use Pod::Usage;
 
+extends 'App::SimulateReads::CLI::Command';
+
 # VERSION
 
 use constant {
@@ -19,9 +21,8 @@ use constant {
 	SEQUENCING_TYPE_OPT   => ['single-end', 'paired-end']
 };
 
-sub opt_spec {
-	'help|h',
-	'man|M',
+override 'opt_spec' => sub {
+	super,
 	'prefix|p=s',
 	'verbose|v',
 	'output-dir|o=s',
@@ -38,7 +39,7 @@ sub opt_spec {
 	'seqid-weight|w=s',
 	'number-of-reads|n=i',
 	'weight-file|f=s'
-}
+};
 
 sub _default_opt {
 	'verbose'          => 0,
@@ -56,15 +57,6 @@ sub _default_opt {
 	'sequencing-error' => 0.005,
 	'read-size'        => 101,
 	'quality-profile'  => 'hiseq'
-}
-
-sub _fill_opts {
-	my ($self, $opts) = @_;
-	my %default_opt = $self->_default_opt;
-
-	for my $opt (keys %default_opt) {
-		$opts->{$opt} = $default_opt{$opt} if not exists $opts->{$opt};
-	}
 }
 
 sub _log_msg_opt {
@@ -106,7 +98,8 @@ sub validate_args {
 
 sub validate_opts {
 	my ($self, $opts) = @_;
-	$self->_fill_opts($opts);
+	my %default_opt = $self->_default_opt;
+	$self->fill_opts($opts, \%default_opt);
 
 	# Possible alternatives
 	my %STRAND_BIAS       = map { $_ => 1 } @{ &STRAND_BIAS_OPT     };
@@ -222,7 +215,9 @@ sub validate_opts {
 sub execute {
 	my ($self, $opts, $args) = @_;
 	my $fasta_file = shift @$args;
-	$self->_fill_opts($opts);
+
+	my %default_opt = $self->_default_opt;
+	$self->fill_opts($opts, \%default_opt);
 
 	# Set if user wants a verbose log
 	$LOG_VERBOSE = $opts->{verbose};
@@ -249,13 +244,15 @@ sub execute {
 	#  Log presentation header
 	#-------------------------------------------------------------------------------
 	my $time_stamp = localtime;
-	my $progname   = file($0)->basename;
+	my $progname   = $self->progname;
+	my $argv = $self->argv;
 log_msg <<"HEADER";
--------------------------------------------------------------
+--------------------------------------------------------
  Date $time_stamp
- Teaching and Research Institute from Sírio-Libanês Hospital
  $progname Copyright (C) 2017 Thiago L. A. Miller
--------------------------------------------------------------
+--------------------------------------------------------
+:: Arguments passed by the user:
+  => '@$argv'
 HEADER
 
 	#-------------------------------------------------------------------------------
