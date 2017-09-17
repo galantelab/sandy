@@ -2,6 +2,10 @@ Revision history for App-SimulateReads
 
 {{$NEXT}}
 
+0.03      2017-09-17 22:50:47-03:00 America/Sao_Paulo
+
+	- Split App::SimulateReads by creating a CLI::App, CLI::Command interface
+
 0.02      2017-09-16 02:18:05-03:00 America/Sao_Paulo
 
 	- Fix README.md issue with PodWeaver by using ReadmeAnyFromPod
