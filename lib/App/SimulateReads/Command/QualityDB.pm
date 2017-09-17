@@ -4,7 +4,9 @@ package App::SimulateReads::Command::QualityDB;
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::Quality::Handle;
 
-our $VERSION = '0.02'; # VERSION
+extends 'App::SimulateReads::CLI::Command';
+
+our $VERSION = '0.03'; # VERSION
 
 has 'db' => (
 	is         => 'ro',
@@ -18,10 +20,9 @@ sub _build_db {
 	return App::SimulateReads::Quality::Handle->new;
 }
 
-sub opt_spec {
-	'help|h',
-	'man|M'
-}
+override 'opt_spec' => sub {
+	super
+};
 
 sub subcommand_map {
 	add     => 'App::SimulateReads::Command::QualityDB::Add',
@@ -68,7 +69,7 @@ App::SimulateReads::Command::QualityDB - qualitydb command class. Manage quality
 
 =head1 VERSION
 
-version 0.02
+version 0.03
 
 =head1 SYNOPSIS
 
