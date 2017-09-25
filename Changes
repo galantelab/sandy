@@ -2,6 +2,10 @@ Revision history for App-SimulateReads
 
 {{$NEXT}}
 
+0.04      2017-09-25 19:16:51-03:00 America/Sao_Paulo
+
+	- Minimum perl version set to v5.10
+
 0.03      2017-09-17 22:50:47-03:00 America/Sao_Paulo
 
 	- Split App::SimulateReads by creating a CLI::App, CLI::Command interface
