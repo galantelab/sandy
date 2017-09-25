@@ -1,7 +1,7 @@
 package App::SimulateReads::Base;
 # ABSTRACT: Policy and base module to App::SimulateReads project.
 
-use 5.018;
+use 5.010;
 use strict;
 use warnings FATAL => 'all';
 no warnings 'experimental::smartmatch';
@@ -16,7 +16,7 @@ use Import::Into;
 use Data::OptList;
 use Module::Runtime 'use_module';
 
-our $VERSION = '0.03'; # VERSION
+our $VERSION = '0.04'; # VERSION
 
 binmode STDERR, ":encoding(utf8)";
 our $LOG_VERBOSE = 1;
@@ -34,7 +34,7 @@ sub import {
 
 	# Import as in Moder::Perl
 	strict->import;
-	feature->import(':5.18');
+	feature->import(':5.10');
 	utf8->import($caller);
 	true->import;
 	Carp->import::into($caller);
@@ -133,7 +133,7 @@ App::SimulateReads::Base - Policy and base module to App::SimulateReads project.
 
 =head1 VERSION
 
-version 0.03
+version 0.04
 
 =head1 AUTHOR
 
