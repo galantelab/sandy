@@ -4,7 +4,7 @@ package App::SimulateReads::Quality;
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::Quality::Handle;
 
-our $VERSION = '0.03'; # VERSION
+our $VERSION = '0.04'; # VERSION
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
@@ -192,7 +192,7 @@ App::SimulateReads::Quality - Class to simulate quality entries
 
 =head1 VERSION
 
-version 0.03
+version 0.04
 
 =head1 AUTHOR
 

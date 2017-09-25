@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Command::QualityDB';
 
-our $VERSION = '0.03'; # VERSION
+our $VERSION = '0.04'; # VERSION
 
 override 'opt_spec' => sub {
 	super,
@@ -51,7 +51,7 @@ App::SimulateReads::Command::QualityDB::Remove - qualitydb subcommand class. Rem
 
 =head1 VERSION
 
-version 0.03
+version 0.04
 
 =head1 SYNOPSIS
 

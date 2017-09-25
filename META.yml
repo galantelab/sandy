@@ -10,11 +10,13 @@ build_requires:
   Test::Perl::Critic: '1.03'
   Test::UseAllModules: '0'
   autodie: '0'
+  perl: '5.010'
 configure_requires:
   ExtUtils::MakeMaker: '0'
   File::ShareDir::Install: '0.06'
+  perl: '5.010'
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 6.010, CPAN::Meta::Converter version 2.150010'
+generated_by: 'Dist::Zilla version 6.010, CPAN::Meta::Converter version 2.150005'
 license: gpl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -50,7 +52,7 @@ requires:
   constant: '0'
   feature: '0'
   namespace::autoclean: '0'
-  perl: '5.018'
+  perl: '5.010'
   strict: '0'
   'true': '0'
   utf8: '0'
@@ -58,5 +60,5 @@ requires:
 resources:
   bugtracker: https://github.com/galantelab/simulate_reads/issues
   repository: git://github.com/galantelab/simulate_reads.git
-version: '0.03'
-x_serialization_backend: 'YAML::Tiny version 1.70'
+version: '0.04'
+x_serialization_backend: 'YAML::Tiny version 1.69'
