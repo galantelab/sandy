@@ -1,7 +1,7 @@
 package App::SimulateReads::Base;
 # ABSTRACT: Policy and base module to App::SimulateReads project.
 
-use 5.018;
+use 5.010;
 use strict;
 use warnings FATAL => 'all';
 no warnings 'experimental::smartmatch';
@@ -34,7 +34,7 @@ sub import {
 
 	# Import as in Moder::Perl
 	strict->import;
-	feature->import(':5.18');
+	feature->import(':5.10');
 	utf8->import($caller);
 	true->import;
 	Carp->import::into($caller);
