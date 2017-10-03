@@ -2,6 +2,11 @@ Revision history for App-SimulateReads
 
 {{$NEXT}}
 
+0.05      2017-10-02 22:57:50-03:00 America/Sao_Paulo
+
+	- Remove Statistics::Basic
+	- Test::Perl::Critic and Test::UseAllModules were moved to [TestRecommends]
+
 0.04      2017-09-25 19:16:51-03:00 America/Sao_Paulo
 
 	- Minimum perl version set to v5.10
