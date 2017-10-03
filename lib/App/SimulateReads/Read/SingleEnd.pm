@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Read';
 
-our $VERSION = '0.04'; # VERSION
+our $VERSION = '0.05'; # VERSION
 
 #===  CLASS METHOD  ============================================================
 #        CLASS: Read::SingleEnd
@@ -48,7 +48,7 @@ App::SimulateReads::Read::SingleEnd - App::SimulateReads::Read subclass for simu
 
 =head1 VERSION
 
-version 0.04
+version 0.05
 
 =head1 AUTHOR
 

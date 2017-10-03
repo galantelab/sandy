@@ -4,7 +4,7 @@ package App::SimulateReads::Fastq;
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::Quality;
 
-our $VERSION = '0.04'; # VERSION
+our $VERSION = '0.05'; # VERSION
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
@@ -77,7 +77,7 @@ App::SimulateReads::Fastq - Base class to simulate fastq entries
 
 =head1 VERSION
 
-version 0.04
+version 0.05
 
 =head1 AUTHOR
 
