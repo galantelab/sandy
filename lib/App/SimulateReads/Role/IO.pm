@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'role';
 use PerlIO::gzip;
 use Scalar::Util 'looks_like_number';
 
-our $VERSION = '0.04'; # VERSION
+our $VERSION = '0.05'; # VERSION
 
 #===  CLASS METHOD  ============================================================
 #        CLASS: My::Role::IO (Role)
@@ -144,7 +144,7 @@ App::SimulateReads::Role::IO - Input and output custom wrappers.
 
 =head1 VERSION
 
-version 0.04
+version 0.05
 
 =head1 AUTHOR
 

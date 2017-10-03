@@ -101,20 +101,20 @@ sub gen_read : Tests(122) {
 	}
 }
 
-sub normality : Tests(1) {
-	my $test = shift;
-	my $read = $test->default_read;
-
-	SKIP: {
-		eval { require Statistics::Normality };
-		skip 'Statistics::Normality not installed', 1 if $@;
-		
-		my @dist;
-		push @dist => ($read->_random_half_normal - 2 * $read->read_size) for 1..100;
-
-		my $pval = Statistics::Normality::shapiro_wilk_test(\@dist);
-		ok $pval >= 0.05,
-			"Shapiro wilk test: pval ($pval) must be greater than alpha level (0.05) to accept the null-hypothesis";
-	}
-}
+#sub normality : Tests(1) {
+#	my $test = shift;
+#	my $read = $test->default_read;
+#
+#	SKIP: {
+#		eval { require Statistics::Normality };
+#		skip 'Statistics::Normality not installed', 1 if $@;
+#		
+#		my @dist;
+#		push @dist => ($read->_random_half_normal - 2 * $read->read_size) for 1..100;
+#
+#		my $pval = Statistics::Normality::shapiro_wilk_test(\@dist);
+#		ok $pval >= 0.05,
+#			"Shapiro wilk test: pval ($pval) must be greater than alpha level (0.05) to accept the null-hypothesis";
+#	}
+#}
 

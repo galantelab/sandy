@@ -6,7 +6,7 @@ use App::SimulateReads::Quality::Handle;
 
 extends 'App::SimulateReads::CLI::Command';
 
-our $VERSION = '0.04'; # VERSION
+our $VERSION = '0.05'; # VERSION
 
 has 'db' => (
 	is         => 'ro',
@@ -69,7 +69,7 @@ App::SimulateReads::Command::QualityDB - qualitydb command class. Manage quality
 
 =head1 VERSION
 
-version 0.04
+version 0.05
 
 =head1 SYNOPSIS
 
