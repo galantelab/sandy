@@ -72,7 +72,7 @@ sub import {
 				Moose->import({into=>$caller});
 				MooseX::StrictConstructor->import({into=>$caller});
 				MooseX::UndefTolerant->import({into=>$caller});
-				My::Types->import({into=>$caller});
+				App::SimulateReads::Types->import({into=>$caller});
 				after_runtime {
 					$caller->meta->make_immutable;
 				}
@@ -81,7 +81,7 @@ sub import {
 				require Moose::Role;
 				require App::SimulateReads::Types;
 				Moose::Role->import({into=>$caller});
-				My::Types->import({into=>$caller});
+				App::SimulateReads::Types->import({into=>$caller});
 			}
 			when ('test') {
 				use_module('Test::Most')->import::into($caller);
