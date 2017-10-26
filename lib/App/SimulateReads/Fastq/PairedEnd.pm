@@ -8,13 +8,25 @@ extends 'App::SimulateReads::Fastq';
 
 # VERSION
 
-#-------------------------------------------------------------------------------
-#  Moose attributes
-#-------------------------------------------------------------------------------
-has 'fragment_mean'    => (is => 'rw', isa => 'My:IntGt0', required => 1);
-has 'fragment_stdd'    => (is => 'rw', isa => 'My:IntGe0', required => 1);
-has 'sequencing_error' => (is => 'ro', isa => 'My:NumHS',  required => 1);
-has '_read'            => (
+has 'fragment_mean' => (
+	is         => 'rw',
+	isa        => 'My:IntGt0',
+	required   => 1
+);
+
+has 'fragment_stdd' => (
+	is         => 'rw',
+	isa        => 'My:IntGe0',
+	required   => 1
+);
+
+has 'sequencing_error' => (
+	is         => 'ro',
+	isa        => 'My:NumHS',
+	required   => 1
+);
+
+has '_read' => (
 	is         => 'ro',
 	isa        => 'App::SimulateReads::Read::PairedEnd',
 	builder    => '_build_read',
@@ -22,16 +34,12 @@ has '_read'            => (
 	handles    => [qw{ gen_read }]
 );
 
-#===  CLASS METHOD  ============================================================
-#        CLASS: Fastq::PairedEnd
-#       METHOD: _build_read (BUILDER)
-#   PARAMETERS: Void
-#      RETURNS: Read::PairedEnd obj
-#  DESCRIPTION: Build a Read::PairedEnd object
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
+sub BUILD {
+	my $self = shift;
+	## Just to ensure that the lazy attributes are built before &new returns
+	$self->_read;
+}
+
 sub _build_read {
 	my $self = shift;
 	App::SimulateReads::Read::PairedEnd->new(
@@ -40,20 +48,8 @@ sub _build_read {
 		fragment_mean    => $self->fragment_mean,
 		fragment_stdd    => $self->fragment_stdd
 	);
-} ## --- end sub _build_read
+}
 
-#===  CLASS METHOD  ============================================================
-#        CLASS: Fastq::PairedEnd
-#       METHOD: fastq
-#   PARAMETERS: $id Str, $seq_name Str, $seq_ref Ref Str, $seq_size Int > 0,
-#               $is_leader Bool
-#      RETURNS: $fastq Ref Str
-#  DESCRIPTION: Consumes sprint_fastq parent template, twice, to generate a 
-#               paired-end fastq entry
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
 sub sprint_fastq {
 	my ($self, $id, $seq_name, $seq_ref, $seq_size, $is_leader) = @_;
 
@@ -75,4 +71,4 @@ sub sprint_fastq {
 	my $fastq2_ref = $self->fastq_template(\$header2, $read2_ref);
 
 	return ($fastq1_ref, $fastq2_ref);
-} ## --- end sub sprint_fastq
+}
