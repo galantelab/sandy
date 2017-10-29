@@ -2,6 +2,12 @@ Revision history for App-SimulateReads
 
 {{$NEXT}}
 
+0.06      2017-10-29 04:28:50-02:00 America/Sao_Paulo
+
+	- Corrected My::Types to App::SimulateReads::Types in Base class
+	- App no more dies if an indexed fasta sequence has not passed the
+	  length constraints. Instead, that sequence are deleted from the hash
+
 0.05      2017-10-02 22:57:50-03:00 America/Sao_Paulo
 
 	- Remove Statistics::Basic
