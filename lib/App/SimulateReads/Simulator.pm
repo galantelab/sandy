@@ -196,14 +196,20 @@ sub _build_weights {
 					unless %$indexed_file;
 
 				my $indexed_fasta = $self->_fasta;
-				my $err;
-				for my $id (keys %$indexed_file) {
+
+				my @ids = keys %$indexed_file;
+				my @ids_not_found;
+
+				for my $id (@ids) {
 					if (not exists $indexed_fasta->{$id}) {
-						$err .= "seqid '$id' not found in '" . $self->fasta_file . "'\n";
+						log_msg "Ignoring seqid '$id': It is not found at the indexed fasta";
+						push @ids_not_found => $id;
 					}
 				}
-				croak "Error in validating '" . $self->weight_file . "':\n" . $err
-					if defined $err;
+
+				if (@ids_not_found == @ids) {
+					croak "No seqid entry of the file '" . $self->weight_file . "' is recorded in the indexed fasta\n";
+				}
 
 				$self->calculate_weights($indexed_file);
 			}
