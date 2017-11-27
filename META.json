@@ -4,7 +4,7 @@
       "Thiago L. A. Miller <tmiller@mochsl.org.br>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 6.010, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Dist::Zilla version 6.010, CPAN::Meta::Converter version 2.150005",
    "license" : [
       "gpl_3"
    ],
@@ -85,7 +85,7 @@
          "web" : "https://github.com/galantelab/simulate_reads"
       }
    },
-   "version" : "0.05",
-   "x_serialization_backend" : "Cpanel::JSON::XS version 3.0239"
+   "version" : "0.07",
+   "x_serialization_backend" : "JSON::PP version 2.94"
 }
 

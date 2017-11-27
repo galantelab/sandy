@@ -49,7 +49,7 @@ sub gen_read : Tests(122) {
 	my $seq_len = $test->seq_len;
 
 	throws_ok { $read->gen_read(\$seq, $read->read_size - 1, 1) }
-	qr/So many tries/,
+	qr/must be greater or equal to fragment_mean/,
 		"Sequence length lesser than read_size must return error";
 	
 	my $err = 0;

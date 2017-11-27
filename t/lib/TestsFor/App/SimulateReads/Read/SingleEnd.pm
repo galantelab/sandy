@@ -22,7 +22,7 @@ sub gen_read : Tests(51) {
 	my $seq_len = $test->seq_len;
 
 	throws_ok { ${ $read->gen_read(\$seq, $read->read_size - 1, 1) } }
-	qr/The constraints were not met/,
+	qr/must be greater or equal to read_size/,
 		"Sequence length lesser than read_size must return error";
 	
 	for my $i (0..9) {
