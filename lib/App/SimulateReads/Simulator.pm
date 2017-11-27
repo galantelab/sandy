@@ -10,7 +10,7 @@ use Parallel::ForkManager;
 
 with qw/App::SimulateReads::Role::WeightedRaffle App::SimulateReads::Role::IO/;
 
-our $VERSION = '0.05'; # VERSION
+our $VERSION = '0.07'; # VERSION
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
@@ -129,24 +129,29 @@ sub _build_fasta {
 	my $self = shift;
 	log_msg ":: Indexing fasta file '" . $self->fasta_file . "' ...";
 	my $indexed_fasta = $self->index_fasta($self->fasta_file);
-	croak "Error parsing " . $self->fasta_file . ". Maybe the file is empty\n"
-		unless %$indexed_fasta;
+
+	unless (%$indexed_fasta) {
+		croak sprintf "Error parsing '%s'. Maybe the file is empty\n" => $self->fasta_file;
+	}
 
 	# Validate genome about the read size required
-	my $err;
 	for my $id (keys %$indexed_fasta) {
 		my $index_size = $indexed_fasta->{$id}{size};
 		given (ref $self->fastq) {
 			when ('App::SimulateReads::Fastq::SingleEnd') {
 				my $read_size = $self->fastq->read_size;
 				if ($index_size < $read_size) {
-					$err .= "seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n";
+					log_msg ":: seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n" .
+						"  -> I'm going to include '>$id' in the blacklist\n";
+					delete $indexed_fasta->{$id};
 				}
 			}
 			when ('App::SimulateReads::Fastq::PairedEnd') {
 				my $fragment_mean = $self->fastq->fragment_mean;
 				if ($index_size < $fragment_mean) {
-					$err .= "seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)\n";
+					log_msg ":: seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)\n" .
+						"  -> I'm going to include '>$id' in the blacklist\n";
+					delete $indexed_fasta->{$id};
 				}
 			}
 			default {
@@ -155,7 +160,10 @@ sub _build_fasta {
 		}
 	}
 	
-	croak "Error parsing '" . $self->fasta_file . "':\n$err" if defined $err;
+	unless (%$indexed_fasta) {
+		croak sprintf "Fasta file '%s' has no valid entry\n" => $self->fasta_file;
+	}
+
 	return $indexed_fasta;
 } ## --- end sub _build_fasta
 
@@ -188,14 +196,20 @@ sub _build_weights {
 					unless %$indexed_file;
 
 				my $indexed_fasta = $self->_fasta;
-				my $err;
-				for my $id (keys %$indexed_file) {
+
+				my @ids = keys %$indexed_file;
+				my @ids_not_found;
+
+				for my $id (@ids) {
 					if (not exists $indexed_fasta->{$id}) {
-						$err .= "seqid '$id' not found in '" . $self->fasta_file . "'\n";
+						log_msg "Ignoring seqid '$id': It is not found at the indexed fasta";
+						push @ids_not_found => $id;
 					}
 				}
-				croak "Error in validating '" . $self->weight_file . "':\n" . $err
-					if defined $err;
+
+				if (@ids_not_found == @ids) {
+					croak "No seqid entry of the file '" . $self->weight_file . "' is recorded in the indexed fasta\n";
+				}
 
 				$self->calculate_weights($indexed_file);
 			}
@@ -463,7 +477,7 @@ App::SimulateReads::Simulator - Class responsible to make the simulation
 
 =head1 VERSION
 
-version 0.05
+version 0.07
 
 =head1 AUTHOR
 

@@ -55,7 +55,7 @@ App::SimulateReads::Quality::Schema::Result::SequencingSystem
 
 =head1 VERSION
 
-version 0.05
+version 0.07
 
 =head1 NAME
 

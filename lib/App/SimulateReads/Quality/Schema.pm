@@ -31,7 +31,7 @@ App::SimulateReads::Quality::Schema
 
 =head1 VERSION
 
-version 0.05
+version 0.07
 
 =head1 AUTHOR
 

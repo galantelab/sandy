@@ -8,6 +8,8 @@ META.yml
 Makefile.PL
 README.md
 dist.ini
+docker/Dockerfile
+docker/README.md
 lib/App/SimulateReads.pm
 lib/App/SimulateReads/Base.pm
 lib/App/SimulateReads/CLI.pm

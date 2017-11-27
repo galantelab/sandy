@@ -4,14 +4,22 @@ package App::SimulateReads::Fastq;
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::Quality;
 
-our $VERSION = '0.05'; # VERSION
+our $VERSION = '0.07'; # VERSION
 
-#-------------------------------------------------------------------------------
-#  Moose attributes
-#-------------------------------------------------------------------------------
-has 'quality_profile'   => (is => 'ro', isa => 'My:QualityP', required => 1, coerce => 1);
-has 'read_size'         => (is => 'ro', isa => 'My:IntGt0',   required => 1);
-has '_quality'          => (
+has 'quality_profile' => (
+	is         => 'ro',
+	isa        => 'My:QualityP',
+	required   => 1,
+	coerce     => 1
+);
+
+has 'read_size' => (
+	is         => 'ro',
+	isa        => 'My:IntGt0',
+	required   => 1
+);
+
+has '_quality' => (
 	is         => 'ro',
 	isa        => 'App::SimulateReads::Quality',
 	builder    => '_build_quality',
@@ -25,34 +33,14 @@ sub BUILD {
 	$self->_quality;
 }
 
-#===  CLASS METHOD  ============================================================
-#        CLASS: Fast
-#       METHOD: _build_quality (BUILDER)
-#   PARAMETERS: Void
-#      RETURNS: Quality obj
-#  DESCRIPTION: Build Quality object
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
 sub _build_quality {
 	my $self = shift;
 	App::SimulateReads::Quality->new(
 		quality_profile => $self->quality_profile,
 		read_size       => $self->read_size
 	);
-} ## --- end sub _build_quality
+}
 
-#===  CLASS METHOD  ============================================================
-#        CLASS: Fast
-#       METHOD: sprintf_fastq
-#   PARAMETERS: $header_ref Ref Str, $seq_ref Ref Str
-#      RETURNS: $fastq Ref Str
-#  DESCRIPTION: Fastq entry template
-#       THROWS: no exceptions
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
 sub fastq_template {
 	my ($self, $header_ref, $seq_ref) = @_;
 	my $quality_ref = $self->gen_quality;
@@ -63,7 +51,7 @@ sub fastq_template {
 	$fastq .= "$$quality_ref";
 
 	return \$fastq;
-} ## --- end sub fastq_template
+}
 
 __END__
 
@@ -77,7 +65,7 @@ App::SimulateReads::Fastq - Base class to simulate fastq entries
 
 =head1 VERSION
 
-version 0.05
+version 0.07
 
 =head1 AUTHOR
 
