@@ -2,6 +2,12 @@ Revision history for App-SimulateReads
 
 {{$NEXT}}
 
+0.07      2017-11-27 11:55:16-02:00 America/Sao_Paulo
+
+	- App no more dies if an indexed weighted file has not a valid seqid
+	  recorded at a validated indexed fasta
+	- Add Dockerfile for the project
+
 0.06      2017-10-29 04:28:50-02:00 America/Sao_Paulo
 
 	- Corrected My::Types to App::SimulateReads::Types in Base class
