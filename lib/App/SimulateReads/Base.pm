@@ -4,7 +4,7 @@ package App::SimulateReads::Base;
 use 5.010;
 use strict;
 use warnings FATAL => 'all';
-no warnings 'experimental::smartmatch';
+no if $] >= 5.018, warnings => "experimental::smartmatch";
 use utf8 ();
 use feature ();
 use true ();
@@ -109,7 +109,7 @@ sub import {
 	#This must come after anything else that might change warning
 	# levels in the caller (e.g. Moose)
 	warnings->import('FATAL'=>'all');
-	warnings->unimport('experimental::smartmatch');
+	warnings->unimport('experimental::smartmatch') if $] >= 5.018;
 
 	namespace::autoclean->import(
 		-cleanee => $caller,
