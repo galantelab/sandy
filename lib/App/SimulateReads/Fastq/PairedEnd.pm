@@ -6,7 +6,7 @@ use App::SimulateReads::Read::PairedEnd;
 
 extends 'App::SimulateReads::Fastq';
 
-our $VERSION = '0.07'; # VERSION
+our $VERSION = '0.08'; # VERSION
 
 has 'fragment_mean' => (
 	is         => 'rw',
@@ -85,7 +85,7 @@ App::SimulateReads::Fastq::PairedEnd - App::SimulateReads::Fastq subclass for si
 
 =head1 VERSION
 
-version 0.07
+version 0.08
 
 =head1 AUTHOR
 
