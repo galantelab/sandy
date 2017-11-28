@@ -4,7 +4,7 @@ package App::SimulateReads::CLI;
 use App::SimulateReads::Base 'class';
 use Path::Class 'file';
 
-our $VERSION = '0.07'; # VERSION
+our $VERSION = '0.08'; # VERSION
 
 has 'argv' => (
 	is      => 'ro',
@@ -35,7 +35,7 @@ App::SimulateReads::CLI - Base class for command line interface.
 
 =head1 VERSION
 
-version 0.07
+version 0.08
 
 =head1 SYNOPSIS
 

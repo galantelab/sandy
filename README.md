@@ -4,7 +4,7 @@ simulate\_reads - Creates single-end and paired-end fastq reads for transcriptom
 
 # VERSION
 
-version 0.07
+version 0.08
 
 # SYNOPSIS
 

@@ -10,7 +10,7 @@ use Parallel::ForkManager;
 
 with qw/App::SimulateReads::Role::WeightedRaffle App::SimulateReads::Role::IO/;
 
-our $VERSION = '0.07'; # VERSION
+our $VERSION = '0.08'; # VERSION
 
 #-------------------------------------------------------------------------------
 #  Moose attributes
@@ -197,17 +197,14 @@ sub _build_weights {
 
 				my $indexed_fasta = $self->_fasta;
 
-				my @ids = keys %$indexed_file;
-				my @ids_not_found;
-
-				for my $id (@ids) {
+				for my $id (keys %$indexed_file) {
 					if (not exists $indexed_fasta->{$id}) {
 						log_msg "Ignoring seqid '$id': It is not found at the indexed fasta";
-						push @ids_not_found => $id;
+						delete $indexed_file->{$id};
 					}
 				}
 
-				if (@ids_not_found == @ids) {
+				unless (%$indexed_file) {
 					croak "No seqid entry of the file '" . $self->weight_file . "' is recorded in the indexed fasta\n";
 				}
 
@@ -477,7 +474,7 @@ App::SimulateReads::Simulator - Class responsible to make the simulation
 
 =head1 VERSION
 
-version 0.07
+version 0.08
 
 =head1 AUTHOR
 
