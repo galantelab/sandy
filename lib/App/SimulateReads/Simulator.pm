@@ -5,6 +5,7 @@ use App::SimulateReads::Base 'class';
 use App::SimulateReads::Fastq::SingleEnd;
 use App::SimulateReads::Fastq::PairedEnd;
 use App::SimulateReads::InterlaceProcesses;
+use Scalar::Util 'looks_like_number';
 use File::Cat 'cat';
 use Parallel::ForkManager;
 
@@ -12,59 +13,94 @@ with qw/App::SimulateReads::Role::WeightedRaffle App::SimulateReads::Role::IO/;
 
 # VERSION
 
-#-------------------------------------------------------------------------------
-#  Moose attributes
-#-------------------------------------------------------------------------------
-has 'jobs'            => (is => 'ro', isa => 'My:IntGt0',      required => 1);
-has 'prefix'          => (is => 'ro', isa => 'Str',            required => 1);
-has 'output_gzip'     => (is => 'ro', isa => 'Bool',           required => 1);
-has 'fasta_file'      => (is => 'ro', isa => 'My:Fasta',       required => 1);
-has 'coverage'        => (is => 'ro', isa => 'My:NumGt0',      required => 0);
-has 'number_of_reads' => (is => 'ro', isa => 'My:IntGt0',      required => 0);
-has 'count_loops_by'  => (is => 'ro', isa => 'My:CountLoopBy', required => 1);
-has 'strand_bias'     => (is => 'ro', isa => 'My:StrandBias',  required => 1);
-has 'seqid_weight'    => (is => 'ro', isa => 'My:SeqIdWeight', required => 1);
-has 'weight_file'     => (is => 'ro', isa => 'My:File',        required => 0);
-has 'fastq'           => (
+has 'jobs' => (
+	is         => 'ro',
+	isa        => 'My:IntGt0',
+	required   => 1
+);
+
+has 'prefix' => (
+	is         => 'ro',
+	isa        => 'Str',
+	required   => 1
+);
+
+has 'output_gzip' => (
+	is         => 'ro',
+	isa        => 'Bool',
+	required   => 1
+);
+
+has 'fasta_file' => (
+	is         => 'ro',
+	isa        => 'My:Fasta',
+	required   => 1
+);
+
+has 'coverage' => (
+	is         => 'ro',
+	isa        => 'My:NumGt0',
+	required   => 0
+);
+
+has 'number_of_reads' => (
+	is         => 'ro',
+	isa        => 'My:IntGt0',
+	required   => 0
+);
+
+has 'count_loops_by' => (
+	is         => 'ro',
+	isa        => 'My:CountLoopBy',
+	required   => 1
+);
+
+has 'strand_bias' => (
+	is         => 'ro',
+	isa        => 'My:StrandBias',
+	required   => 1
+);
+
+has 'seqid_weight' => (
+	is         => 'ro',
+	isa        => 'My:SeqIdWeight',
+	required   => 1
+);
+
+has 'weight_file' => (
+	is         => 'ro',
+	isa        => 'My:File',
+	required   => 0
+);
+
+has 'fastq' => (
 	is         => 'ro',
 	isa        => 'App::SimulateReads::Fastq::SingleEnd | App::SimulateReads::Fastq::PairedEnd',
 	required   => 1,
 	handles    => [ qw{ sprint_fastq } ]
 );
-has '_fasta'         => (
+
+has '_fasta' => (
 	is         => 'ro',
 	isa        => 'My:IdxFasta',
 	builder    => '_build_fasta',
 	lazy_build => 1
 );
-has '_strand'        => (
+
+has '_strand' => (
 	is         => 'ro',
 	isa        => 'CodeRef',
 	builder    => '_build_strand',
 	lazy_build => 1
 );
-has '_seqid_raffle'  => (
+
+has '_seqid_raffle' => (
 	is         => 'ro',
 	isa        => 'CodeRef',
 	builder    => '_build_seqid_raffle',
 	lazy_build => 1
 );
 
-#===  CLASS METHOD  ============================================================
-#        CLASS: Simulator
-#       METHOD: BUILD (Moose)
-#   PARAMETERS: Void
-#      RETURNS: Void
-#  DESCRIPTION: Validate optional attributes and/or attributes that depends of
-#               another attribute
-#       THROWS: If seqid_weight == 'file' and the user did not pass a weight
-#               file, throws an exception.
-#               If count_loops_by == 'coverage', then coverage must be defined,
-#               as well as 'number_of_reads', number_of_reads must be defined
-#     COMMENTS: We need to initialize lazy attributes here. If not, the child
-#               processes could independently initialize one
-#     SEE ALSO: n/a
-#===============================================================================
 sub BUILD {
 	my $self = shift;
 
@@ -88,51 +124,64 @@ sub BUILD {
 	$self->_strand;
 	$self->_fasta;
 	$self->_seqid_raffle;
-} ## --- end sub BUILD
+}
  
-#===  CLASS METHOD  ============================================================
-#        CLASS: Simulator
-#       METHOD: _build_strand (BUILDER)
-#   PARAMETERS: Void
-#      RETURNS: Ref Code
-#  DESCRIPTION: Build _strand attribute. (dynamic linkage)
-#       THROWS: If it is given a unknown option, throws an error
-#     COMMENTS: Valid strand_bias: 'plus', 'minus' and 'random'
-#     SEE ALSO: n/a
-#===============================================================================
 sub _build_strand {
 	my $self = shift;
 	my $strand_sub;
+
 	given ($self->strand_bias) {
 		when ('plus')   { $strand_sub = sub {1} }
 		when ('minus')  { $strand_sub = sub {0} }
 		when ('random') { $strand_sub = sub { int(rand(2)) }}
 		default         { croak "Unknown option '$_' for strand bias\n" }
 	}
-	return $strand_sub;
-} ## --- end sub _build_strand
 
-#===  CLASS METHOD  ============================================================
-#        CLASS: Simulator
-#       METHOD: _build_fasta (BUILDER)
-#   PARAMETERS: Void
-#      RETURNS: $indexed_fasta My:IdxFasta
-#  DESCRIPTION: Build _fasta attribute
-#       THROWS: For single end read: If the read size required is greater than
-#               any genomic sequence, then throws an error. For paired end read:
-#               If fragment mean is greater than any genomic sequence, the throws
-#               an error.
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
+	return $strand_sub;
+}
+
+sub _index_fasta {
+	my $self = shift;
+	my $fasta = $self->fasta_file;
+
+	my $fh = $self->my_open_r($fasta);
+
+	# indexed_genome = ID => (seq, len)
+	my %indexed_fasta;
+	my $id;
+	while (<$fh>) {
+		chomp;
+		next if /^;/;
+		if (/^>/) {
+			my @fields = split /\|/;
+			$id = (split / / => $fields[0])[0];
+			$id =~ s/^>//;
+			$id = uc $id;
+		} else {
+			croak "Error reading fasta file '$fasta': Not defined id"
+				unless defined $id;
+			$indexed_fasta{$id}{seq} .= $_;
+		}
+	}
+	
+	for (keys %indexed_fasta) {
+		$indexed_fasta{$_}{size} = length $indexed_fasta{$_}{seq};
+	}
+
+	unless (%indexed_fasta) {
+		croak "Error parsing '$fasta'. Maybe the file is empty\n";
+	}
+
+	$fh->close
+		or croak "Cannot close file $fasta: $!\n";
+
+	return \%indexed_fasta;
+}
+
 sub _build_fasta {
 	my $self = shift;
 	log_msg ":: Indexing fasta file '" . $self->fasta_file . "' ...";
-	my $indexed_fasta = $self->index_fasta($self->fasta_file);
-
-	unless (%$indexed_fasta) {
-		croak sprintf "Error parsing '%s'. Maybe the file is empty\n" => $self->fasta_file;
-	}
+	my $indexed_fasta = $self->_index_fasta($self->fasta_file);
 
 	# Validate genome about the read size required
 	for my $id (keys %$indexed_fasta) {
@@ -165,20 +214,45 @@ sub _build_fasta {
 	}
 
 	return $indexed_fasta;
-} ## --- end sub _build_fasta
+}
 
-#===  CLASS METHOD  ============================================================
-#        CLASS: Simulator
-#       METHOD: _build_weights (BUILDER)
-#   PARAMETERS: Void
-#      RETURNS: My:Weights
-#  DESCRIPTION: Build weights. It is required by the WeightedRaffle role. 
-#               It verifies seqid_weight and sets the required weights matrix
-#       THROWS: If seqid_weight == 'file', then it needs to be validated
-#               If it is given a unknown option, throws an error
-#     COMMENTS: none
-#     SEE ALSO: n/a
-#===============================================================================
+sub _index_weight_file {
+	my $self = shift;
+	my $weight_file = $self->weight_file;
+
+	my $fh = $self->my_open_r($weight_file);
+	my %indexed_file;
+
+	my $line = 0;
+	while (<$fh>) {
+		$line++;
+		chomp;
+		next if /^\s*$/;
+
+		my @fields = split /\t/;
+
+		croak "Error parsing '$weight_file': seqid (first column) not found at line $line\n"
+			unless defined $fields[0];
+		croak "Error parsing '$weight_file': weight (second column) not found at line $line\n"
+			unless defined $fields[1];
+		croak "Error parsing '$weight_file': weight (second column) does not look like a number at line $line\n"
+			if not looks_like_number($fields[1]);
+		croak "Error parsing '$weight_file': weight (second column) lesser or equal to zero at line $line\n"
+			if $fields[1] <= 0;
+
+		$indexed_file{uc $fields[0]} = $fields[1];
+	}
+	
+	unless (%indexed_file) {
+		croak "Error parsing '$weight_file': Maybe the file is empty\n"
+	}
+
+	$fh->close
+		or croak "Cannot close file $weight_file: $!\n";
+
+	return \%indexed_file;
+}
+
 sub _build_weights {
 	my $self = shift;
 	my $weights;
@@ -190,12 +264,9 @@ sub _build_weights {
 		}
 		when ('file') {
 			log_msg ":: Indexing weight file '" . $self->weight_file . "' ...";
-			my $indexed_file = $self->index_weight_file($self->weight_file);
+			my $indexed_file = $self->_index_weight_file($self->weight_file);
 
 			# Validate weight_file
-			croak "Error parsing '" . $self->weight_file . "': Maybe the file is empty\n"
-				unless %$indexed_file;
-
 			my $indexed_fasta = $self->_fasta;
 
 			for my $id (keys %$indexed_file) {
@@ -220,18 +291,8 @@ sub _build_weights {
 	}
 
 	return $weights;
-} ## --- end sub _build_weights
+}
 
-#===  CLASS METHOD  ============================================================
-#        CLASS: Simulator
-#       METHOD: _build_seqid_raffle (BUILDER)
-#   PARAMETERS: Void
-#      RETURNS: Ref Code
-#  DESCRIPTION: Build _seqid_raffle attribute. (dynamic linkage) 
-#       THROWS: If it is given a unknown option, throws an error
-#     COMMENTS: seqid_weight can be: 'length', 'file' and 'same'
-#     SEE ALSO: n/a
-#===============================================================================
 sub _build_seqid_raffle {
 	my $self = shift;
 	my $seqid_sub;
@@ -249,22 +310,8 @@ sub _build_seqid_raffle {
 		}
 	}
 	return $seqid_sub;
-} ## --- end sub _build_seqid_raffle
+}
 
-#===  CLASS METHOD  ============================================================
-#        CLASS: Simulator
-#       METHOD: _calculate_number_of_reads (PRIVATE)
-#   PARAMETERS: Void
-#      RETURNS: $number_of_reads Int > 0
-#  DESCRIPTION: Calculates the number of reads to produce based on the coverage
-#               or the own value passed by the user
-#       THROWS: If count_loops_by is equal to 'coverage', it may accur that the
-#               fasta_file size, or the coverage asked is too low, which results in
-#               zero reads
-#               If it is given a unknown option, throws an error
-#     COMMENTS: count_loops_by can be: 'coverage' and 'number_of_reads'
-#     SEE ALSO: n/a
-#===============================================================================
 sub _calculate_number_of_reads {
 	my $self = shift;
 	my $number_of_reads;
@@ -297,22 +344,8 @@ sub _calculate_number_of_reads {
 	}
 
 	return $number_of_reads;
-} ## --- end sub _calculate_number_of_reads
+}
 
-#===  CLASS METHOD  ============================================================
-#        CLASS: Simulator
-#       METHOD: run_simulation
-#   PARAMETERS: Void
-#      RETURNS: Void
-#  DESCRIPTION: The main class method where the simulation unfolds
-#       THROWS: Try catch the fasta object passed by the user. If occurs an error,
-#               then throws an exception
-#     COMMENTS: It is not recommended to make parallelism in perl, so the workaround
-#               is to implement a parent, child system by forking the task and
-#               making part of the job in each child. In the end, it returns to
-#               parent and concatenate all temporary files generated
-#     SEE ALSO: n/a
-#===============================================================================
 sub run_simulation {
 	my $self = shift;
 	my $fasta = $self->_fasta;
@@ -461,4 +494,4 @@ sub run_simulation {
 		unlink $file_t
 			or croak "Cannot remove temporary file: $file_t: $!\n";
 	}
-} ## --- end sub run_simulation
+}
