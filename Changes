@@ -2,6 +2,11 @@ Revision history for App-SimulateReads
 
 {{$NEXT}}
 
+0.09      2017-11-28 23:24:58-02:00 America/Sao_Paulo
+
+	- Fix bug concerning perl versions (5.010 and >=5.018) and
+	  experimental::smartmatch warnings
+
 0.08      2017-11-27 22:21:06-02:00 America/Sao_Paulo
 
 	- Fix indexed weight file. If an entry does not exist at the indexed
