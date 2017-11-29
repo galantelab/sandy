@@ -3,7 +3,7 @@ package App::SimulateReads::Read;
 
 use App::SimulateReads::Base 'class';
 
-our $VERSION = '0.08'; # VERSION
+our $VERSION = '0.09'; # VERSION
 
 has 'sequencing_error' => (
 	is         => 'ro',
@@ -111,7 +111,7 @@ App::SimulateReads::Read - Base class to simulate reads
 
 =head1 VERSION
 
-version 0.08
+version 0.09
 
 =head1 AUTHOR
 

@@ -55,6 +55,7 @@ my %WriteMakefileArgs = (
     "base" => 0,
     "constant" => 0,
     "feature" => 0,
+    "if" => 0,
     "namespace::autoclean" => 0,
     "strict" => 0,
     "true" => 0,
@@ -68,7 +69,7 @@ my %WriteMakefileArgs = (
     "Test::UseAllModules" => 0,
     "autodie" => 0
   },
-  "VERSION" => "0.08",
+  "VERSION" => "0.09",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -109,6 +110,7 @@ my %FallbackPrereqs = (
   "base" => 0,
   "constant" => 0,
   "feature" => 0,
+  "if" => 0,
   "namespace::autoclean" => 0,
   "strict" => 0,
   "true" => 0,
