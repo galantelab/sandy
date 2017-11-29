@@ -4,7 +4,7 @@ package App::SimulateReads::Base;
 use 5.010;
 use strict;
 use warnings FATAL => 'all';
-no warnings 'experimental::smartmatch';
+no if $] >= 5.018, warnings => "experimental::smartmatch";
 use utf8 ();
 use feature ();
 use true ();
@@ -16,7 +16,7 @@ use Import::Into;
 use Data::OptList;
 use Module::Runtime 'use_module';
 
-our $VERSION = '0.08'; # VERSION
+our $VERSION = '0.09'; # VERSION
 
 binmode STDERR, ":encoding(utf8)";
 our $LOG_VERBOSE = 1;
@@ -109,7 +109,7 @@ sub import {
 	#This must come after anything else that might change warning
 	# levels in the caller (e.g. Moose)
 	warnings->import('FATAL'=>'all');
-	warnings->unimport('experimental::smartmatch');
+	warnings->unimport('experimental::smartmatch') if $] >= 5.018;
 
 	namespace::autoclean->import(
 		-cleanee => $caller,
@@ -133,7 +133,7 @@ App::SimulateReads::Base - Policy and base module to App::SimulateReads project.
 
 =head1 VERSION
 
-version 0.08
+version 0.09
 
 =head1 AUTHOR
 

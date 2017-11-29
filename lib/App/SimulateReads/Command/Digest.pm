@@ -12,7 +12,7 @@ use Pod::Usage;
 
 extends 'App::SimulateReads::CLI::Command';
 
-our $VERSION = '0.08'; # VERSION
+our $VERSION = '0.09'; # VERSION
 
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
@@ -323,7 +323,7 @@ App::SimulateReads::Command::Digest - digest command class. Simulate single-end 
 
 =head1 VERSION
 
-version 0.08
+version 0.09
 
 =head1 SYNOPSIS
 
