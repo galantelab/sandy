@@ -86,7 +86,7 @@
          "web" : "https://github.com/galantelab/simulate_reads"
       }
    },
-   "version" : "0.09",
+   "version" : "0.10",
    "x_serialization_backend" : "Cpanel::JSON::XS version 3.0239"
 }
 

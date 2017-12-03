@@ -11,7 +11,7 @@ use Parallel::ForkManager;
 
 with qw/App::SimulateReads::Role::WeightedRaffle App::SimulateReads::Role::IO/;
 
-our $VERSION = '0.09'; # VERSION
+our $VERSION = '0.10'; # VERSION
 
 has 'jobs' => (
 	is         => 'ro',
@@ -508,7 +508,7 @@ App::SimulateReads::Simulator - Class responsible to make the simulation
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 AUTHOR
 

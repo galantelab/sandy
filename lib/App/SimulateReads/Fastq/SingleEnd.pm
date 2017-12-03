@@ -6,7 +6,7 @@ use App::SimulateReads::Read::SingleEnd;
 
 extends 'App::SimulateReads::Fastq';
 
-our $VERSION = '0.09'; # VERSION
+our $VERSION = '0.10'; # VERSION
 
 has 'sequencing_error' => (
 	is         => 'ro',
@@ -62,7 +62,7 @@ App::SimulateReads::Fastq::SingleEnd - App::SimulateReads::Fastq subclass for si
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 AUTHOR
 

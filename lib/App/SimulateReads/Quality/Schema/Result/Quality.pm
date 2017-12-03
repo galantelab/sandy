@@ -68,7 +68,7 @@ App::SimulateReads::Quality::Schema::Result::Quality
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 NAME
 

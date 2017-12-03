@@ -9,7 +9,7 @@ use App::SimulateReads;
 # PODNAME: simulate_reads
 # ABSTRACT: Creates single-end and paired-end fastq reads for transcriptome and genome simulation.
 
-our $VERSION = '0.09'; # VERSION
+our $VERSION = '0.10'; # VERSION
 
 my $app = App::SimulateReads->new;
 $app->run;
@@ -26,7 +26,7 @@ simulate_reads - Creates single-end and paired-end fastq reads for transcriptome
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 SYNOPSIS
 
