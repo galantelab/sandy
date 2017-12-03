@@ -2,6 +2,10 @@ Revision history for App-SimulateReads
 
 {{$NEXT}}
 
+0.10      2017-12-03 04:27:18-02:00 America/Sao_Paulo
+
+	- Add version option
+
 0.09      2017-11-28 23:24:58-02:00 America/Sao_Paulo
 
 	- Fix bug concerning perl versions (5.010 and >=5.018) and
