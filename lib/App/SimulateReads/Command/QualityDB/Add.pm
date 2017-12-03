@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Command::QualityDB';
 
-our $VERSION = '0.09'; # VERSION
+our $VERSION = '0.10'; # VERSION
 
 use constant {
 	TYPE_OPT => ['raw', 'fastq']
@@ -101,7 +101,7 @@ App::SimulateReads::Command::QualityDB::Add - qualitydb subcommand class. Add a 
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 SYNOPSIS
 

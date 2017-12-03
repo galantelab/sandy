@@ -4,7 +4,7 @@ package App::SimulateReads::Fastq;
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::Quality;
 
-our $VERSION = '0.09'; # VERSION
+our $VERSION = '0.10'; # VERSION
 
 has 'quality_profile' => (
 	is         => 'ro',
@@ -65,7 +65,7 @@ App::SimulateReads::Fastq - Base class to simulate fastq entries
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 AUTHOR
 

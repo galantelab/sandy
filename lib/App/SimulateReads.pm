@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::CLI::App';
 
-our $VERSION = '0.09'; # VERSION
+our $VERSION = '0.10'; # VERSION
 
 sub command_map {
 	digest    => 'App::SimulateReads::Command::Digest',
@@ -24,7 +24,7 @@ App::SimulateReads - App builder that simulates single-end and paired-end reads.
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 SYNOPSIS
 

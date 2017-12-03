@@ -4,7 +4,7 @@ package App::SimulateReads::Role::IO;
 use App::SimulateReads::Base 'role';
 use PerlIO::gzip;
 
-our $VERSION = '0.09'; # VERSION
+our $VERSION = '0.10'; # VERSION
 
 sub my_open_r {
 	my ($self, $file) = @_;
@@ -48,7 +48,7 @@ App::SimulateReads::Role::IO - Input and output custom wrappers.
 
 =head1 VERSION
 
-version 0.09
+version 0.10
 
 =head1 AUTHOR
 
