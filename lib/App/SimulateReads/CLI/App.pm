@@ -40,6 +40,11 @@ sub _build_app_path {
 	return $INC{$command_pm};
 }
 
+override 'opt_spec' => sub {
+	super,
+	'version|v'
+};
+
 sub command_map_bultin {
 	help => \&help_command,
 	man  => \&man_command
@@ -67,6 +72,11 @@ sub _whois {
 sub _try_msg {
 	my $self = shift;
 	return sprintf "Try '%s --help' for more information" => $self->_whois;
+}
+
+sub _version_text {
+	my $self = shift;
+	pod2usage(-verbose => 99, -sections => ['NAME', 'VERSION'], -exitval => 0);
 }
 
 sub _help_text {
@@ -113,6 +123,7 @@ sub run_no_command {
 
 	$self->_help_text if $opts->{help};
 	$self->_man_text if $opts->{man};
+	$self->_version_text if $opts->{version};
 }
 
 sub run_command {
