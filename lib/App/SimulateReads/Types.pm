@@ -90,4 +90,9 @@ subtype 'My:CountLoopBy'
 	=> where   { $_ eq 'coverage' || $_ eq 'number-of-reads' }
 	=> message { "'$_' is not a valid count_loops_by: 'coverage' or 'number-of-reads'" };
 
+#subtype 'My:HeaderP'
+#	=> as 'Str'
+#	=> where { $_ eq 'illumina' || $_ eq 'transcriptime' || $_ eq 'genome' }
+#	=> message { "'$_' is not a valid header profile" };
+
 1; ## --- end class App::SimulateReads::Types

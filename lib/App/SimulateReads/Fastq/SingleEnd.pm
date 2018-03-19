@@ -37,7 +37,7 @@ sub _build_read {
 }
 
 sub sprint_fastq {
-	my ($self, $id, $seq_name, $seq_ref, $seq_size, $is_leader) = @_;
+	my ($self, $id, $num, $seq_name, $seq_ref, $seq_size, $is_leader) = @_;
 
 	my ($read_ref, $pos) = $self->gen_read($seq_ref, $seq_size, $is_leader);
 
