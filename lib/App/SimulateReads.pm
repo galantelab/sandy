@@ -9,7 +9,8 @@ extends 'App::SimulateReads::CLI::App';
 
 sub command_map {
 	digest    => 'App::SimulateReads::Command::Digest',
-	qualitydb =>  'App::SimulateReads::Command::QualityDB'
+	simulate  => 'App::SimulateReads::Command::Simulate',
+	qualitydb => 'App::SimulateReads::Command::QualityDB'
 }
 
 __END__

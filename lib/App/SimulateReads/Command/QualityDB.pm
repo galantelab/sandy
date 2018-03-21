@@ -69,7 +69,7 @@ __END__
   -h, --help               brief help message
   -M, --man                full documentation
  
- Subcommands:
+ Commands:
   add                      add a new quality profile to database
   remove                   remove an user quality profle from database
   restore                  restore the database

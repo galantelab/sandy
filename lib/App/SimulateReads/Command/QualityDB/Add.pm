@@ -88,6 +88,7 @@ sub execute {
 
 	log_msg "Done!";
 }
+
 __END__
 
 =head1 SYNOPSIS
