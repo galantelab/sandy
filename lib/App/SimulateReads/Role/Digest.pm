@@ -69,7 +69,7 @@ sub validate_args {
 		die "<$fasta_file> is not a file. Please, give me a valid fasta file\n";
 	}
 
-	# Check the file extension: fasta, fa, fna, ffn followed, or not, by .gz 
+	# Check the file extension: fasta, fa, fna, ffn followed, or not, by .gz
 	if ($fasta_file !~ /.+\.(fasta|fa|fna|ffn)(\.gz)?$/) {
 		die "<$fasta_file> does not seem to be a fasta file. Please check the file extension\n";
 	}
@@ -85,7 +85,8 @@ sub validate_opts {
 	# Possible alternatives
 	my %STRAND_BIAS       = map { $_ => 1 } @{ &STRAND_BIAS_OPT     };
 	my %SEQID_WEIGHT      = map { $_ => 1 } @{ &SEQID_WEIGHT_OPT    };
-	my %SEQUENCING_TYPE   = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT }; 
+	my %SEQUENCING_TYPE   = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT };
+	my %COUNT_LOOPS_BY    = map { $_ => 1 } @{ &COUNT_LOOPS_BY_OPT  };
 	my %QUALITY_PROFILE   = %{ $self->_quality_profile_report };
 
 	#  prefix
@@ -154,24 +155,35 @@ sub validate_opts {
 		}
 	}
 
-	# count-loops-by (COUNT_LOOPS_BY_OPT). The default value is counting by coverage
-	# Or calculate number of reads by coverage, or the user pass the number-of-reads.
-	# number-of-reads option overrides coverage
-	if (exists $opts->{'number-of-reads'}) {
-		# number_of_reads > 0
-		if ($opts->{'number-of-reads'} <= 0) {
-			die "Option 'number-of-reads' requires a value greater than zero, not $opts->{'number-of-reads'}\n";
-		}
+	# count-loops-by (COUNT_LOOPS_BY_OPT). The default value is defined into the consuming class
+	if (not exists $COUNT_LOOPS_BY{$default_opt{'count-loops-by'}}) {
+		my $opt = join ', ' => keys %COUNT_LOOPS_BY;
+		die "The provider must define the default count-lopps-by: $opt, not $default_opt{'count-loops-by'}";
+	}
 
-		# sequencing_type eq paired-end requires at least 2 reads
-		if ($opts->{'number-of-reads'} < 2 && $opts->{'sequencing-type'} eq 'paired-end') {
-			die "Option 'number-of-reads' requires a value greater or equal to 2 for paired-end reads, not $opts->{'number-of-reads'}\n";
+	# If default is 'coverage', then test if user wants to override it
+	if ($default_opt{'count-loops-by'} eq 'coverage') {
+		if (exists $opts->{'number-of-reads'}) {
+			# number_of_reads > 0
+			if ($opts->{'number-of-reads'} <= 0) {
+				die "Option 'number-of-reads' requires a value greater than zero, not $opts->{'number-of-reads'}\n";
+			}
+
+			# sequencing_type eq paired-end requires at least 2 reads
+			if ($opts->{'number-of-reads'} < 2 && $opts->{'sequencing-type'} eq 'paired-end') {
+				die "Option 'number-of-reads' requires a value greater or equal to 2 for paired-end reads, not $opts->{'number-of-reads'}\n";
+			}
 		}
 	}
 
-	# coverage > 0
-	if ($opts->{coverage} <= 0) {
-		die "Option 'coverage' requires a value greater than zero, not $opts->{coverage}\n";
+	# If default is 'number-of-reads', then test if user wants to override it
+	if ($default_opt{'count-loops-by'} eq 'number-of-reads') {
+		if (exists $opts->{'coverage'}) {
+			# coverage > 0
+			if ($opts->{coverage} <= 0) {
+				die "Option 'coverage' requires a value greater than zero, not $opts->{coverage}\n";
+			}
+		}
 	}
 
 	# seqid-weight (SEQID_WEIGHT_OPT)
@@ -203,12 +215,13 @@ sub execute {
 	# Set if user wants a verbose log
 	$LOG_VERBOSE = $opts->{verbose};
 
-	# Set default count-loop-by behavior
-	# TODO: Set number-of-reads or coverage depending of count-loop-by:
-	# That means: If it is genome number-of-reads override coverage and for transcriptome
-	# coverage override number-of-reads
-	$opts->{'count-loops-by'} = 'number-of-reads' if exists $opts->{'number-of-reads'};
-
+	# Override default 'count-loops-by'
+	if ($default_opt{'count-loops-by'} eq 'coverage') {
+		$opts->{'count-loops-by'} = 'number-of-reads' if exists $opts->{'number-of-reads'};
+	} elsif ($default_opt{'count-loops-by'} eq 'number-of-reads') {
+		$opts->{'count-loops-by'} = 'coverage' if exists $opts->{'coverage'};
+	}
+	
 	# Create output directory if it not exist
 	make_path($opts->{'output-dir'}, {error => \my $err_list});
 	my $err_dir;
@@ -230,13 +243,13 @@ sub execute {
 	my $time_stamp = localtime;
 	my $progname   = $self->progname;
 	my $argv = $self->argv;
-log_msg <<"HEADER";
+	log_msg <<"HEADER";
 --------------------------------------------------------
- Date $time_stamp
- $progname Copyright (C) 2017 Thiago L. A. Miller
+Date $time_stamp
+$progname Copyright (C) 2017 Thiago L. A. Miller
 --------------------------------------------------------
 :: Arguments passed by the user:
-  => '@$argv'
+=> '@$argv'
 HEADER
 
 	#-------------------------------------------------------------------------------
