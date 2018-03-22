@@ -8,7 +8,6 @@ extends 'App::SimulateReads::CLI::App';
 # VERSION
 
 sub command_map {
-	digest    => 'App::SimulateReads::Command::Digest',
 	simulate  => 'App::SimulateReads::Command::Simulate',
 	qualitydb => 'App::SimulateReads::Command::QualityDB'
 }
@@ -30,7 +29,7 @@ __END__
   man                      show application or command-specific documentation
 
  Main commands:
-  digest                   digest a fasta file into single|paired-end reads 
+  simulate                 manage genome/transcriptome sequencing simulation
   qualitydb                manage quality profile database
 
 =head1 DESCRIPTION
