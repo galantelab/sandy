@@ -16,7 +16,7 @@ use Import::Into;
 use Data::OptList;
 use Module::Runtime 'use_module';
 
-our $VERSION = '0.10'; # VERSION
+our $VERSION = '0.11'; # VERSION
 
 binmode STDERR, ":encoding(utf8)";
 our $LOG_VERBOSE = 1;
@@ -133,7 +133,7 @@ App::SimulateReads::Base - Policy and base module to App::SimulateReads project.
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 AUTHOR
 
@@ -141,7 +141,7 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2017 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

@@ -6,7 +6,7 @@ use App::SimulateReads::Quality::Handle;
 
 extends 'App::SimulateReads::CLI::Command';
 
-our $VERSION = '0.10'; # VERSION
+our $VERSION = '0.11'; # VERSION
 
 has 'db' => (
 	is         => 'ro',
@@ -69,7 +69,7 @@ App::SimulateReads::Command::QualityDB - qualitydb command class. Manage quality
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 SYNOPSIS
 
@@ -81,7 +81,7 @@ version 0.10
   -h, --help               brief help message
   -M, --man                full documentation
  
- Subcommands:
+ Commands:
   add                      add a new quality profile to database
   remove                   remove an user quality profle from database
   restore                  restore the database
@@ -97,7 +97,7 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2017 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

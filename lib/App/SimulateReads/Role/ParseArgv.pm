@@ -4,7 +4,7 @@ package App::SimulateReads::Role::ParseArgv;
 use App::SimulateReads::Base 'role';
 use Getopt::Long 'GetOptionsFromArray';
 
-our $VERSION = '0.10'; # VERSION
+our $VERSION = '0.11'; # VERSION
 
 sub parser {
 	my ($self, $argv, @opt_spec) = @_;
@@ -34,7 +34,7 @@ App::SimulateReads::Role::ParseArgv - Getopt::Long wrapper.
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 AUTHOR
 
@@ -42,7 +42,7 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2017 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

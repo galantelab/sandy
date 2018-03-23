@@ -48,11 +48,11 @@ sub sprint_fastq : Tests(3) {
 
 	my $id = "SR0001";
 	my $seq_name = "Chr1";
-	my $read_ref = $fastq->sprint_fastq($id, $seq_name, \$seq, length $seq, 1);
+	my $read_ref = $fastq->sprint_fastq($id, 1, $seq_name, \$seq, length $seq, 1);
 	my $read_size = $fastq->read_size;
 
-	my $header = qr/$id simulation_read length=$read_size position=${seq_name}:\d+-\d+/;
-	my $rg = qr/\@${header}\n.+\n\+\n.+/;
+	my $header = qr/simulation_read length=$read_size position=${seq_name}:\d+-\d+/;
+	my $rg = qr/\@.+${header}\n.+\n\+\n.+/;
 	ok $$read_ref =~ $rg,
 		"read retuned by 'fastq' must be in fastq format";
 	
@@ -65,7 +65,7 @@ sub sprint_fastq : Tests(3) {
 	is $pos, $pos_t,
 		"The seq_name:start-end inside fastq header should be the correct relative position";
 
-	my $read2_ref = $fastq->sprint_fastq($id, $seq_name, \$seq, length $seq, 0);
+	my $read2_ref = $fastq->sprint_fastq($id, 1, $seq_name, \$seq, length $seq, 0);
 
 	my @lines2 = split /\n/ => $$read2_ref;
 	$fastq->_read->reverse_complement(\$lines2[1]);

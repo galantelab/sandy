@@ -4,7 +4,7 @@ simulate\_reads - Creates single-end and paired-end fastq reads for transcriptom
 
 # VERSION
 
-version 0.10
+version 0.11
 
 # SYNOPSIS
 
@@ -41,7 +41,7 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 # COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2017 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

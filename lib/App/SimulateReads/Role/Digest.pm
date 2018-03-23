@@ -1,18 +1,17 @@
-package App::SimulateReads::Command::Digest;
-# ABSTRACT: digest command class. Simulate single-end and paired-end reads.
+package App::SimulateReads::Role::Digest;
+# ABSTRACT: Wrapper on Simulator class for genome/transcriptome sequencing
 
-use App::SimulateReads::Base 'class';
+use App::SimulateReads::Base 'role';
 use App::SimulateReads::Quality::Handle;
 use App::SimulateReads::Fastq::SingleEnd;
 use App::SimulateReads::Fastq::PairedEnd;
 use App::SimulateReads::Simulator;
 use Path::Class 'file';
 use File::Path 'make_path';
-use Pod::Usage;
 
-extends 'App::SimulateReads::CLI::Command';
+requires qw/default_opt opt_spec rm_opt/;
 
-our $VERSION = '0.10'; # VERSION
+our $VERSION = '0.11'; # VERSION
 
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
@@ -22,48 +21,56 @@ use constant {
 };
 
 override 'opt_spec' => sub {
-	super,
-	'prefix|p=s',
-	'verbose|v',
-	'output-dir|o=s',
-	'jobs|j=i',
-	'gzip|z!',
-	'coverage|c=f',
-	'read-size|r=i',
-	'fragment-mean|m=i',
-	'fragment-stdd|d=i',
-	'sequencing-error|e=f',
-	'sequencing-type|t=s',
-	'quality-profile|q=s',
-	'strand-bias|b=s',
-	'seqid-weight|w=s',
-	'number-of-reads|n=i',
-	'weight-file|f=s'
-};
+	my $self = shift;
+	my @rm_opt = $self->rm_opt;
 
-sub _default_opt {
-	'verbose'          => 0,
-	'prefix'           => 'out',
-	'output-dir'       => '.',
-	'jobs'             => 1,
-	'gzip'             => 1,
-	'count-loops-by'   => 'coverage',
-	'coverage'         => 1,
-	'strand-bias'      => 'random',
-	'seqid-weight'     => 'length',
-	'sequencing-type'  => 'paired-end',
-	'fragment-mean'    => 300,
-	'fragment-stdd'    => 50,
-	'sequencing-error' => 0.005,
-	'read-size'        => 101,
-	'quality-profile'  => 'hiseq'
-}
+	my %all_opt = (
+		'prefix'           => 'prefix|p=s',
+		'verbose'          => 'verbose|v',
+		'output-dir'       => 'output-dir|o=s',
+		'jobs'             => 'jobs|j=i',
+		'gzip'             => 'gzip|z!',
+		'coverage'         => 'coverage|c=f',
+		'read-size'        => 'read-size|r=i',
+		'fragment-mean'    => 'fragment-mean|m=i',
+		'fragment-stdd'    => 'fragment-stdd|d=i',
+		'sequencing-error' => 'sequencing-error|e=f',
+		'sequencing-type'  => 'sequencing-type|t=s',
+		'quality-profile'  => 'quality-profile|q=s',
+		'strand-bias'      => 'strand-bias|b=s',
+		'sequid-weight'    => 'seqid-weight|w=s',
+		'number-of-reads'  => 'number-of-reads|n=i',
+		'weight-file'      => 'weight-file|f=s'
+	);
+
+	for my $opt (@rm_opt) {
+		delete $all_opt{$opt} if exists $all_opt{$opt};
+	}
+
+	return super, values %all_opt;
+#	'prefix|p=s',
+#	'verbose|v',
+#	'output-dir|o=s',
+#	'jobs|j=i',
+#	'gzip|z!',
+#	'coverage|c=f',
+#	'read-size|r=i',
+#	'fragment-mean|m=i',
+#	'fragment-stdd|d=i',
+#	'sequencing-error|e=f',
+#	'sequencing-type|t=s',
+#	'quality-profile|q=s',
+#	'strand-bias|b=s',
+#	'seqid-weight|w=s',
+#	'number-of-reads|n=i',
+#	'weight-file|f=s'
+};
 
 sub _log_msg_opt {
 	my ($self, $opts) = @_;
 	while (my ($key, $value) = each %$opts) {
 		next if ref($value) =~ /Fastq/;
-		$value = "not defined" if not defined $value;
+		next if not defined $value;
 		$key =~ s/_/ /g;
 		log_msg "  => $key $value";
 	}
@@ -88,7 +95,7 @@ sub validate_args {
 		die "<$fasta_file> is not a file. Please, give me a valid fasta file\n";
 	}
 
-	# Check the file extension: fasta, fa, fna, ffn followed, or not, by .gz 
+	# Check the file extension: fasta, fa, fna, ffn followed, or not, by .gz
 	if ($fasta_file !~ /.+\.(fasta|fa|fna|ffn)(\.gz)?$/) {
 		die "<$fasta_file> does not seem to be a fasta file. Please check the file extension\n";
 	}
@@ -98,13 +105,14 @@ sub validate_args {
 
 sub validate_opts {
 	my ($self, $opts) = @_;
-	my %default_opt = $self->_default_opt;
+	my %default_opt = $self->default_opt;
 	$self->fill_opts($opts, \%default_opt);
 
 	# Possible alternatives
 	my %STRAND_BIAS       = map { $_ => 1 } @{ &STRAND_BIAS_OPT     };
 	my %SEQID_WEIGHT      = map { $_ => 1 } @{ &SEQID_WEIGHT_OPT    };
-	my %SEQUENCING_TYPE   = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT }; 
+	my %SEQUENCING_TYPE   = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT };
+	my %COUNT_LOOPS_BY    = map { $_ => 1 } @{ &COUNT_LOOPS_BY_OPT  };
 	my %QUALITY_PROFILE   = %{ $self->_quality_profile_report };
 
 	#  prefix
@@ -173,11 +181,31 @@ sub validate_opts {
 		}
 	}
 
-	# count-loops-by (COUNT_LOOPS_BY_OPT). The default value is counting by coverage
-	# Or calculate number of reads by coverage, or the user pass the number-of-reads.
-	# number-of-reads option overrides coverage
-	if (exists $opts->{'number-of-reads'}) {
-		# number_of_reads > 0
+	# count-loops-by (COUNT_LOOPS_BY_OPT). The default value is defined into the consuming class
+	if (not exists $COUNT_LOOPS_BY{$default_opt{'count-loops-by'}}) {
+		my $opt = join ', ' => keys %COUNT_LOOPS_BY;
+		die "The provider must define the default count-lopps-by: $opt, not $default_opt{'count-loops-by'}";
+	}
+
+	# If default is 'coverage'
+	if ($default_opt{'count-loops-by'} eq 'coverage') {
+		if (not defined $opts->{coverage}) {
+			die "The provider must define the 'coverage' if count-loop-by = coverage";
+		}
+	}
+
+	if (defined $opts->{coverage} && $opts->{coverage} <= 0) {
+		die "Option 'coverage' requires a value greater than zero, not $opts->{coverage}\n";
+	}
+
+	# If default is 'number-of-reads'
+	if ($default_opt{'count-loops-by'} eq 'number-of-reads') {
+		if (not defined $opts->{'number-of-reads'}) {
+			die "The provider must define the 'number-of-reads' if count-loop-by = number-of-reads";
+		}
+	}
+
+	if (defined $opts->{'number-of-reads'}) {
 		if ($opts->{'number-of-reads'} <= 0) {
 			die "Option 'number-of-reads' requires a value greater than zero, not $opts->{'number-of-reads'}\n";
 		}
@@ -186,11 +214,6 @@ sub validate_opts {
 		if ($opts->{'number-of-reads'} < 2 && $opts->{'sequencing-type'} eq 'paired-end') {
 			die "Option 'number-of-reads' requires a value greater or equal to 2 for paired-end reads, not $opts->{'number-of-reads'}\n";
 		}
-	}
-
-	# coverage > 0
-	if ($opts->{coverage} <= 0) {
-		die "Option 'coverage' requires a value greater than zero, not $opts->{coverage}\n";
 	}
 
 	# seqid-weight (SEQID_WEIGHT_OPT)
@@ -202,7 +225,7 @@ sub validate_opts {
 	# seqid-weight eq 'file' requires a weight-file
 	if ($opts->{'seqid-weight'} eq 'file') {
 		if (not defined $opts->{'weight-file'}) {
-			die "Option 'seqid-weight=file' requires the argument 'weight-file' with a tab-separated values file\n";
+			die "Option 'weight-file' requires an expression matrix file\n";
 		}
 
 		# It is defined, but the file exists?
@@ -216,14 +239,21 @@ sub execute {
 	my ($self, $opts, $args) = @_;
 	my $fasta_file = shift @$args;
 
-	my %default_opt = $self->_default_opt;
+	my %default_opt = $self->default_opt;
 	$self->fill_opts($opts, \%default_opt);
 
 	# Set if user wants a verbose log
 	$LOG_VERBOSE = $opts->{verbose};
 
-	# Set default count-loop-by behavior
-	$opts->{'count-loops-by'} = 'number-of-reads' if exists $opts->{'number-of-reads'};
+	# Override default 'count-loops-by'
+	if ($default_opt{'count-loops-by'} eq 'coverage') {
+		$opts->{'count-loops-by'} = 'number-of-reads' if exists $opts->{'number-of-reads'};
+	}
+	elsif ($default_opt{'count-loops-by'} eq 'number-of-reads') {
+		$opts->{'count-loops-by'} = 'coverage' if exists $opts->{'coverage'};
+	} else {
+		die "'count-lopps-by' must be defined"
+	}
 
 	# Create output directory if it not exist
 	make_path($opts->{'output-dir'}, {error => \my $err_list});
@@ -246,13 +276,13 @@ sub execute {
 	my $time_stamp = localtime;
 	my $progname   = $self->progname;
 	my $argv = $self->argv;
-log_msg <<"HEADER";
+	log_msg <<"HEADER";
 --------------------------------------------------------
- Date $time_stamp
- $progname Copyright (C) 2017 Thiago L. A. Miller
+Date $time_stamp
+$progname
 --------------------------------------------------------
 :: Arguments passed by the user:
-  => '@$argv'
+=> '@$argv'
 HEADER
 
 	#-------------------------------------------------------------------------------
@@ -319,144 +349,11 @@ __END__
 
 =head1 NAME
 
-App::SimulateReads::Command::Digest - digest command class. Simulate single-end and paired-end reads.
+App::SimulateReads::Role::Digest - Wrapper on Simulator class for genome/transcriptome sequencing
 
 =head1 VERSION
 
-version 0.10
-
-=head1 SYNOPSIS
-
- simulate_reads digest [options] <fasta-file>
-
- Arguments:
-  a fasta-file 
-
- Options:
-  -h, --help               brief help message
-  -M, --man                full documentation
-  -v, --verbose            print log messages
-  -p, --prefix             prefix output [default:"out"]	
-  -o, --output-dir         output directory [default:"."]
-  -j, --jobs               number of jobs [default:"1"; Integer]
-  -z, --gzip               compress output file
-  -c, --coverage           fastq-file coverage [default:"1", Number]
-  -n, --number-of-reads    directly set the number of reads
-                           [default:"1", Integer]
-  -t, --sequencing-type    single-end or paired-end reads
-                           [default:"paired-end"]
-  -q, --quality-profile    illumina sequencing system profiles
-                           [default:"hiseq"]
-  -e, --sequencing-error   sequencing error rate
-                           [default:"0.005"; Number]
-  -r, --read-size          the read size [default:"101"; Integer]
-  -m, --fragment-mean      the fragment mean size for paired-end reads
-                           [default:"300"; Integer]
-  -d, --fragment-stdd      the fragment standard deviation size for
-                           paired-end reads [default:"50"; Integer]
-  -b, --strand-bias        which strand to be used: plus, minus and random
-                           [default:"random"]
-  -w, --seqid-weight       seqid raffle type: length, same, file
-                           [default: "length"]
-  -f, --weight-file        weight file when seqid-weight=file
-
-=head1 DESCRIPTION
-
-B<simulate_reads> will read the given input file and do something
-useful with the contents thereof.
-
-=head1 OPTIONS
-
-=over 8
-
-=item B<--help>
-
-Print a brief help message and exits.
-
-=item B<--man>
-
-Prints the manual page and exits.
-
-=item B<--verbose>
-
-Prints log information to standard error
-
-=item B<--prefix>
-
-Concatenates the prefix to the output-file name.
-
-=item B<--output-dir>
-
-Creates output-file inside output-dir. If output-dir
-does not exist, it is created recursively
-
-=item B<--jobs>
-
-Sets the number of child jobs to be created
-
-=item B<--gzip>
-
-Compress the output-file with gzip algorithm. It is
-possible to pass --no-gzip if one wants
-uncompressed output-file
-
-=item B<--read-size>
-
-Sets the read size. For now the unique valid value is 101
-
-=item B<--coverage>
-
-Calculates the number of reads based on the sequence
-coverage: number_of_reads = (sequence_size * coverage) / read_size
-
-=item B<--number-of-reads>
-
-Sets directly the number of reads desired. It overrides coverage,
-in case the two options are given
-
-=item B<--sequencing-type>
-
-Sets the sequencing type to single-end or paired-end
-
-=item B<--fragment-mean>
-
-If the sequencing-type is set to paired-end, it sets the
-fragment mean
-
-=item B<--fragment-stdd>
-
-If the sequencing-type is set to paired-end, it sets the
-fragment standard deviation
-
-=item B<--sequencing-error>
-
-Sets the sequencing error rate. Valid values are between zero and one
-
-=item B<--quality-profile>
-
-Sets the illumina sequencing system profile for quality. For now, the unique
-valid values are hiseq and poisson
-
-=item B<--strand-bias>
-
-Sets which strand to use to make a read. Valid options are plus, minus and
-random - if you want to randomly calculte the strand for each read
-
-=item B<--seqid-weight>
-
-Sets the seqid (e.g. chromossome, ensembl id) raffle behavior. Valid options are
-length, same and file. If it is set to 'same', all seqid receives the same weight
-when raffling. If it is set to 'length', the seqid weight is calculated based on
-the seqid sequence length. And finally, if it is set to 'file', the user must set
-the option --weight-file. For details, see B<--weight-file>
-
-=item B<--weight-file>
-
-If --seqid-weight is set to file, then this option becomes mandatory. A valid
-weight file is a tab-separated values file with 2 columns. The first column is
-for the seqid and the second column for the desired weight. Valid weights are integers
-
-=back
+version 0.11
 
 =head1 AUTHOR
 
@@ -464,7 +361,7 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2017 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 
