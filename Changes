@@ -2,6 +2,11 @@ Revision history for App-SimulateReads
 
 {{$NEXT}}
 
+0.11      2018-03-23 18:44:59-03:00 America/Sao_Paulo
+
+	- Fix bug when weight-file has just one entry and it is equal to "1"
+	- Split digest command into genome, transcriptome and custom
+
 0.10      2017-12-03 04:27:18-02:00 America/Sao_Paulo
 
 	- Add version option
