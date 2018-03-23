@@ -4,7 +4,7 @@ package App::SimulateReads::Quality;
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::Quality::Handle;
 
-our $VERSION = '0.10'; # VERSION
+our $VERSION = '0.11'; # VERSION
 
 has 'quality_profile' => (
 	is         => 'ro',
@@ -154,7 +154,7 @@ App::SimulateReads::Quality - Class to simulate quality entries
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 AUTHOR
 
@@ -162,7 +162,7 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2017 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

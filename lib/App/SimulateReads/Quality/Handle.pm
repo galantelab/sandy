@@ -10,7 +10,7 @@ use Storable qw/nfreeze thaw/;
 
 with 'App::SimulateReads::Role::IO';
 
-our $VERSION = '0.10'; # VERSION
+our $VERSION = '0.11'; # VERSION
  
 #-------------------------------------------------------------------------------
 #  Hardcoded paths for quality_profile
@@ -353,7 +353,7 @@ App::SimulateReads::Quality::Handle - Class to handle database schemas.
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 AUTHOR
 
@@ -361,7 +361,7 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2017 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

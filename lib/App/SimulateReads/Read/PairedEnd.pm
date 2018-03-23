@@ -6,7 +6,7 @@ use Math::Random 'random_normal';
 
 extends 'App::SimulateReads::Read';
 
-our $VERSION = '0.10'; # VERSION
+our $VERSION = '0.11'; # VERSION
 
 use constant {
 	NUM_TRIES => 1000
@@ -90,7 +90,7 @@ App::SimulateReads::Read::PairedEnd - App::SimulateReads::Read subclass for simu
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 AUTHOR
 
@@ -98,7 +98,7 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2017 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

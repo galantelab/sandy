@@ -11,7 +11,7 @@ use Parallel::ForkManager;
 
 with qw/App::SimulateReads::Role::WeightedRaffle App::SimulateReads::Role::IO/;
 
-our $VERSION = '0.10'; # VERSION
+our $VERSION = '0.11'; # VERSION
 
 has 'jobs' => (
 	is         => 'ro',
@@ -116,7 +116,7 @@ sub BUILD {
 	} elsif ($self->count_loops_by eq 'number_of_reads' and not defined $self->number_of_reads) {
 		croak "count_loops_by=number_of_reads requires a number_of_reads number\n";
 	}
-	
+
 	## Just to ensure that the lazy attributes are built before &new returns
 	# Only seqid_weight=same is not a weighted raffle, so in this case
 	# not construct weight attribute
@@ -125,7 +125,7 @@ sub BUILD {
 	$self->_fasta;
 	$self->_seqid_raffle;
 }
- 
+
 sub _build_strand {
 	my $self = shift;
 	my $strand_sub;
@@ -163,7 +163,7 @@ sub _index_fasta {
 			$indexed_fasta{$id}{seq} .= $_;
 		}
 	}
-	
+
 	for (keys %indexed_fasta) {
 		$indexed_fasta{$_}{size} = length $indexed_fasta{$_}{seq};
 	}
@@ -208,7 +208,7 @@ sub _build_fasta {
 			}
 		}
 	}
-	
+
 	unless (%$indexed_fasta) {
 		croak sprintf "Fasta file '%s' has no valid entry\n" => $self->fasta_file;
 	}
@@ -229,7 +229,7 @@ sub _index_weight_file {
 		chomp;
 		next if /^\s*$/;
 
-		my @fields = split /\t/;
+		my @fields = split;
 
 		croak "Error parsing '$weight_file': seqid (first column) not found at line $line\n"
 			unless defined $fields[0];
@@ -242,7 +242,7 @@ sub _index_weight_file {
 
 		$indexed_file{uc $fields[0]} = $fields[1];
 	}
-	
+
 	unless (%indexed_file) {
 		croak "Error parsing '$weight_file': Maybe the file is empty\n"
 	}
@@ -339,8 +339,8 @@ sub _calculate_number_of_reads {
 
 	# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or fasta_file size
 	if ($number_of_reads <= 0 || ($class eq 'App::SimulateReads::Fastq::PairedEnd' && $number_of_reads == 1)) {
-		croak "The computed number of reads is equal to zero.\n" . 
-		      "It may occur due to the low coverage, fasta-file sequence size or number of reads directly passed by the user\n";
+		croak "The computed number of reads is equal to zero.\n" .
+			"It may occur due to the low coverage, fasta-file sequence size or number of reads directly passed by the user\n";
 	}
 
 	return $number_of_reads;
@@ -376,7 +376,7 @@ sub run_simulation {
 	# Forks
 	my $number_of_jobs = $self->jobs;
 	my $pm = Parallel::ForkManager->new($number_of_jobs);
-	
+
 	# Parent child pids
 	my $parent_pid = $$;
 	my @child_pid;
@@ -402,10 +402,10 @@ sub run_simulation {
 		#-------------------------------------------------------------------------------
 		log_msg ":: Creating job $tid ...";
 		my @files_t = map { "$_.${parent_pid}_part$tid" } @{ $files{$fastq_class} };
-		my $pid = $pm->start(\@files_t) and next;	
+		my $pid = $pm->start(\@files_t) and next;
 
 		#-------------------------------------------------------------------------------
-		# Inside child 
+		# Inside child
 		#-------------------------------------------------------------------------------
 		# Intelace child/parent processes
 		my $sig = App::SimulateReads::InterlaceProcesses->new(foreign_pid => [$parent_pid]);
@@ -424,7 +424,7 @@ sub run_simulation {
 		$last_read_idx += $number_of_reads % $number_of_jobs
 			if $tid == $number_of_jobs;
 
-		log_msg "  => Job $tid: Working on reads from $idx to $last_read_idx";
+		log_msg "  => Job $tid: Working on sequences from $idx to $last_read_idx";
 
 		# Create temporary files
 		log_msg "  => Job $tid: Creating temporary file: @files_t";
@@ -435,8 +435,8 @@ sub run_simulation {
 			my $id = $seqid->();
 			my @fastq_entry;
 			try {
-				@fastq_entry = $self->sprint_fastq("SR${parent_pid}.$id.$i $i",
-					$id, \$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
+				@fastq_entry = $self->sprint_fastq($tid, $i, $id,
+					\$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
 			} catch {
 				croak "Not defined entry for seqid '>$id' at job $tid: $_";
 			} finally {
@@ -508,7 +508,7 @@ App::SimulateReads::Simulator - Class responsible to make the simulation
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 AUTHOR
 
@@ -516,7 +516,7 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2017 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

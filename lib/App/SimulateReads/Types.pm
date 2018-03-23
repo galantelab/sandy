@@ -3,7 +3,7 @@ package App::SimulateReads::Types;
  
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.10'; # VERSION
+our $VERSION = '0.11'; # VERSION
 
 subtype 'My:IntGt0'
 	=> as      'Int'
@@ -90,6 +90,11 @@ subtype 'My:CountLoopBy'
 	=> where   { $_ eq 'coverage' || $_ eq 'number-of-reads' }
 	=> message { "'$_' is not a valid count_loops_by: 'coverage' or 'number-of-reads'" };
 
+#subtype 'My:HeaderP'
+#	=> as 'Str'
+#	=> where { $_ eq 'illumina' || $_ eq 'transcriptime' || $_ eq 'genome' }
+#	=> message { "'$_' is not a valid header profile" };
+
 1; ## --- end class App::SimulateReads::Types
 
 __END__
@@ -104,7 +109,7 @@ App::SimulateReads::Types - Moose type constraints for App::SimulateReads projec
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 AUTHOR
 
@@ -112,7 +117,7 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2017 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

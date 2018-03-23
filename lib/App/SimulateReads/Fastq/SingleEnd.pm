@@ -6,7 +6,7 @@ use App::SimulateReads::Read::SingleEnd;
 
 extends 'App::SimulateReads::Fastq';
 
-our $VERSION = '0.10'; # VERSION
+our $VERSION = '0.11'; # VERSION
 
 has 'sequencing_error' => (
 	is         => 'ro',
@@ -37,7 +37,7 @@ sub _build_read {
 }
 
 sub sprint_fastq {
-	my ($self, $id, $seq_name, $seq_ref, $seq_size, $is_leader) = @_;
+	my ($self, $id, $num, $seq_name, $seq_ref, $seq_size, $is_leader) = @_;
 
 	my ($read_ref, $pos) = $self->gen_read($seq_ref, $seq_size, $is_leader);
 
@@ -62,7 +62,7 @@ App::SimulateReads::Fastq::SingleEnd - App::SimulateReads::Fastq subclass for si
 
 =head1 VERSION
 
-version 0.10
+version 0.11
 
 =head1 AUTHOR
 
@@ -70,7 +70,7 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2017 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 
