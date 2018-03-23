@@ -23,7 +23,7 @@ has 'num_weights' => (
 
 has 'max_weight'  => (
 	is         => 'ro',
-	isa        => 'My:IntGt0',
+	isa        => 'My:IntGe0',
 	builder    => '_build_max_weight',
 	lazy_build => 1
 );
