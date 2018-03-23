@@ -9,7 +9,7 @@ use App::SimulateReads::Simulator;
 use Path::Class 'file';
 use File::Path 'make_path';
 
-requires qw/default_opt opt_spec/;
+requires qw/default_opt opt_spec rm_opt/;
 
 # VERSION
 
@@ -21,30 +21,56 @@ use constant {
 };
 
 override 'opt_spec' => sub {
-	super,
-	'prefix|p=s',
-	'verbose|v',
-	'output-dir|o=s',
-	'jobs|j=i',
-	'gzip|z!',
-	'coverage|c=f',
-	'read-size|r=i',
-	'fragment-mean|m=i',
-	'fragment-stdd|d=i',
-	'sequencing-error|e=f',
-	'sequencing-type|t=s',
-	'quality-profile|q=s',
-	'strand-bias|b=s',
-	'seqid-weight|w=s',
-	'number-of-reads|n=i',
-	'weight-file|f=s'
+	my $self = shift;
+	my @rm_opt = $self->rm_opt;
+
+	my %all_opt = (
+		'prefix'           => 'prefix|p=s',
+		'verbose'          => 'verbose|v',
+		'output-dir'       => 'output-dir|o=s',
+		'jobs'             => 'jobs|j=i',
+		'gzip'             => 'gzip|z!',
+		'coverage'         => 'coverage|c=f',
+		'read-size'        => 'read-size|r=i',
+		'fragment-mean'    => 'fragment-mean|m=i',
+		'fragment-stdd'    => 'fragment-stdd|d=i',
+		'sequencing-error' => 'sequencing-error|e=f',
+		'sequencing-type'  => 'sequencing-type|t=s',
+		'quality-profile'  => 'quality-profile|q=s',
+		'strand-bias'      => 'strand-bias|b=s',
+		'sequid-weight'    => 'seqid-weight|w=s',
+		'number-of-reads'  => 'number-of-reads|n=i',
+		'weight-file'      => 'weight-file|f=s'
+	);
+
+	for my $opt (@rm_opt) {
+		delete $all_opt{$opt} if exists $all_opt{$opt};
+	}
+
+	return super, values %all_opt;
+#	'prefix|p=s',
+#	'verbose|v',
+#	'output-dir|o=s',
+#	'jobs|j=i',
+#	'gzip|z!',
+#	'coverage|c=f',
+#	'read-size|r=i',
+#	'fragment-mean|m=i',
+#	'fragment-stdd|d=i',
+#	'sequencing-error|e=f',
+#	'sequencing-type|t=s',
+#	'quality-profile|q=s',
+#	'strand-bias|b=s',
+#	'seqid-weight|w=s',
+#	'number-of-reads|n=i',
+#	'weight-file|f=s'
 };
 
 sub _log_msg_opt {
 	my ($self, $opts) = @_;
 	while (my ($key, $value) = each %$opts) {
 		next if ref($value) =~ /Fastq/;
-		$value = "not defined" if not defined $value;
+		next if not defined $value;
 		$key =~ s/_/ /g;
 		log_msg "  => $key $value";
 	}
@@ -161,28 +187,32 @@ sub validate_opts {
 		die "The provider must define the default count-lopps-by: $opt, not $default_opt{'count-loops-by'}";
 	}
 
-	# If default is 'coverage', then test if user wants to override it
+	# If default is 'coverage'
 	if ($default_opt{'count-loops-by'} eq 'coverage') {
-		if (exists $opts->{'number-of-reads'}) {
-			# number_of_reads > 0
-			if ($opts->{'number-of-reads'} <= 0) {
-				die "Option 'number-of-reads' requires a value greater than zero, not $opts->{'number-of-reads'}\n";
-			}
-
-			# sequencing_type eq paired-end requires at least 2 reads
-			if ($opts->{'number-of-reads'} < 2 && $opts->{'sequencing-type'} eq 'paired-end') {
-				die "Option 'number-of-reads' requires a value greater or equal to 2 for paired-end reads, not $opts->{'number-of-reads'}\n";
-			}
+		if (not defined $opts->{coverage}) {
+			die "The provider must define the 'coverage' if count-loop-by = coverage";
 		}
 	}
 
-	# If default is 'number-of-reads', then test if user wants to override it
+	if (defined $opts->{coverage} && $opts->{coverage} <= 0) {
+		die "Option 'coverage' requires a value greater than zero, not $opts->{coverage}\n";
+	}
+
+	# If default is 'number-of-reads'
 	if ($default_opt{'count-loops-by'} eq 'number-of-reads') {
-		if (exists $opts->{'coverage'}) {
-			# coverage > 0
-			if ($opts->{coverage} <= 0) {
-				die "Option 'coverage' requires a value greater than zero, not $opts->{coverage}\n";
-			}
+		if (not defined $opts->{'number-of-reads'}) {
+			die "The provider must define the 'number-of-reads' if count-loop-by = number-of-reads";
+		}
+	}
+
+	if (defined $opts->{'number-of-reads'}) {
+		if ($opts->{'number-of-reads'} <= 0) {
+			die "Option 'number-of-reads' requires a value greater than zero, not $opts->{'number-of-reads'}\n";
+		}
+
+		# sequencing_type eq paired-end requires at least 2 reads
+		if ($opts->{'number-of-reads'} < 2 && $opts->{'sequencing-type'} eq 'paired-end') {
+			die "Option 'number-of-reads' requires a value greater or equal to 2 for paired-end reads, not $opts->{'number-of-reads'}\n";
 		}
 	}
 
@@ -195,7 +225,7 @@ sub validate_opts {
 	# seqid-weight eq 'file' requires a weight-file
 	if ($opts->{'seqid-weight'} eq 'file') {
 		if (not defined $opts->{'weight-file'}) {
-			die "Option 'seqid-weight=file' requires the argument 'weight-file' with a tab-separated values file\n";
+			die "Option 'weight-file' requires an expression matrix file\n";
 		}
 
 		# It is defined, but the file exists?
@@ -218,10 +248,13 @@ sub execute {
 	# Override default 'count-loops-by'
 	if ($default_opt{'count-loops-by'} eq 'coverage') {
 		$opts->{'count-loops-by'} = 'number-of-reads' if exists $opts->{'number-of-reads'};
-	} elsif ($default_opt{'count-loops-by'} eq 'number-of-reads') {
-		$opts->{'count-loops-by'} = 'coverage' if exists $opts->{'coverage'};
 	}
-	
+	elsif ($default_opt{'count-loops-by'} eq 'number-of-reads') {
+		$opts->{'count-loops-by'} = 'coverage' if exists $opts->{'coverage'};
+	} else {
+		die "'count-lopps-by' must be defined"
+	}
+
 	# Create output directory if it not exist
 	make_path($opts->{'output-dir'}, {error => \my $err_list});
 	my $err_dir;
@@ -246,7 +279,7 @@ sub execute {
 	log_msg <<"HEADER";
 --------------------------------------------------------
 Date $time_stamp
-$progname Copyright (C) 2017 Thiago L. A. Miller
+$progname
 --------------------------------------------------------
 :: Arguments passed by the user:
 => '@$argv'

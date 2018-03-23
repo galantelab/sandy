@@ -1,5 +1,5 @@
-package App::SimulateReads::Command::Simulate::Transcriptome;
-# ABSTRACT: simulate subcommand class. Simulate transcriptome sequencing
+package App::SimulateReads::Command::Simulate::Custom;
+# ABSTRACT: simulate subcommand class. Simulate a custom sequencing
 
 use App::SimulateReads::Base 'class';
 
@@ -15,10 +15,10 @@ sub default_opt {
 	'output-dir'       => '.',
 	'jobs'             => 1,
 	'gzip'             => 1,
-	'count-loops-by'   => 'number-of-reads',
-	'number-of-reads'  => 1000000,
-	'strand-bias'      => 'minus',
-	'seqid-weight'     => 'file',
+	'count-loops-by'   => 'coverage',
+	'coverage'         => 8,
+	'strand-bias'      => 'random',
+	'seqid-weight'     => 'length',
 	'sequencing-type'  => 'paired-end',
 	'fragment-mean'    => 300,
 	'fragment-stdd'    => 50,
@@ -28,22 +28,15 @@ sub default_opt {
 }
 
 sub rm_opt {
-	'strand-bias',
-	'coverage',
-	'seqid-weight'
 }
 
 __END__
 
 =head1 SYNOPSIS
-
- simulate_reads simulate transcriptome [options] -f <expression-matrix> <fasta-file>
+ simulate_reads simulate custom [options] <fasta-file>
 
  Arguments:
   a fasta-file 
-
- Mandatory options:
-  -f, --weight-file        an expression-matrix file
 
  Options:
   -h, --help               brief help message
@@ -52,9 +45,9 @@ __END__
   -p, --prefix             prefix output [default:"out"]	
   -o, --output-dir         output directory [default:"."]
   -j, --jobs               number of jobs [default:"1"; Integer]
-  -z, --gzip               compress output file
-  -n, --number-of-reads    set the number of reads
-                           [default:"1000000", Integer]
+  -z, --output-gzip        compress output file
+  -c, --coverage           fastq-file coverage [default:"8", Number]
+  -n, --number-of-reads    directly set the number of reads [Integer]
   -t, --sequencing-type    single-end or paired-end reads
                            [default:"paired-end"]
   -q, --quality-profile    illumina sequencing system profiles
@@ -62,10 +55,15 @@ __END__
   -e, --sequencing-error   sequencing error rate
                            [default:"0.005"; Number]
   -r, --read-size          the read size [default:"101"; Integer]
-  -m, --fragment-mean      the fragment mean size for paired-end reads
+  -m, --fragment-mean      the mean size fragments for paired-end reads
                            [default:"300"; Integer]
-  -d, --fragment-stdd      the fragment standard deviation size for
-                           paired-end reads [default:"50"; Integer]
+  -d, --fragment-stdd      the standard deviation for fragment sizes
+                           [default:"50"; Integer]
+  -b, --strand-bias        which strand to be used: plus, minus and random
+                           [default:"random"]
+  -w, --seqid-weight       seqid raffle type: length, same, file
+                           [default: "length"]
+  -f, --weight-file        an expression-matrix when seqid-weight=file
 
 =head1 OPTIONS
 
@@ -96,20 +94,25 @@ does not exist, it is created recursively
 
 Sets the number of child jobs to be created
 
-=item B<--gzip>
+=item B<--output-gzip>
 
 Compress the output-file with gzip algorithm. It is
-possible to pass --no-gzip if one wants
+possible to pass --no-output-gzip if one wants
 uncompressed output-file
 
 =item B<--read-size>
 
 Sets the read size. For now the unique valid value is 101
 
+=item B<--coverage>
+
+Calculates the number of reads based on the sequence
+coverage: number_of_reads = (sequence_size * coverage) / read_size
+
 =item B<--number-of-reads>
 
-Sets the number of reads desired. This is the default option
-for transcriptome sequencing simulation
+Sets directly the number of reads desired. It overrides coverage,
+in case the two options are given
 
 =item B<--sequencing-type>
 
@@ -134,15 +137,29 @@ Sets the sequencing error rate. Valid values are between zero and one
 Sets the illumina sequencing system profile for quality. For now, the unique
 valid values are hiseq and poisson
 
+=item B<--strand-bias>
+
+Sets which strand to use to make a read. Valid options are plus, minus and
+random - if you want to randomly calculte the strand for each read
+
+=item B<--seqid-weight>
+
+Sets the seqid (e.g. chromossome, ensembl id) raffle behavior. Valid options are
+length, same and file. If it is set to 'same', all seqid receives the same weight
+when raffling. If it is set to 'length', the seqid weight is calculated based on
+the seqid sequence length. And finally, if it is set to 'file', the user must set
+the option --weight-file. For details, see B<--weight-file>
+
 =item B<--weight-file>
 
-A valid weight file is an expression-matrix file with 2 columns. The first column is
+If --seqid-weight is set to file, then this option becomes mandatory. A valid
+weight file is an expression-matrix file with 2 columns. The first column is
 for the seqid and the second column is for the count. The counts will be treated as weights
 
 =back
 
 =head1 DESCRIPTION
 
-Simulate transcriptome sequencing.
+Simulate a custom sequencing.
 
 =cut

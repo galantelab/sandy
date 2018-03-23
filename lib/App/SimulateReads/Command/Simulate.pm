@@ -13,6 +13,7 @@ override 'opt_spec' => sub {
 };
 
 sub subcommand_map {
+	custom        => 'App::SimulateReads::Command::Simulate::Custom',
 	genome        => 'App::SimulateReads::Command::Simulate::Genome',
 	transcriptome => 'App::SimulateReads::Command::Simulate::Transcriptome',
 }
@@ -29,6 +30,7 @@ simulate_reads simulate <command>
 Commands:
  genome                   simulate genome sequencing
  transcriptome            simulate transcriptome sequencing
+ custom                   simulate a custom sequencing
 HELP
 }
 
@@ -49,6 +51,7 @@ __END__
  Commands:
   genome                   simulate genome sequencing
   transcriptome            simulate transcriptome sequencing
+  custom                   simulate a custom sequencing
 
 =head1 DESCRIPTION
 

@@ -229,7 +229,7 @@ sub _index_weight_file {
 		chomp;
 		next if /^\s*$/;
 
-		my @fields = split /\t/;
+		my @fields = split;
 
 		croak "Error parsing '$weight_file': seqid (first column) not found at line $line\n"
 			unless defined $fields[0];
@@ -424,7 +424,7 @@ sub run_simulation {
 		$last_read_idx += $number_of_reads % $number_of_jobs
 			if $tid == $number_of_jobs;
 
-		log_msg "  => Job $tid: Working on reads from $idx to $last_read_idx";
+		log_msg "  => Job $tid: Working on sequences from $idx to $last_read_idx";
 
 		# Create temporary files
 		log_msg "  => Job $tid: Creating temporary file: @files_t";

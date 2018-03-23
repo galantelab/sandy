@@ -106,6 +106,7 @@ sub _build_gen_header {
 		'%U' => '$info->{num}'
 	);
 
+#	return  $self->compile_template('%i.%U %U simulation_read length=%r position=%c:%t-%n distance=%D', 'info', \%sym_table);
 	return  $self->compile_template('%i.%U %U simulation_read length=%r position=%c:%t-%n', 'info', \%sym_table);
 }
 

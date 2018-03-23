@@ -13,8 +13,12 @@ sub compile_template {
 		$template =~ s/$sym/$variable/g;
 	}
 
+	## no critic
+
 	my $sub = eval "sub { my \$$input_name = shift; return \"$template\"; }";
 	croak "Error compiling template '$template': $@" if $@;
+
+	## use critic
 
 	return $sub;
 }
