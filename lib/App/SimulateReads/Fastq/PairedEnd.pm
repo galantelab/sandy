@@ -10,14 +10,20 @@ with 'App::SimulateReads::Role::RunTimeTemplate';
 
 # VERSION
 
+has 'template_id' => (
+	is         => 'ro',
+	isa        => 'Str',
+	required   => 1
+);
+
 has 'fragment_mean' => (
-	is         => 'rw',
+	is         => 'ro',
 	isa        => 'My:IntGt0',
 	required   => 1
 );
 
 has 'fragment_stdd' => (
-	is         => 'rw',
+	is         => 'ro',
 	isa        => 'My:IntGe0',
 	required   => 1
 );
@@ -92,22 +98,23 @@ sub _build_gen_header {
 		'%m' => '$info->{fragment_mean}',
 		'%d' => '$info->{fragment_stdd}',
 		'%f' => '$info->{fragment_size}',
-		'%p' => '$info->{fragment_pos}',
-		'%c' => '$info->{seq_name}',
+		'%S' => '$info->{fragment_start}',
+		'%E' => '$info->{fragment_end}',
+		'%c' => '$info->{seq_id}',
 		'%t' => '$info->{start}',
 		'%n' => '$info->{end}',
-		'%C' => '$info->{mate_seq_id}',
 		'%T' => '$info->{mate_start}',
 		'%N' => '$info->{mate_end}',
 		'%D' => '$info->{tlen}',
 		'%i' => '$info->{instrument}',
 		'%I' => '$info->{id}',
 		'%R' => '$info->{read}',
-		'%U' => '$info->{num}'
+		'%U' => '$info->{num}',
+		'%s' => '$info->{strand}'
 	);
 
 #	return  $self->compile_template('%i.%U %U simulation_read length=%r position=%c:%t-%n distance=%D', 'info', \%sym_table);
-	return  $self->compile_template('%i.%U %U simulation_read length=%r position=%c:%t-%n', 'info', \%sym_table);
+	return  $self->compile_template($self->template_id, 'info', \%sym_table);
 }
 
 sub _build_info {
@@ -126,12 +133,14 @@ sub _build_info {
 }
 
 sub sprint_fastq {
-	my ($self, $id, $num, $seq_name, $seq_ref, $seq_size, $is_leader) = @_;
+	my ($self, $id, $num, $seq_id, $seq_ref, $seq_size, $is_leader) = @_;
 
 	my ($read1_ref, $read2_ref, $fragment_pos, $fragment_size) = $self->gen_read($seq_ref, $seq_size, $is_leader);
 
-	my ($start1, $end1) = ($fragment_pos + 1, $fragment_pos + $self->read_size);
-	my ($start2, $end2) = ($fragment_pos + $fragment_size, $fragment_pos + $fragment_size - $self->read_size + 1);
+	my ($fragment_start, $fragment_end) = ($fragment_pos + 1, $fragment_pos + $fragment_size);
+
+	my ($start1, $end1) = ($fragment_start, $fragment_start + $self->read_size - 1);
+	my ($start2, $end2) = ($fragment_end, $fragment_end - $self->read_size + 1);
 
 	unless ($is_leader) {
 		($start1, $end1, $start2, $end2) = ($start2, $end2, $start1, $end1);
@@ -141,30 +150,32 @@ sub sprint_fastq {
 		'id'               => $id,
 		'num'              => $num,
 		'fragment_size'    => $fragment_size,
-		'fragment_pos'     => $fragment_pos,
-		'seq_name'         => $seq_name,
+		'fragment_start'   => $fragment_start,
+		'fragment_end'     => $fragment_end,
+		'seq_id'           => $seq_id,
 		'start'            => $start1,
 		'end'              => $end1,
-		'mate_seq_name'    => $seq_name,
 		'mate_start'       => $start2,
 		'mate_end'         => $end2,
-		'tlen'             => $start2 - $end1,
+		'tlen'             => $end2 - $end1,
 		'read'             => 1,
+		'strand'           => $is_leader ? 'P' : 'M'
 	);
 
 	$self->set_info2(
 		'id'               => $id,
 		'num'              => $num,
 		'fragment_size'    => $fragment_size,
-		'fragment_pos'     => $fragment_pos,
-		'seq_name'         => $seq_name,
+		'fragment_start'   => $fragment_start,
+		'fragment_end'     => $fragment_end,
+		'seq_id'           => $seq_id,
 		'start'            => $start2,
 		'end'              => $end2,
-		'mate_seq_name'    => $seq_name,
 		'mate_start'       => $start1,
 		'mate_end'         => $end1,
-		'tlen'             => $end1 - $start2,
-		'read'             => 2
+		'tlen'             => $end1 - $end2,
+		'read'             => 2,
+		'strand'           => $is_leader ? 'P' : 'M'
 	);
 
 	my $gen_header = $self->_gen_header;

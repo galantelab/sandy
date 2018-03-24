@@ -26,6 +26,8 @@ override 'opt_spec' => sub {
 
 	my %all_opt = (
 		'prefix'           => 'prefix|p=s',
+		'id'               => 'id|I=s',
+		'append-id'        => 'append-id|i=s',
 		'verbose'          => 'verbose|v',
 		'output-dir'       => 'output-dir|o=s',
 		'jobs'             => 'jobs|j=i',
@@ -38,7 +40,7 @@ override 'opt_spec' => sub {
 		'sequencing-type'  => 'sequencing-type|t=s',
 		'quality-profile'  => 'quality-profile|q=s',
 		'strand-bias'      => 'strand-bias|b=s',
-		'sequid-weight'    => 'seqid-weight|w=s',
+		'seqid-weight'     => 'seqid-weight|w=s',
 		'number-of-reads'  => 'number-of-reads|n=i',
 		'weight-file'      => 'weight-file|f=s'
 	);
@@ -48,22 +50,6 @@ override 'opt_spec' => sub {
 	}
 
 	return super, values %all_opt;
-#	'prefix|p=s',
-#	'verbose|v',
-#	'output-dir|o=s',
-#	'jobs|j=i',
-#	'gzip|z!',
-#	'coverage|c=f',
-#	'read-size|r=i',
-#	'fragment-mean|m=i',
-#	'fragment-stdd|d=i',
-#	'sequencing-error|e=f',
-#	'sequencing-type|t=s',
-#	'quality-profile|q=s',
-#	'strand-bias|b=s',
-#	'seqid-weight|w=s',
-#	'number-of-reads|n=i',
-#	'weight-file|f=s'
 };
 
 sub _log_msg_opt {
@@ -255,6 +241,13 @@ sub execute {
 		die "'count-lopps-by' must be defined"
 	}
 
+	# Sequence identifier
+	$opts->{'id'} ||= $opts->{'sequencing-type'} eq 'paired-end' ?
+		$opts->{'paired-end-id'} :
+		$opts->{'single-end-id'};
+
+	$opts->{id} .= " $opts->{'append-id'}" if defined $opts->{'append-id'};
+
 	# Create output directory if it not exist
 	make_path($opts->{'output-dir'}, {error => \my $err_list});
 	my $err_dir;
@@ -289,6 +282,7 @@ HEADER
 	#  Construct the Fastq and Simulator classes
 	#-------------------------------------------------------------------------------
 	my %paired_end_param = (
+		template_id       => $opts->{'id'},
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
 		read_size         => $opts->{'read-size'},
@@ -297,6 +291,7 @@ HEADER
 	);
 
 	my %single_end_param = (
+		template_id       => $opts->{'id'},
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
 		read_size         => $opts->{'read-size'}

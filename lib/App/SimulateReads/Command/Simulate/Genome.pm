@@ -10,6 +10,8 @@ with 'App::SimulateReads::Role::Digest';
 # VERSION
 
 sub default_opt {
+	'paired-end-id'    => '%i.%U_%c_%s_%S_%E',
+	'single-end-id'    => '%i.%U_%c_%s_%t_%n',
 	'verbose'          => 0,
 	'prefix'           => 'out',
 	'output-dir'       => '.',
@@ -49,6 +51,8 @@ __END__
   -v, --verbose            print log messages
   -p, --prefix             prefix output [default:"out"]	
   -o, --output-dir         output directory [default:"."]
+  -i, --append-id          append to the defined template id [Format]
+  -I, --id                 overlap the default template id [Format]
   -j, --jobs               number of jobs [default:"1"; Integer]
   -z, --gzip               compress output file
   -c, --coverage           fastq-file coverage [default:"8", Number]
@@ -88,6 +92,53 @@ Concatenates the prefix to the output-file name.
 
 Creates output-file inside output-dir. If output-dir
 does not exist, it is created recursively
+
+=item B<--append-id>
+
+Append string template to the defined template id.
+See B<Format>
+
+=item B<--id>
+
+Overlap the default defined template id:
+I<single-end> %i.%U_%c_%s_%t_%n and I<paired-end> %i.%U_%c_%s_%S_%E
+e.g. SR123.1_chr1_P_1001_1101
+See B<Format>
+
+=item B<Format>
+
+A string B<Format> is a combination of literal and escape characters similar to the way I<printf> works.
+That way, the user has the freedom to customize the fastq sequence identifier to fit her needs. Valid
+escape characteres are:
+
+Common escape characters
+
+	Escape       Meaning
+	------       ------------------------------------------
+	%i   	     instrument id composed by SR + PID
+	%I           job slot number
+	%q           quality profile
+	%e           sequencing error
+	%R           read 1, or 2 if it is the paired-end mate
+	%U           read number
+	%r           read size
+	%c           sequence id as chromossome, ref
+	%s           read or fragment strand
+	%t           read start position
+	%n           read end position
+
+Paired-end specific escape characters
+
+	Escape       Meaning
+	------       ------------------------------------------
+	%T           mate read start position
+	%N           mate read end position
+	%D           distance between the paired-reads
+	%m           fragment mean
+	%d           fragment standard deviation
+	%f           fragment size
+	%S           fragment start position
+	%E           fragment end position
 
 =item B<--jobs>
 

@@ -107,6 +107,7 @@ sub setup : Tests(setup) {
 			quality_profile   => 'poisson',
 			read_size         => QUALITY_SIZE,
 			sequencing_error  => 0.1,
+			template_id       => 'sr0001 simulation_read length=%r position=%c:%t-%n'
 		)
 	);
 
@@ -117,7 +118,8 @@ sub setup : Tests(setup) {
 			read_size         => QUALITY_SIZE,
 			sequencing_error  => 0.1,
 			fragment_mean     => 50,
-			fragment_stdd     => 10
+			fragment_stdd     => 10,
+			template_id       => 'sr0001 simulation_read length=%r position=%c:%t-%n'
 		)
 	);
 
@@ -132,7 +134,7 @@ sub cleanup : Tests(shutdown) {
 	$test->SUPER::shutdown;
 }
 
-sub constructor : Tests(16) {
+sub constructor : Tests(18) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
