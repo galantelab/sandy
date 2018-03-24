@@ -4,7 +4,7 @@ package App::SimulateReads::Role::ParseArgv;
 use App::SimulateReads::Base 'role';
 use Getopt::Long 'GetOptionsFromArray';
 
-our $VERSION = '0.11'; # VERSION
+our $VERSION = '0.12'; # VERSION
 
 sub parser {
 	my ($self, $argv, @opt_spec) = @_;
@@ -34,7 +34,7 @@ App::SimulateReads::Role::ParseArgv - Getopt::Long wrapper.
 
 =head1 VERSION
 
-version 0.11
+version 0.12
 
 =head1 AUTHOR
 

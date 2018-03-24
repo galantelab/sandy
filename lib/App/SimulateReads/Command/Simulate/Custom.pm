@@ -7,9 +7,11 @@ extends 'App::SimulateReads::Command::Simulate';
 
 with 'App::SimulateReads::Role::Digest';
 
-our $VERSION = '0.11'; # VERSION
+our $VERSION = '0.12'; # VERSION
 
 sub default_opt {
+	'paired-end-id'    => '%i.%U %U',
+	'single-end-id'    => '%i.%U %U',
 	'verbose'          => 0,
 	'prefix'           => 'out',
 	'output-dir'       => '.',
@@ -42,13 +44,10 @@ App::SimulateReads::Command::Simulate::Custom - simulate subcommand class. Simul
 
 =head1 VERSION
 
-version 0.11
-
-=head1 DESCRIPTION
-
-Simulate a custom sequencing.
+version 0.12
 
 =head1 SYNOPSIS
+
  simulate_reads simulate custom [options] <fasta-file>
 
  Arguments:
@@ -60,6 +59,8 @@ Simulate a custom sequencing.
   -v, --verbose            print log messages
   -p, --prefix             prefix output [default:"out"]	
   -o, --output-dir         output directory [default:"."]
+  -i, --append-id          append to the defined template id [Format]
+  -I, --id                 overlap the default template id [Format]
   -j, --jobs               number of jobs [default:"1"; Integer]
   -z, --output-gzip        compress output file
   -c, --coverage           fastq-file coverage [default:"8", Number]
@@ -80,6 +81,10 @@ Simulate a custom sequencing.
   -w, --seqid-weight       seqid raffle type: length, same, file
                            [default: "length"]
   -f, --weight-file        an expression-matrix when seqid-weight=file
+
+=head1 DESCRIPTION
+
+Simulate a custom sequencing.
 
 =head1 OPTIONS
 
@@ -105,6 +110,53 @@ Concatenates the prefix to the output-file name.
 
 Creates output-file inside output-dir. If output-dir
 does not exist, it is created recursively
+
+=item B<--append-id>
+
+Append string template to the defined template id.
+See B<Format>
+
+=item B<--id>
+
+Overlap the default defined template id:
+I<single-end> %i.%U %U and I<paired-end> %i.%U %U
+e.g. SR123.1 1
+See B<Format>
+
+=item B<Format>
+
+A string B<Format> is a combination of literal and escape characters similar to the way I<printf> works.
+That way, the user has the freedom to customize the fastq sequence identifier to fit her needs. Valid
+escape characteres are:
+
+Common escape characters
+
+	Escape       Meaning
+	------       ------------------------------------------
+	%i   	     instrument id composed by SR + PID
+	%I           job slot number
+	%q           quality profile
+	%e           sequencing error
+	%R           read 1, or 2 if it is the paired-end mate
+	%U           read number
+	%r           read size
+	%c           sequence id as chromossome, ref
+	%s           read or fragment strand
+	%t           read start position
+	%n           read end position
+
+Paired-end specific escape characters
+
+	Escape       Meaning
+	------       ------------------------------------------
+	%T           mate read start position
+	%N           mate read end position
+	%D           distance between the paired-reads
+	%m           fragment mean
+	%d           fragment standard deviation
+	%f           fragment size
+	%S           fragment start position
+	%E           fragment end position
 
 =item B<--jobs>
 

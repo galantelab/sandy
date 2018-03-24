@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Command::QualityDB';
 
-our $VERSION = '0.11'; # VERSION
+our $VERSION = '0.12'; # VERSION
 
 override 'opt_spec' => sub {
 	super,
@@ -39,7 +39,7 @@ App::SimulateReads::Command::QualityDB::Restore - qualitydb subcommand class. Re
 
 =head1 VERSION
 
-version 0.11
+version 0.12
 
 =head1 SYNOPSIS
 

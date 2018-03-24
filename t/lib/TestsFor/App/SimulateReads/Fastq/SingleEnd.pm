@@ -14,7 +14,8 @@ sub setup : Tests(setup) {
 	my $test = shift;
 
 	my %default_attr = (
-		sequencing_error => 0.1
+		sequencing_error => 0.1,
+		template_id      => 'sr0001 simulation_read length=%r position=%c:%t-%n'
 	);
 
 	$test->SUPER::setup(%default_attr);
@@ -25,7 +26,7 @@ sub cleanup : Tests(shutdown) {
 	$test->SUPER::shutdown;
 }
 
-sub constructor : Tests(6) {
+sub constructor : Tests(8) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
@@ -46,7 +47,7 @@ sub sprint_fastq : Tests(3) {
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
 
-	my $id = "SR0001";
+	my $id = "sr0001";
 	my $seq_name = "Chr1";
 	my $read_ref = $fastq->sprint_fastq($id, 1, $seq_name, \$seq, length $seq, 1);
 	my $read_size = $fastq->read_size;
