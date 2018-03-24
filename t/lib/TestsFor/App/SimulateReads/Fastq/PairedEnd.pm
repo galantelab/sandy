@@ -16,7 +16,8 @@ sub setup : Tests(setup) {
 	my %default_attr = (
 		sequencing_error => 0.1,
 		fragment_mean    => 50,
-		fragment_stdd    => 10
+		fragment_stdd    => 10,
+		template_id      => 'sr0001 simulation_read length=%r position=%c:%t-%n'
 	);
 
 	$test->SUPER::setup(%default_attr);
@@ -27,7 +28,7 @@ sub cleanup : Tests(shutdown) {
 	$test->SUPER::shutdown;
 }
 
-sub constructor : Tests(10) {
+sub constructor : Tests(12) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;

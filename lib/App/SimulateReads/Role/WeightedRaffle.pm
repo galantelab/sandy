@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'role';
 
 requires '_build_weights';
 
-our $VERSION = '0.11'; # VERSION
+our $VERSION = '0.12'; # VERSION
 
 has 'weights'     => (
 	is         => 'ro',
@@ -101,7 +101,7 @@ App::SimulateReads::Role::WeightedRaffle - Extends class with weighted raffle.
 
 =head1 VERSION
 
-version 0.11
+version 0.12
 
 =head1 AUTHOR
 
