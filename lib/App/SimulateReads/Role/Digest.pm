@@ -11,7 +11,7 @@ use File::Path 'make_path';
 
 requires qw/default_opt opt_spec rm_opt/;
 
-our $VERSION = '0.12'; # VERSION
+our $VERSION = '0.13'; # VERSION
 
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
@@ -275,7 +275,7 @@ Date $time_stamp
 $progname
 --------------------------------------------------------
 :: Arguments passed by the user:
-=> '@$argv'
+  => '@$argv'
 HEADER
 
 	#-------------------------------------------------------------------------------
@@ -348,7 +348,7 @@ App::SimulateReads::Role::Digest - Wrapper on Simulator class for genome/transcr
 
 =head1 VERSION
 
-version 0.12
+version 0.13
 
 =head1 AUTHOR
 

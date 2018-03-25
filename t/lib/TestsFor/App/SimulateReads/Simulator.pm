@@ -9,23 +9,23 @@ use autodie;
 use base 'TestsFor';
  
 use constant {
-	VERBOSE            => 0,
-	COUNT_LOOPS_BY     => 'coverage',
-	COVERAGE           => 8,
-	STRAND_BIAS        => 'random',
-	SEQID_WEIGHT       => 'length',
-	SEQUENCING_TYPE    => 'paired-end',
-	SEQUENCING_SYSTEM  => 'poisson',
-	JOBS               => 2,
-	OUTPUT_GZIP        => 0,
-	SEQ_SYS            => 'poisson',
-	QUALITY_SIZE       => 10,
-	GENOME             => '.data.fa',
-	GENOME_SIZE        => 2280,
-	COVERAGE           => 5,
-	PREFIX             => 'ponga',
-	OUTPUT_SINGLE_END  => 'ponga_simulation_read.fastq',
-	OUTPUT_PAIRED_END  => ['ponga_simulation_read_R1.fastq', 'ponga_simulation_read_R2.fastq']
+	VERBOSE           => 0,
+	COUNT_LOOPS_BY    => 'coverage',
+	COVERAGE          => 8,
+	STRAND_BIAS       => 'random',
+	SEQID_WEIGHT      => 'length',
+	SEQUENCING_TYPE   => 'paired-end',
+	SEQUENCING_SYSTEM => 'poisson',
+	JOBS              => 2,
+	OUTPUT_GZIP       => 0,
+	SEQ_SYS           => 'poisson',
+	QUALITY_SIZE      => 10,
+	GENOME            => '.data.fa',
+	GENOME_SIZE       => 2280,
+	COVERAGE          => 5,
+	PREFIX            => 'ponga',
+	OUTPUT_SINGLE_END => 'ponga_R1_001.fastq',
+	OUTPUT_PAIRED_END => ['ponga_R1_001.fastq', 'ponga_R2_001.fastq']
 };
 
 sub startup : Tests(startup) {

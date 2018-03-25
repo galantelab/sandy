@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::CLI';
 
-our $VERSION = '0.12'; # VERSION
+our $VERSION = '0.13'; # VERSION
 
 override 'opt_spec' => sub {
 	super
@@ -46,7 +46,7 @@ App::SimulateReads::CLI::Command - App::SimulateReads::CLI subclass for commands
 
 =head1 VERSION
 
-version 0.12
+version 0.13
 
 =head1 SYNOPSIS
 
