@@ -87,6 +87,33 @@ has '_fasta' => (
 	lazy_build => 1
 );
 
+has '_fasta_tree' => (
+	traits     => ['Hash'],
+	is         => 'ro',
+	isa        => 'HashRef[ArrayRef]',
+	handles    => {
+		_set_fasta_tree    => 'set',
+		_get_fasta_tree    => 'get',
+		_exists_fasta_tree => 'exists',
+		_fasta_tree_pairs  => 'kv',
+		_has_no_fasta_tree => 'is_empty'
+	}
+);
+
+has '_fasta_rtree' => (
+	traits     => ['Hash'],
+	is         => 'ro',
+	isa        => 'HashRef[Str]',
+	handles    => {
+		_set_fasta_rtree    => 'set',
+		_get_fasta_rtree    => 'get',
+		_delete_fasta_rtree => 'delete',
+		_exists_fasta_rtree => 'exists',
+		_fasta_rtree_pairs  => 'kv',
+		_has_no_fasta_rtree => 'is_empty'
+	}
+);
+
 has '_strand' => (
 	is         => 'ro',
 	isa        => 'CodeRef',
@@ -148,15 +175,27 @@ sub _index_fasta {
 
 	# indexed_genome = ID => (seq, len)
 	my %indexed_fasta;
+
+	# >ID|PID as in gencode transcripts
+	my %fasta_rtree;
 	my $id;
+
 	while (<$fh>) {
 		chomp;
 		next if /^;/;
 		if (/^>/) {
 			my @fields = split /\|/;
-			$id = (split / / => $fields[0])[0];
+			$id = $fields[0];
 			$id =~ s/^>//;
-			$id = uc $id;
+			$id =~ s/^\s+|\s+$//g;
+
+			# It is necessary to catch gene -> transcript relation
+			# # TODO: Make a hash tarit for indexed fasta
+			if (defined $fields[1]) {
+				my $pid = $fields[1];
+				$pid =~ s/^\s+|\s+$//g;
+				$fasta_rtree{$id} = $pid;
+			}
 		} else {
 			croak "Error reading fasta file '$fasta': Not defined id"
 				unless defined $id;
@@ -175,15 +214,20 @@ sub _index_fasta {
 	$fh->close
 		or croak "Cannot close file $fasta: $!\n";
 
+	$self->_set_fasta_rtree(%fasta_rtree) if %fasta_rtree;
 	return \%indexed_fasta;
 }
 
 sub _build_fasta {
 	my $self = shift;
-	log_msg ":: Indexing fasta file '" . $self->fasta_file . "' ...";
-	my $indexed_fasta = $self->_index_fasta($self->fasta_file);
+	log_msg sprintf ":: Indexing fasta file '%s' ..." => $self->fasta_file;
+	my $indexed_fasta = $self->_index_fasta;
 
 	# Validate genome about the read size required
+	log_msg sprintf ":: Validating fasta file '%s' ..." => $self->fasta_file;
+	# Entries to remove
+	my @blacklist;
+
 	for my $id (keys %$indexed_fasta) {
 		my $index_size = $indexed_fasta->{$id}{size};
 		given (ref $self->fastq) {
@@ -193,6 +237,7 @@ sub _build_fasta {
 					log_msg ":: seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n" .
 						"  -> I'm going to include '>$id' in the blacklist\n";
 					delete $indexed_fasta->{$id};
+					push @blacklist => $id;
 				}
 			}
 			when ('App::SimulateReads::Fastq::PairedEnd') {
@@ -201,6 +246,7 @@ sub _build_fasta {
 					log_msg ":: seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)\n" .
 						"  -> I'm going to include '>$id' in the blacklist\n";
 					delete $indexed_fasta->{$id};
+					push @blacklist => $id;
 				}
 			}
 			default {
@@ -211,6 +257,22 @@ sub _build_fasta {
 
 	unless (%$indexed_fasta) {
 		croak sprintf "Fasta file '%s' has no valid entry\n" => $self->fasta_file;
+	}
+
+	# Remove no valid entries from id -> pid relation
+	$self->_delete_fasta_rtree(@blacklist) if @blacklist;
+
+	# Reverse fasta_rtree to pid -> \@ids
+	unless ($self->_has_no_fasta_rtree) {
+		# Build parent -> child ids relation
+		my %fasta_tree;
+
+		for my $pair ($self->_fasta_rtree_pairs) {
+			my ($id, $pid) = (@$pair);
+			push @{ $fasta_tree{$pid} } => $id;
+		}
+
+		$self->_set_fasta_tree(%fasta_tree);
 	}
 
 	return $indexed_fasta;
@@ -240,7 +302,7 @@ sub _index_weight_file {
 		croak "Error parsing '$weight_file': weight (second column) lesser or equal to zero at line $line\n"
 			if $fields[1] <= 0;
 
-		$indexed_file{uc $fields[0]} = $fields[1];
+		$indexed_file{$fields[0]} = $fields[1];
 	}
 
 	unless (%indexed_file) {
@@ -270,8 +332,9 @@ sub _build_weights {
 			my $indexed_fasta = $self->_fasta;
 
 			for my $id (keys %$indexed_file) {
-				if (not exists $indexed_fasta->{$id}) {
-					log_msg "Ignoring seqid '$id': It is not found at the indexed fasta";
+				# If not exists into indexed_fasta, it must then exist into fasta_tree
+				unless (exists $indexed_fasta->{$id} || $self->_exists_fasta_tree($id)) {
+					log_msg ":: Ignoring seqid '$id': It is not found at the indexed fasta";
 					delete $indexed_file->{$id};
 				}
 			}
@@ -302,7 +365,18 @@ sub _build_seqid_raffle {
 			my $seqids_size = scalar @seqids;
 			$seqid_sub = sub { $seqids[int(rand($seqids_size))] };
 		}
-		when (/^(file|length)$/) {
+		when ('file') {
+			$seqid_sub = sub {
+				my $seqid = $self->weighted_raffle;
+				# The user could have passed the 'gene' instead of 'transcript'
+				if ($self->_exists_fasta_tree($seqid)) {
+					my $fasta_tree_entry = $self->_get_fasta_tree($seqid);
+					$seqid = $fasta_tree_entry->[int(rand(@$fasta_tree_entry))];
+				}
+				return $seqid;
+			};
+		}
+		when ('length') {
 			$seqid_sub = sub { $self->weighted_raffle };
 		}
 		default {
@@ -346,6 +420,20 @@ sub _calculate_number_of_reads {
 	return $number_of_reads;
 }
 
+sub _calculate_parent_count {
+	my ($self, $counter_ref) = @_;
+	return if $self->_has_no_fasta_rtree;
+
+	my %parent_count;
+
+	while (my ($id, $count) = each %$counter_ref) {
+		my $pid = $self->_get_fasta_rtree($id);
+		$parent_count{$pid} += $count if defined $pid;
+	}
+
+	return \%parent_count;
+}
+
 sub run_simulation {
 	my $self = shift;
 	my $fasta = $self->_fasta;
@@ -359,16 +447,19 @@ sub run_simulation {
 	# Function that returns seqid by seqid_weight
 	my $seqid = $self->_seqid_raffle;
 
-	# Files to be generated
+	# Fastq files to be generated
 	my %files = (
 		'App::SimulateReads::Fastq::SingleEnd' => [
-			$self->prefix . '_simulation_read.fastq'
+			$self->prefix . '_R1_001.fastq'
 		],
 		'App::SimulateReads::Fastq::PairedEnd' => [
-			$self->prefix . '_simulation_read_R1.fastq',
-			$self->prefix . '_simulation_read_R2.fastq'
+			$self->prefix . '_R1_001.fastq',
+			$self->prefix . '_R2_001.fastq'
 		],
 	);
+
+	# Count file to be generated
+	my $count_file = $self->prefix . '_counts.tsv';
 
 	# Is it single-end or paired-end?
 	my $fastq_class = ref $self->fastq;
@@ -387,9 +478,21 @@ sub run_simulation {
 	# Run in parent right after creating child process
 	$pm->run_on_start(
 		sub {
-			my ($pid, $files_ref) = @_;
+			my $pid = shift;
 			push @child_pid => $pid;
-			push @tmp_files => @$files_ref;
+		}
+	);
+
+	# Count the overall cumulative number of reads for each seqid
+	my %counters;
+
+	# Run in parent right after finishing child process
+	$pm->run_on_finish(
+		sub {
+			my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $counter_ref) = @_;
+			while (my ($seqid, $count) = each %$counter_ref) {
+				$counters{$seqid} += $count;
+			}
 		}
 	);
 
@@ -402,7 +505,8 @@ sub run_simulation {
 		#-------------------------------------------------------------------------------
 		log_msg ":: Creating job $tid ...";
 		my @files_t = map { "$_.${parent_pid}_part$tid" } @{ $files{$fastq_class} };
-		my $pid = $pm->start(\@files_t) and next;
+		push @tmp_files => @files_t;
+		my $pid = $pm->start and next;
 
 		#-------------------------------------------------------------------------------
 		# Inside child
@@ -430,6 +534,9 @@ sub run_simulation {
 		log_msg "  => Job $tid: Creating temporary file: @files_t";
 		my @fhs = map { $self->my_open_w($_, $self->output_gzip) } @files_t;
 
+		# Count the cumulative number of reads for each seqid
+		my %counter;
+
 		# Run simualtion in child
 		for (my $i = $idx; $i <= $last_read_idx and not $sig->signal_catched; $i++) {
 			my $id = $seqid->();
@@ -442,6 +549,7 @@ sub run_simulation {
 			} finally {
 				unless (@_) {
 					for my $fh_idx (0..$#fhs) {
+						$counter{$id}++;
 						$fhs[$fh_idx]->say(${$fastq_entry[$fh_idx]})
 							or croak "Cannot write to $files_t[$fh_idx]: $!\n";
 					}
@@ -458,7 +566,7 @@ sub run_simulation {
 
 		# Child exit
 		log_msg "  => Job $tid is finished";
-		$pm->finish;
+		$pm->finish(0, \%counter);
 	}
 
 	# Back to parent
@@ -487,6 +595,29 @@ sub run_simulation {
 		$fh[$fh_idx]->close
 			or croak "Cannot write file $files{$fastq_class}[$fh_idx]: $!\n";
 	}
+
+	# Save counts
+	log_msg ":: Saving count file ...";
+	my $count_fh = $self->my_open_w($count_file, 0);
+
+	log_msg ":; Wrinting counts to $count_file ...";
+	while (my ($id, $count) = each %counters) {
+		$count_fh->say("$id\t$count");
+	}
+
+	# Just in case, calculate 'gene' like expression
+	my $parent_count = $self->_calculate_parent_count(\%counters);
+
+	if (defined $parent_count) {
+		while (my ($id, $count) = each %$parent_count) {
+			$count_fh->say("$id\t$count");
+		}
+	}
+
+	# Close $count_file
+	log_msg ":; Writing and closing $count_file ...";
+	$count_fh->close
+		or croak "Cannot write file $count_file: $!\n";
 
 	# Clean up the mess
 	log_msg ":: Removing temporary files ...";

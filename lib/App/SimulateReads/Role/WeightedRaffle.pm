@@ -66,7 +66,7 @@ sub weighted_raffle {
 	my $range = int(rand($self->max_weight + 1));
 	return $self->_search(0, $self->num_weights - 1, $range);
 }
- 
+
 sub _search {
 	my ($self, $min_index, $max_index, $range) = @_;
 
