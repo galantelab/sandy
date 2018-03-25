@@ -7,7 +7,7 @@ extends 'App::SimulateReads::Command::Simulate';
 
 with 'App::SimulateReads::Role::Digest';
 
-our $VERSION = '0.12'; # VERSION
+our $VERSION = '0.13'; # VERSION
 
 sub default_opt {
 	'paired-end-id'    => '%i.%U %U',
@@ -44,7 +44,7 @@ App::SimulateReads::Command::Simulate::Custom - simulate subcommand class. Simul
 
 =head1 VERSION
 
-version 0.12
+version 0.13
 
 =head1 SYNOPSIS
 

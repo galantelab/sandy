@@ -4,7 +4,7 @@ package App::SimulateReads::Quality;
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::Quality::Handle;
 
-our $VERSION = '0.12'; # VERSION
+our $VERSION = '0.13'; # VERSION
 
 has 'quality_profile' => (
 	is         => 'ro',
@@ -154,7 +154,7 @@ App::SimulateReads::Quality - Class to simulate quality entries
 
 =head1 VERSION
 
-version 0.12
+version 0.13
 
 =head1 AUTHOR
 
