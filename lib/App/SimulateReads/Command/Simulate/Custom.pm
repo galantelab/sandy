@@ -53,6 +53,7 @@ __END__
   -j, --jobs               number of jobs [default:"1"; Integer]
   -z, --gzip               compress output file
   -s, --seed               set the seed of the base generator
+                           [default:"time()"; Integer]
   -c, --coverage           fastq-file coverage [default:"8", Number]
   -n, --number-of-reads    directly set the number of reads [Integer]
   -t, --sequencing-type    single-end or paired-end reads

@@ -56,8 +56,8 @@ has '_info1' => (
 	builder    => '_build_info',
 	lazy_build => 1,
 	handles    => {
-		set_info1 => 'set',
-		get_info1 => 'get'
+		_set_info1 => 'set',
+		_get_info1 => 'get'
 	}
 );
 
@@ -68,8 +68,8 @@ has '_info2' => (
 	builder    => '_build_info',
 	lazy_build => 1,
 	handles    => {
-		set_info2 => 'set',
-		get_info2 => 'get'
+		_set_info2 => 'set',
+		_get_info2 => 'get'
 	}
 );
 
@@ -147,7 +147,7 @@ sub sprint_fastq {
 		($start1, $end1, $start2, $end2) = ($start2, $end2, $start1, $end1);
 	}
 
-	$self->set_info1(
+	$self->_set_info1(
 		'id'               => $id,
 		'num'              => $num,
 		'fragment_size'    => $fragment_size,
@@ -163,7 +163,7 @@ sub sprint_fastq {
 		'strand'           => $is_leader ? 'P' : 'M'
 	);
 
-	$self->set_info2(
+	$self->_set_info2(
 		'id'               => $id,
 		'num'              => $num,
 		'fragment_size'    => $fragment_size,

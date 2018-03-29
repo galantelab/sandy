@@ -36,8 +36,8 @@ has '_info' => (
 	builder    => '_build_info',
 	lazy_build => 1,
 	handles    => {
-		set_info => 'set',
-		get_info => 'get'
+		_set_info => 'set',
+		_get_info => 'get'
 	}
 );
 
@@ -107,7 +107,7 @@ sub sprint_fastq {
 		($start, $end) = ($end, $start);
 	}
 
-	$self->set_info(
+	$self->_set_info(
 		'id'     => $id,
 		'num'    => $num,
 		'seq_id' => $seq_id,

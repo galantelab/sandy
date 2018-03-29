@@ -224,11 +224,13 @@ sub _index_fasta {
 
 sub _build_fasta {
 	my $self = shift;
-	log_msg sprintf ":: Indexing fasta file '%s' ..." => $self->fasta_file;
+	my $fasta = $self->fasta_file;
+
+	log_msg ":: Indexing fasta file '$fasta' ...";
 	my $indexed_fasta = $self->_index_fasta;
 
 	# Validate genome about the read size required
-	log_msg sprintf ":: Validating fasta file '%s' ..." => $self->fasta_file;
+	log_msg ":: Validating fasta file '$fasta' ...";
 	# Entries to remove
 	my @blacklist;
 
@@ -238,7 +240,7 @@ sub _build_fasta {
 			when ('App::SimulateReads::Fastq::SingleEnd') {
 				my $read_size = $self->fastq->read_size;
 				if ($index_size < $read_size) {
-					log_msg ":: seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n" .
+					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n" .
 						"  -> I'm going to include '>$id' in the blacklist\n";
 					delete $indexed_fasta->{$id};
 					push @blacklist => $id;
@@ -247,7 +249,7 @@ sub _build_fasta {
 			when ('App::SimulateReads::Fastq::PairedEnd') {
 				my $fragment_mean = $self->fastq->fragment_mean;
 				if ($index_size < $fragment_mean) {
-					log_msg ":: seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)\n" .
+					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)\n" .
 						"  -> I'm going to include '>$id' in the blacklist\n";
 					delete $indexed_fasta->{$id};
 					push @blacklist => $id;
@@ -276,6 +278,13 @@ sub _build_fasta {
 			push @{ $fasta_tree{$pid} } => $id;
 		}
 
+		# Need to sort ids to ensure that raffle will
+		# be reproducible
+		while (my ($pid, $ids) = each %fasta_tree) {
+			my @sorted_ids = sort @$ids;
+			$fasta_tree{$pid} = \@sorted_ids;
+		}
+
 		$self->_set_fasta_tree(%fasta_tree);
 	}
 
@@ -297,16 +306,16 @@ sub _index_weight_file {
 
 		my @fields = split;
 
-		croak "Error parsing '$weight_file': seqid (first column) not found at line $line\n"
+		croak "Error parsing weight file '$weight_file': Seqid (first column) not found at line $line\n"
 			unless defined $fields[0];
-		croak "Error parsing '$weight_file': weight (second column) not found at line $line\n"
+		croak "Error parsing weight file '$weight_file': Weight (second column) not found at line $line\n"
 			unless defined $fields[1];
-		croak "Error parsing '$weight_file': weight (second column) does not look like a number at line $line\n"
+		croak "Error parsing weight file '$weight_file': Weight (second column) does not look like a number at line $line\n"
 			if not looks_like_number($fields[1]);
 
 		# Only throws a warning, because it is common zero values in expression matrix
 		if ($fields[1] <= 0) {
-			log_msg ":: In parsing '$weight_file'. Ignoring seqid '$fields[0]': weight (second column) lesser or equal to zero at line $line\n";
+			log_msg ":: Parsing weight file '$weight_file': Ignoring seqid '$fields[0]': Weight (second column) lesser or equal to zero at line $line\n";
 			next;
 		}
 
@@ -314,11 +323,11 @@ sub _index_weight_file {
 	}
 
 	unless (%indexed_file) {
-		croak "Error parsing '$weight_file': Maybe the file is empty\n"
+		croak "Error parsing weight-file '$weight_file': Maybe the file is empty\n"
 	}
 
 	$fh->close
-		or croak "Cannot close file $weight_file: $!\n";
+		or croak "Cannot close weight-file $weight_file: $!\n";
 
 	return \%indexed_file;
 }
@@ -342,14 +351,15 @@ sub _build_seqid_raffle {
 			for my $id (keys %$indexed_file) {
 				# If not exists into indexed_fasta, it must then exist into fasta_tree
 				unless (exists $indexed_fasta->{$id} || $self->_exists_fasta_tree($id)) {
-					log_msg ":: Ignoring seqid '$id': It is not found at the indexed fasta";
+					log_msg sprintf ":: Ignoring seqid '$id' from weight file '%s': It is not found into the indexed fasta file '%s'"
+						=> $self->weight_file, $self->fasta_file;
 					delete $indexed_file->{$id};
 				}
 			}
 
 			unless (%$indexed_file) {
-				croak sprintf "No seqid entry of the file '%s' is recorded in the indexed fasta\n"
-					=> $self->weight_file;
+				croak sprintf "No valid seqid entry of the weight file '%s' is recorded into the indexed fasta file '%s'\n"
+					=> $self->weight_file, $self->fasta_file;
 			}
 
 			my $raffler = App::SimulateReads::WeightedRaffle->new(
@@ -418,7 +428,7 @@ sub _calculate_number_of_reads {
 
 sub _set_seed {
 	my ($self, $inc) = @_;
-	my $seed = $inc ? $self->seed + $inc : $self->seed;
+	my $seed = defined $inc ? $self->seed + $inc : $self->seed;
 	srand($seed);
 	require Math::Random;
 	Math::Random::random_set_seed_from_phrase($seed);

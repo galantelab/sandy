@@ -9,8 +9,8 @@ with 'App::SimulateReads::Role::Digest';
 
 # VERSION
 sub default_opt {
-	'paired-end-id'    => '%i.%U %U',
-	'single-end-id'    => '%i.%U %U',
+	'paired-end-id'    => '%i.%U_%c %U',
+	'single-end-id'    => '%i.%U_%c %U',
 	'seed'             => time,
 	'verbose'          => 0,
 	'prefix'           => 'out',
@@ -58,6 +58,7 @@ __END__
   -j, --jobs               number of jobs [default:"1"; Integer]
   -z, --gzip               compress output file
   -s, --seed               set the seed of the base generator
+                           [default:"time()"; Integer]
   -n, --number-of-reads    set the number of reads
                            [default:"1000000", Integer]
   -t, --sequencing-type    single-end or paired-end reads
