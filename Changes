@@ -2,6 +2,11 @@ Revision history for App-SimulateReads
 
 {{$NEXT}}
 
+0.14      2018-03-29 03:29:43-03:00 America/Sao_Paulo
+
+	- Add seed option for reproducible simulations
+	- Change weighted raffle from 'role' to 'class'
+
 0.13      2018-03-25 20:40:24-03:00 America/Sao_Paulo
 
 	- Add save counts
