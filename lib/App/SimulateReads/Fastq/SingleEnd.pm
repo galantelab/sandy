@@ -86,7 +86,8 @@ sub _build_info {
 	my $self = shift;
 
 	my %info = (
-		instrument       => sprintf("SR%d", getppid),
+#		instrument       => sprintf("SR%d", getppid),
+		instrument       => 'SR',
 		quality_profile  => $self->quality_profile,
 		read_size        => $self->read_size,
 		sequencing_error => $self->sequencing_error

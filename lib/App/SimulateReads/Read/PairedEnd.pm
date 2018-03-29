@@ -57,7 +57,7 @@ sub gen_read {
 		$fragment_size = $self->_random_half_normal;
 	}
 
-	my ($fragment_ref, $fragment_pos) = $self->subseq_rand($seq_ref, $seq_size, $fragment_size);	
+	my ($fragment_ref, $fragment_pos) = $self->subseq_rand($seq_ref, $seq_size, $fragment_size);
 
 	my $read1_ref = $self->subseq($fragment_ref, $fragment_size, $self->read_size, 0);
 	$self->update_count_base($self->read_size);

@@ -12,6 +12,7 @@ with 'App::SimulateReads::Role::Digest';
 sub default_opt {
 	'paired-end-id'    => '%i.%U %U',
 	'single-end-id'    => '%i.%U %U',
+	'seed'             => time,
 	'verbose'          => 0,
 	'prefix'           => 'out',
 	'output-dir'       => '.',
@@ -50,7 +51,8 @@ __END__
   -i, --append-id          append to the defined template id [Format]
   -I, --id                 overlap the default template id [Format]
   -j, --jobs               number of jobs [default:"1"; Integer]
-  -z, --output-gzip        compress output file
+  -z, --gzip               compress output file
+  -s, --seed               set the seed of the base generator
   -c, --coverage           fastq-file coverage [default:"8", Number]
   -n, --number-of-reads    directly set the number of reads [Integer]
   -t, --sequencing-type    single-end or paired-end reads
@@ -146,11 +148,19 @@ Paired-end specific escape characters
 
 Sets the number of child jobs to be created
 
-=item B<--output-gzip>
+=item B<--gzip>
 
 Compress the output-file with gzip algorithm. It is
 possible to pass --no-output-gzip if one wants
 uncompressed output-file
+
+=item B<--seed>
+
+Sets the seed of the base generator. The ability to set the seed is
+useful for those who want reproducible simulations. Pay attention to
+the number of jobs (--jobs) set, because each job receives a different
+seed calculated from the I<main seed>. So, for reproducibility, the
+same seed set before needs the same number of jobs set before as well.
 
 =item B<--read-size>
 

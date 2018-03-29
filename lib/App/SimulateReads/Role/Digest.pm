@@ -25,6 +25,7 @@ override 'opt_spec' => sub {
 	my @rm_opt = $self->rm_opt;
 
 	my %all_opt = (
+		'seed'             => 'seed|s=i',
 		'prefix'           => 'prefix|p=s',
 		'id'               => 'id|I=s',
 		'append-id'        => 'append-id|i=s',
@@ -313,6 +314,7 @@ HEADER
 		fasta_file        => $fasta_file,
 		prefix            => $opts->{'prefix'},
 		output_gzip       => $opts->{'gzip'},
+		seed              => $opts->{'seed'},
 		count_loops_by    => $opts->{'count-loops-by'},
 		number_of_reads   => $opts->{'number-of-reads'},
 		coverage          => $opts->{'coverage'},

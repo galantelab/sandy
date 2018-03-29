@@ -1,27 +1,31 @@
-package App::SimulateReads::Role::WeightedRaffle;
-# ABSTRACT: Extends class with weighted raffle.
+package App::SimulateReads::WeightedRaffle;
+# ABSTRACT: Weighted raffle interface.
 
-use App::SimulateReads::Base 'role';
-
-requires '_build_weights';
+use App::SimulateReads::Base 'class';
 
 # VERSION
 
-has 'weights'     => (
+has 'weights' => (
+	is         => 'ro',
+	isa        => 'HashRef[Int]',
+	required   => 1
+);
+
+has '_weights' => (
 	is         => 'ro',
 	isa        => 'My:Weights',
 	builder    => '_build_weights',
 	lazy_build => 1
 );
 
-has 'num_weights' => (
+has '_num_weights' => (
 	is         => 'ro',
 	isa        => 'My:IntGt0',
 	builder    => '_build_num_weights',
 	lazy_build => 1
 );
 
-has 'max_weight'  => (
+has '_max_weight' => (
 	is         => 'ro',
 	isa        => 'My:IntGe0',
 	builder    => '_build_max_weight',
@@ -30,25 +34,24 @@ has 'max_weight'  => (
 
 sub _build_num_weights {
 	my $self = shift;
-	my $weights = $self->weights;
-	croak "Not found a weights object\n" unless defined $weights;
+	my $weights = $self->_weights;
 	return scalar @$weights;
 }
 
 sub _build_max_weight {
 	my $self = shift;
-	my $weights = $self->weights;
-	croak "Not found a weights object\n" unless defined $weights;
+	my $weights = $self->_weights;
 	return $weights->[-1]{up};
 }
 
-sub calculate_weights {
-	my ($self, $line) = @_;
+sub _build_weights {
+	my $self = shift;
+	my $line = $self->weights;
 
 	my @weights;
 	my $left = 0;
 
-	for my $feature (keys %$line) {
+	for my $feature (sort keys %$line) {
 		my %weight = (
 			down    => $left,
 			up      => $left + $line->{$feature} - 1,
@@ -63,8 +66,8 @@ sub calculate_weights {
 
 sub weighted_raffle {
 	my $self = shift;
-	my $range = int(rand($self->max_weight + 1));
-	return $self->_search(0, $self->num_weights - 1, $range);
+	my $range = int(rand($self->_max_weight + 1));
+	return $self->_search(0, $self->_num_weights - 1, $range);
 }
 
 sub _search {
@@ -75,7 +78,7 @@ sub _search {
 	}
 
 	my $selected_index = int(($min_index + $max_index) / 2);
-	my $weight = $self->weights->[$selected_index];
+	my $weight = $self->_weights->[$selected_index];
 
 	if ($range >= $weight->{down} && $range <= $weight->{up}) {
 		return $weight->{feature};

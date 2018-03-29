@@ -5,13 +5,20 @@ use App::SimulateReads::Base 'class';
 use App::SimulateReads::Fastq::SingleEnd;
 use App::SimulateReads::Fastq::PairedEnd;
 use App::SimulateReads::InterlaceProcesses;
+use App::SimulateReads::WeightedRaffle;
 use Scalar::Util 'looks_like_number';
 use File::Cat 'cat';
 use Parallel::ForkManager;
 
-with qw/App::SimulateReads::Role::WeightedRaffle App::SimulateReads::Role::IO/;
+with qw/App::SimulateReads::Role::IO/;
 
 # VERSION
+
+has 'seed' => (
+	is        => 'ro',
+	isa       => 'Int',
+	required  => 1
+);
 
 has 'jobs' => (
 	is         => 'ro',
@@ -145,12 +152,9 @@ sub BUILD {
 	}
 
 	## Just to ensure that the lazy attributes are built before &new returns
-	# Only seqid_weight=same is not a weighted raffle, so in this case
-	# not construct weight attribute
-	$self->weights if $self->seqid_weight ne 'same';
-	$self->_strand;
-	$self->_fasta;
 	$self->_seqid_raffle;
+	$self->_fasta;
+	$self->_strand;
 }
 
 sub _build_strand {
@@ -299,8 +303,12 @@ sub _index_weight_file {
 			unless defined $fields[1];
 		croak "Error parsing '$weight_file': weight (second column) does not look like a number at line $line\n"
 			if not looks_like_number($fields[1]);
-		croak "Error parsing '$weight_file': weight (second column) lesser or equal to zero at line $line\n"
-			if $fields[1] <= 0;
+
+		# Only throws a warning, because it is common zero values in expression matrix
+		if ($fields[1] <= 0) {
+			log_msg ":: In parsing '$weight_file'. Ignoring seqid '$fields[0]': weight (second column) lesser or equal to zero at line $line\n";
+			next;
+		}
 
 		$indexed_file{$fields[0]} = $fields[1];
 	}
@@ -315,17 +323,17 @@ sub _index_weight_file {
 	return \%indexed_file;
 }
 
-sub _build_weights {
+sub _build_seqid_raffle {
 	my $self = shift;
-	my $weights;
-
+	my $seqid_sub;
 	given ($self->seqid_weight) {
-		when ('length') {
-			my %chr_size = map { $_, $self->_fasta->{$_}{size} } keys %{ $self->_fasta };
-			$weights = $self->calculate_weights(\%chr_size);
+		when ('same') {
+			my @seqids = keys %{ $self->_fasta };
+			my $seqids_size = scalar @seqids;
+			$seqid_sub = sub { $seqids[int(rand($seqids_size))] };
 		}
 		when ('file') {
-			log_msg ":: Indexing weight file '" . $self->weight_file . "' ...";
+			log_msg sprintf ":: Indexing weight file '%s' ..." => $self->weight_file;
 			my $indexed_file = $self->_index_weight_file($self->weight_file);
 
 			# Validate weight_file
@@ -340,34 +348,16 @@ sub _build_weights {
 			}
 
 			unless (%$indexed_file) {
-				croak "No seqid entry of the file '" . $self->weight_file . "' is recorded in the indexed fasta\n";
+				croak sprintf "No seqid entry of the file '%s' is recorded in the indexed fasta\n"
+					=> $self->weight_file;
 			}
 
-			$weights = $self->calculate_weights($indexed_file);
-		}
-		when ('same') {
-			croak "Error: Cannot build raffle weights for 'seqid-weight=same'\n";
-		}
-		default {
-			croak "Unknown option '$_' for weighted raffle\n";
-		}
-	}
+			my $raffler = App::SimulateReads::WeightedRaffle->new(
+				weights => $indexed_file
+			);
 
-	return $weights;
-}
-
-sub _build_seqid_raffle {
-	my $self = shift;
-	my $seqid_sub;
-	given ($self->seqid_weight) {
-		when ('same') {
-			my @seqids = keys %{ $self->_fasta };
-			my $seqids_size = scalar @seqids;
-			$seqid_sub = sub { $seqids[int(rand($seqids_size))] };
-		}
-		when ('file') {
 			$seqid_sub = sub {
-				my $seqid = $self->weighted_raffle;
+				my $seqid = $raffler->weighted_raffle;
 				# The user could have passed the 'gene' instead of 'transcript'
 				if ($self->_exists_fasta_tree($seqid)) {
 					my $fasta_tree_entry = $self->_get_fasta_tree($seqid);
@@ -377,7 +367,13 @@ sub _build_seqid_raffle {
 			};
 		}
 		when ('length') {
-			$seqid_sub = sub { $self->weighted_raffle };
+			my %chr_size = map { $_, $self->_fasta->{$_}{size} } keys %{ $self->_fasta };
+
+			my $raffler = App::SimulateReads::WeightedRaffle->new(
+				weights => \%chr_size
+			);
+
+			$seqid_sub = sub { $raffler->weighted_raffle };
 		}
 		default {
 			croak "Unknown option '$_' for seqid-raffle\n";
@@ -418,6 +414,14 @@ sub _calculate_number_of_reads {
 	}
 
 	return $number_of_reads;
+}
+
+sub _set_seed {
+	my ($self, $inc) = @_;
+	my $seed = $inc ? $self->seed + $inc : $self->seed;
+	srand($seed);
+	require Math::Random;
+	Math::Random::random_set_seed_from_phrase($seed);
 }
 
 sub _calculate_parent_count {
@@ -515,8 +519,7 @@ sub run_simulation {
 		my $sig = App::SimulateReads::InterlaceProcesses->new(foreign_pid => [$parent_pid]);
 
 		# Set child seed
-		my $seed = time + $$;
-		srand($seed);
+		$self->_set_seed($tid);
 
 		# Calculate the number of reads to this job and correct this local index
 		# to the global index
