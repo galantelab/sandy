@@ -6,7 +6,7 @@ use Math::Random 'random_normal';
 
 extends 'App::SimulateReads::Read';
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
 
 use constant {
 	NUM_TRIES => 1000
@@ -57,7 +57,7 @@ sub gen_read {
 		$fragment_size = $self->_random_half_normal;
 	}
 
-	my ($fragment_ref, $fragment_pos) = $self->subseq_rand($seq_ref, $seq_size, $fragment_size);	
+	my ($fragment_ref, $fragment_pos) = $self->subseq_rand($seq_ref, $seq_size, $fragment_size);
 
 	my $read1_ref = $self->subseq($fragment_ref, $fragment_size, $self->read_size, 0);
 	$self->update_count_base($self->read_size);
@@ -90,7 +90,7 @@ App::SimulateReads::Read::PairedEnd - App::SimulateReads::Read subclass for simu
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 AUTHOR
 

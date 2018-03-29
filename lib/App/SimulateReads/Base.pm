@@ -16,7 +16,7 @@ use Import::Into;
 use Data::OptList;
 use Module::Runtime 'use_module';
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
 
 binmode STDERR, ":encoding(utf8)";
 our $LOG_VERBOSE = 1;
@@ -133,7 +133,7 @@ App::SimulateReads::Base - Policy and base module to App::SimulateReads project.
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 AUTHOR
 

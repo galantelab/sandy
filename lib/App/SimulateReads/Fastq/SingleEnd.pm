@@ -8,7 +8,7 @@ extends 'App::SimulateReads::Fastq';
 
 with 'App::SimulateReads::Role::RunTimeTemplate';
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
 
 has 'template_id' => (
 	is         => 'ro',
@@ -36,8 +36,8 @@ has '_info' => (
 	builder    => '_build_info',
 	lazy_build => 1,
 	handles    => {
-		set_info => 'set',
-		get_info => 'get'
+		_set_info => 'set',
+		_get_info => 'get'
 	}
 );
 
@@ -86,7 +86,8 @@ sub _build_info {
 	my $self = shift;
 
 	my %info = (
-		instrument       => sprintf("SR%d", getppid),
+#		instrument       => sprintf("SR%d", getppid),
+		instrument       => 'SR',
 		quality_profile  => $self->quality_profile,
 		read_size        => $self->read_size,
 		sequencing_error => $self->sequencing_error
@@ -106,7 +107,7 @@ sub sprint_fastq {
 		($start, $end) = ($end, $start);
 	}
 
-	$self->set_info(
+	$self->_set_info(
 		'id'     => $id,
 		'num'    => $num,
 		'seq_id' => $seq_id,
@@ -134,7 +135,7 @@ App::SimulateReads::Fastq::SingleEnd - App::SimulateReads::Fastq subclass for si
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 AUTHOR
 
