@@ -16,6 +16,7 @@ use constant {
 	SEQID_WEIGHT      => 'length',
 	SEQUENCING_TYPE   => 'paired-end',
 	SEQUENCING_SYSTEM => 'poisson',
+	SEED              => time,
 	JOBS              => 2,
 	OUTPUT_GZIP       => 0,
 	SEQ_SYS           => 'poisson',
@@ -99,6 +100,7 @@ sub setup : Tests(setup) {
 		seqid_weight   => 'length',
 		count_loops_by => 'coverage',
 		strand_bias    => 'random',
+		seed           => SEED
 	);
 	
 	my %sg_single_end = (

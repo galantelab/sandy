@@ -42,9 +42,9 @@ lib/App/SimulateReads/Role/Digest.pm
 lib/App/SimulateReads/Role/IO.pm
 lib/App/SimulateReads/Role/ParseArgv.pm
 lib/App/SimulateReads/Role/RunTimeTemplate.pm
-lib/App/SimulateReads/Role/WeightedRaffle.pm
 lib/App/SimulateReads/Simulator.pm
 lib/App/SimulateReads/Types.pm
+lib/App/SimulateReads/WeightedRaffle.pm
 perlcritic.ini
 script/simulate_reads
 share/quality_profile.db

@@ -11,7 +11,7 @@ use File::Path 'make_path';
 
 requires qw/default_opt opt_spec rm_opt/;
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
 
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
@@ -25,6 +25,7 @@ override 'opt_spec' => sub {
 	my @rm_opt = $self->rm_opt;
 
 	my %all_opt = (
+		'seed'             => 'seed|s=i',
 		'prefix'           => 'prefix|p=s',
 		'id'               => 'id|I=s',
 		'append-id'        => 'append-id|i=s',
@@ -313,6 +314,7 @@ HEADER
 		fasta_file        => $fasta_file,
 		prefix            => $opts->{'prefix'},
 		output_gzip       => $opts->{'gzip'},
+		seed              => $opts->{'seed'},
 		count_loops_by    => $opts->{'count-loops-by'},
 		number_of_reads   => $opts->{'number-of-reads'},
 		coverage          => $opts->{'coverage'},
@@ -348,7 +350,7 @@ App::SimulateReads::Role::Digest - Wrapper on Simulator class for genome/transcr
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 AUTHOR
 

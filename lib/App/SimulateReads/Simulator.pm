@@ -5,13 +5,20 @@ use App::SimulateReads::Base 'class';
 use App::SimulateReads::Fastq::SingleEnd;
 use App::SimulateReads::Fastq::PairedEnd;
 use App::SimulateReads::InterlaceProcesses;
+use App::SimulateReads::WeightedRaffle;
 use Scalar::Util 'looks_like_number';
 use File::Cat 'cat';
 use Parallel::ForkManager;
 
-with qw/App::SimulateReads::Role::WeightedRaffle App::SimulateReads::Role::IO/;
+with qw/App::SimulateReads::Role::IO/;
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
+
+has 'seed' => (
+	is        => 'ro',
+	isa       => 'Int',
+	required  => 1
+);
 
 has 'jobs' => (
 	is         => 'ro',
@@ -145,12 +152,9 @@ sub BUILD {
 	}
 
 	## Just to ensure that the lazy attributes are built before &new returns
-	# Only seqid_weight=same is not a weighted raffle, so in this case
-	# not construct weight attribute
-	$self->weights if $self->seqid_weight ne 'same';
-	$self->_strand;
-	$self->_fasta;
 	$self->_seqid_raffle;
+	$self->_fasta;
+	$self->_strand;
 }
 
 sub _build_strand {
@@ -220,11 +224,13 @@ sub _index_fasta {
 
 sub _build_fasta {
 	my $self = shift;
-	log_msg sprintf ":: Indexing fasta file '%s' ..." => $self->fasta_file;
+	my $fasta = $self->fasta_file;
+
+	log_msg ":: Indexing fasta file '$fasta' ...";
 	my $indexed_fasta = $self->_index_fasta;
 
 	# Validate genome about the read size required
-	log_msg sprintf ":: Validating fasta file '%s' ..." => $self->fasta_file;
+	log_msg ":: Validating fasta file '$fasta' ...";
 	# Entries to remove
 	my @blacklist;
 
@@ -234,7 +240,7 @@ sub _build_fasta {
 			when ('App::SimulateReads::Fastq::SingleEnd') {
 				my $read_size = $self->fastq->read_size;
 				if ($index_size < $read_size) {
-					log_msg ":: seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n" .
+					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n" .
 						"  -> I'm going to include '>$id' in the blacklist\n";
 					delete $indexed_fasta->{$id};
 					push @blacklist => $id;
@@ -243,7 +249,7 @@ sub _build_fasta {
 			when ('App::SimulateReads::Fastq::PairedEnd') {
 				my $fragment_mean = $self->fastq->fragment_mean;
 				if ($index_size < $fragment_mean) {
-					log_msg ":: seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)\n" .
+					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)\n" .
 						"  -> I'm going to include '>$id' in the blacklist\n";
 					delete $indexed_fasta->{$id};
 					push @blacklist => $id;
@@ -272,6 +278,13 @@ sub _build_fasta {
 			push @{ $fasta_tree{$pid} } => $id;
 		}
 
+		# Need to sort ids to ensure that raffle will
+		# be reproducible
+		while (my ($pid, $ids) = each %fasta_tree) {
+			my @sorted_ids = sort @$ids;
+			$fasta_tree{$pid} = \@sorted_ids;
+		}
+
 		$self->_set_fasta_tree(%fasta_tree);
 	}
 
@@ -293,67 +306,30 @@ sub _index_weight_file {
 
 		my @fields = split;
 
-		croak "Error parsing '$weight_file': seqid (first column) not found at line $line\n"
+		croak "Error parsing weight file '$weight_file': Seqid (first column) not found at line $line\n"
 			unless defined $fields[0];
-		croak "Error parsing '$weight_file': weight (second column) not found at line $line\n"
+		croak "Error parsing weight file '$weight_file': Weight (second column) not found at line $line\n"
 			unless defined $fields[1];
-		croak "Error parsing '$weight_file': weight (second column) does not look like a number at line $line\n"
+		croak "Error parsing weight file '$weight_file': Weight (second column) does not look like a number at line $line\n"
 			if not looks_like_number($fields[1]);
-		croak "Error parsing '$weight_file': weight (second column) lesser or equal to zero at line $line\n"
-			if $fields[1] <= 0;
+
+		# Only throws a warning, because it is common zero values in expression matrix
+		if ($fields[1] <= 0) {
+			log_msg ":: Parsing weight file '$weight_file': Ignoring seqid '$fields[0]': Weight (second column) lesser or equal to zero at line $line\n";
+			next;
+		}
 
 		$indexed_file{$fields[0]} = $fields[1];
 	}
 
 	unless (%indexed_file) {
-		croak "Error parsing '$weight_file': Maybe the file is empty\n"
+		croak "Error parsing weight-file '$weight_file': Maybe the file is empty\n"
 	}
 
 	$fh->close
-		or croak "Cannot close file $weight_file: $!\n";
+		or croak "Cannot close weight-file $weight_file: $!\n";
 
 	return \%indexed_file;
-}
-
-sub _build_weights {
-	my $self = shift;
-	my $weights;
-
-	given ($self->seqid_weight) {
-		when ('length') {
-			my %chr_size = map { $_, $self->_fasta->{$_}{size} } keys %{ $self->_fasta };
-			$weights = $self->calculate_weights(\%chr_size);
-		}
-		when ('file') {
-			log_msg ":: Indexing weight file '" . $self->weight_file . "' ...";
-			my $indexed_file = $self->_index_weight_file($self->weight_file);
-
-			# Validate weight_file
-			my $indexed_fasta = $self->_fasta;
-
-			for my $id (keys %$indexed_file) {
-				# If not exists into indexed_fasta, it must then exist into fasta_tree
-				unless (exists $indexed_fasta->{$id} || $self->_exists_fasta_tree($id)) {
-					log_msg ":: Ignoring seqid '$id': It is not found at the indexed fasta";
-					delete $indexed_file->{$id};
-				}
-			}
-
-			unless (%$indexed_file) {
-				croak "No seqid entry of the file '" . $self->weight_file . "' is recorded in the indexed fasta\n";
-			}
-
-			$weights = $self->calculate_weights($indexed_file);
-		}
-		when ('same') {
-			croak "Error: Cannot build raffle weights for 'seqid-weight=same'\n";
-		}
-		default {
-			croak "Unknown option '$_' for weighted raffle\n";
-		}
-	}
-
-	return $weights;
 }
 
 sub _build_seqid_raffle {
@@ -366,8 +342,32 @@ sub _build_seqid_raffle {
 			$seqid_sub = sub { $seqids[int(rand($seqids_size))] };
 		}
 		when ('file') {
+			log_msg sprintf ":: Indexing weight file '%s' ..." => $self->weight_file;
+			my $indexed_file = $self->_index_weight_file($self->weight_file);
+
+			# Validate weight_file
+			my $indexed_fasta = $self->_fasta;
+
+			for my $id (keys %$indexed_file) {
+				# If not exists into indexed_fasta, it must then exist into fasta_tree
+				unless (exists $indexed_fasta->{$id} || $self->_exists_fasta_tree($id)) {
+					log_msg sprintf ":: Ignoring seqid '$id' from weight file '%s': It is not found into the indexed fasta file '%s'"
+						=> $self->weight_file, $self->fasta_file;
+					delete $indexed_file->{$id};
+				}
+			}
+
+			unless (%$indexed_file) {
+				croak sprintf "No valid seqid entry of the weight file '%s' is recorded into the indexed fasta file '%s'\n"
+					=> $self->weight_file, $self->fasta_file;
+			}
+
+			my $raffler = App::SimulateReads::WeightedRaffle->new(
+				weights => $indexed_file
+			);
+
 			$seqid_sub = sub {
-				my $seqid = $self->weighted_raffle;
+				my $seqid = $raffler->weighted_raffle;
 				# The user could have passed the 'gene' instead of 'transcript'
 				if ($self->_exists_fasta_tree($seqid)) {
 					my $fasta_tree_entry = $self->_get_fasta_tree($seqid);
@@ -377,7 +377,13 @@ sub _build_seqid_raffle {
 			};
 		}
 		when ('length') {
-			$seqid_sub = sub { $self->weighted_raffle };
+			my %chr_size = map { $_, $self->_fasta->{$_}{size} } keys %{ $self->_fasta };
+
+			my $raffler = App::SimulateReads::WeightedRaffle->new(
+				weights => \%chr_size
+			);
+
+			$seqid_sub = sub { $raffler->weighted_raffle };
 		}
 		default {
 			croak "Unknown option '$_' for seqid-raffle\n";
@@ -418,6 +424,14 @@ sub _calculate_number_of_reads {
 	}
 
 	return $number_of_reads;
+}
+
+sub _set_seed {
+	my ($self, $inc) = @_;
+	my $seed = defined $inc ? $self->seed + $inc : $self->seed;
+	srand($seed);
+	require Math::Random;
+	Math::Random::random_set_seed_from_phrase($seed);
 }
 
 sub _calculate_parent_count {
@@ -515,8 +529,7 @@ sub run_simulation {
 		my $sig = App::SimulateReads::InterlaceProcesses->new(foreign_pid => [$parent_pid]);
 
 		# Set child seed
-		my $seed = time + $$;
-		srand($seed);
+		$self->_set_seed($tid);
 
 		# Calculate the number of reads to this job and correct this local index
 		# to the global index
@@ -639,7 +652,7 @@ App::SimulateReads::Simulator - Class responsible to make the simulation
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 AUTHOR
 

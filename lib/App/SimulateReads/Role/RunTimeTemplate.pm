@@ -3,7 +3,7 @@ package App::SimulateReads::Role::RunTimeTemplate;
 
 use App::SimulateReads::Base 'role';
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
 
 sub compile_template {
 	my ($self, $template, $input_name, $sym_table) = @_;
@@ -35,7 +35,7 @@ App::SimulateReads::Role::RunTimeTemplate - Extends class with runtime printf li
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 AUTHOR
 

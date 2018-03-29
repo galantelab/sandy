@@ -3,7 +3,7 @@ package App::SimulateReads::InterlaceProcesses;
 
 use App::SimulateReads::Base 'class';
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
 
 has 'foreign_pid' => (
 	is       => 'ro',
@@ -51,7 +51,7 @@ App::SimulateReads::InterlaceProcesses - Interlaces the processe id for differen
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 AUTHOR
 

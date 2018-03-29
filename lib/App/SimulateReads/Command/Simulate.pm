@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::CLI::Command';
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
 
 override 'opt_spec' => sub {
 	super,
@@ -46,7 +46,7 @@ App::SimulateReads::Command::Simulate - simulate command class. Manage genome, t
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 SYNOPSIS
 

@@ -8,7 +8,7 @@ extends 'App::SimulateReads::Fastq';
 
 with 'App::SimulateReads::Role::RunTimeTemplate';
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
 
 has 'template_id' => (
 	is         => 'ro',
@@ -56,8 +56,8 @@ has '_info1' => (
 	builder    => '_build_info',
 	lazy_build => 1,
 	handles    => {
-		set_info1 => 'set',
-		get_info1 => 'get'
+		_set_info1 => 'set',
+		_get_info1 => 'get'
 	}
 );
 
@@ -68,8 +68,8 @@ has '_info2' => (
 	builder    => '_build_info',
 	lazy_build => 1,
 	handles    => {
-		set_info2 => 'set',
-		get_info2 => 'get'
+		_set_info2 => 'set',
+		_get_info2 => 'get'
 	}
 );
 
@@ -121,7 +121,8 @@ sub _build_info {
 	my $self = shift;
 
 	my %info = (
-		instrument       => sprintf("SR%d", getppid),
+#		instrument       => sprintf("SR%d", getppid),
+		instrument       => 'SR',
 		quality_profile  => $self->quality_profile,
 		read_size        => $self->read_size,
 		sequencing_error => $self->sequencing_error,
@@ -146,7 +147,7 @@ sub sprint_fastq {
 		($start1, $end1, $start2, $end2) = ($start2, $end2, $start1, $end1);
 	}
 
-	$self->set_info1(
+	$self->_set_info1(
 		'id'               => $id,
 		'num'              => $num,
 		'fragment_size'    => $fragment_size,
@@ -162,7 +163,7 @@ sub sprint_fastq {
 		'strand'           => $is_leader ? 'P' : 'M'
 	);
 
-	$self->set_info2(
+	$self->_set_info2(
 		'id'               => $id,
 		'num'              => $num,
 		'fragment_size'    => $fragment_size,
@@ -200,7 +201,7 @@ App::SimulateReads::Fastq::PairedEnd - App::SimulateReads::Fastq subclass for si
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 AUTHOR
 

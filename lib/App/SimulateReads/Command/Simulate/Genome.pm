@@ -7,11 +7,12 @@ extends 'App::SimulateReads::Command::Simulate';
 
 with 'App::SimulateReads::Role::Digest';
 
-our $VERSION = '0.13'; # VERSION
+our $VERSION = '0.14'; # VERSION
 
 sub default_opt {
 	'paired-end-id'    => '%i.%U_%c_%s_%S_%E',
 	'single-end-id'    => '%i.%U_%c_%s_%t_%n',
+	'seed'             => time,
 	'verbose'          => 0,
 	'prefix'           => 'out',
 	'output-dir'       => '.',
@@ -48,7 +49,7 @@ App::SimulateReads::Command::Simulate::Genome - simulate subcommand class. Simul
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 SYNOPSIS
 
@@ -67,6 +68,8 @@ version 0.13
   -I, --id                 overlap the default template id [Format]
   -j, --jobs               number of jobs [default:"1"; Integer]
   -z, --gzip               compress output file
+  -s, --seed               set the seed of the base generator
+                           [default:"time()"; Integer]
   -c, --coverage           fastq-file coverage [default:"8", Number]
   -t, --sequencing-type    single-end or paired-end reads
                            [default:"paired-end"]
@@ -165,6 +168,14 @@ Sets the number of child jobs to be created
 Compress the output-file with gzip algorithm. It is
 possible to pass --no-gzip if one wants
 uncompressed output-file
+
+=item B<--seed>
+
+Sets the seed of the base generator. The ability to set the seed is
+useful for those who want reproducible simulations. Pay attention to
+the number of jobs (--jobs) set, because each job receives a different
+seed calculated from the I<main seed>. So, for reproducibility, the
+same seed set before needs the same number of jobs set before as well.
 
 =item B<--read-size>
 
