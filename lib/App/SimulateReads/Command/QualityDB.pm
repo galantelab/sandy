@@ -2,7 +2,7 @@ package App::SimulateReads::Command::QualityDB;
 # ABSTRACT: qualitydb command class. Manage quality profile database.
 
 use App::SimulateReads::Base 'class';
-use App::SimulateReads::Quality::Handle;
+use App::SimulateReads::DB::Handle::Quality;
 
 extends 'App::SimulateReads::CLI::Command';
 
@@ -10,14 +10,14 @@ extends 'App::SimulateReads::CLI::Command';
 
 has 'db' => (
 	is         => 'ro',
-	isa        => 'App::SimulateReads::Quality::Handle',
+	isa        => 'App::SimulateReads::DB::Handle::Quality',
 	builder    => '_build_db',
 	lazy_build => 1,
 	handles    => [qw/insertdb restoredb deletedb make_report/]
 );
 
 sub _build_db {
-	return App::SimulateReads::Quality::Handle->new;
+	return App::SimulateReads::DB::Handle::Quality->new;
 }
 
 override 'opt_spec' => sub {

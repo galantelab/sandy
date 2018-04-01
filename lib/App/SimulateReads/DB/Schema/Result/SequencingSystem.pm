@@ -1,12 +1,12 @@
 use utf8;
-package App::SimulateReads::Quality::Schema::Result::SequencingSystem;
+package App::SimulateReads::DB::Schema::Result::SequencingSystem;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-App::SimulateReads::Quality::Schema::Result::SequencingSystem
+App::SimulateReads::DB::Schema::Result::SequencingSystem
 
 =cut
 
@@ -75,20 +75,20 @@ __PACKAGE__->add_unique_constraint("name_unique", ["name"]);
 
 Type: has_many
 
-Related object: L<App::SimulateReads::Quality::Schema::Result::Quality>
+Related object: L<App::SimulateReads::DB::Schema::Result::Quality>
 
 =cut
 
 __PACKAGE__->has_many(
   "qualities",
-  "App::SimulateReads::Quality::Schema::Result::Quality",
+  "App::SimulateReads::DB::Schema::Result::Quality",
   { "foreign.sequencing_system_id" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-09-14 23:37:51
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:NTenO9gWSMUFhnomwjCmuQ
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2018-03-30 20:36:51
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:cng0D2lvZ+cuqwUD7e3Icw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -55,7 +55,7 @@ sub import {
 
 	my @no_clean;
 	for my $opt_spec (@opts) {
-		my ($opt, $opt_args) = @$opt_spec;		
+		my ($opt, $opt_args) = @$opt_spec;
 		given ($opt) {
 			when ('dont_clean') {
 				if (!$opt_args) {

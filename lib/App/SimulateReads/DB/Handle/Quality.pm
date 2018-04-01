@@ -1,9 +1,8 @@
-package App::SimulateReads::Quality::Handle;
-# ABSTRACT: Class to handle database schemas.
+package App::SimulateReads::DB::Handle::Quality;
+# ABSTRACT: Class to handle quality database schemas.
 
 use App::SimulateReads::Base 'class';
-use App::SimulateReads::Quality::Schema;
-use Path::Class 'file';
+use App::SimulateReads::DB;
 use IO::Compress::Gzip 'gzip';
 use IO::Uncompress::Gunzip 'gunzip';
 use Storable qw/nfreeze thaw/;
@@ -12,50 +11,9 @@ with 'App::SimulateReads::Role::IO';
 
 # VERSION
  
-#-------------------------------------------------------------------------------
-#  Hardcoded paths for quality_profile
-#-------------------------------------------------------------------------------
-my $DB = 'quality_profile.db';
-my @DB_PATH = (
-	file(__FILE__)->dir->parent->parent->parent->parent->file('share'),
-	file(__FILE__)->dir->parent->parent->parent->file('auto', 'share', 'dist', 'App-SimulateReads')
-);
-
-has 'schema' => (
-	is         => 'ro',
-	isa        => 'App::SimulateReads::Quality::Schema',
-	builder    => '_build_schema',
-	lazy_build => 1,
-);
-
-sub _build_schema {
-	my $self = shift;
-	my $db;
-
-	for my $path (@DB_PATH) {
-		my $file = file($path, $DB);
-		if (-f $file) {
-			$db = $file;
-			last;
-		}
-	}
-
-	croak "$DB not found in @DB_PATH" unless defined $db;
-	return App::SimulateReads::Quality::Schema->connect(
-		"dbi:SQLite:$db",
-		"", 
-		"", 
-		{
-			RaiseError    => 1,
-			PrintError    => 0,
-			on_connect_do => 'PRAGMA foreign_keys = ON'
-		}
-	);
-}
-
 sub insertdb {
 	my ($self, $file, $sequencing_system, $size, $source, $is_user_provided, $type) = @_;
-	my $schema = $self->schema;
+	my $schema = App::SimulateReads::DB->schema;
 
 	log_msg ":: Checking if there is already a sequencing-system '$sequencing_system' ...";
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
@@ -223,7 +181,7 @@ sub _wcl {
 
 sub retrievedb {
 	my ($self, $sequencing_system, $size) = @_;
-	my $schema = $self->schema;
+	my $schema = App::SimulateReads::DB->schema;
 
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
 	croak "'$sequencing_system' not found into database" unless defined $seq_sys_rs;
@@ -242,7 +200,7 @@ sub retrievedb {
 
 sub deletedb {
 	my ($self, $sequencing_system, $size) = @_;
-	my $schema = $self->schema;
+	my $schema = App::SimulateReads::DB->schema;
 
 	log_msg ":: Checking if there is a sequencing-system '$sequencing_system' ...";
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
@@ -269,7 +227,7 @@ sub deletedb {
 
 sub restoredb {
 	my $self = shift;
-	my $schema = $self->schema;
+	my $schema = App::SimulateReads::DB->schema;
 
 	log_msg ":: Searching for user-provided entries ...";
 	my $user_provided = $schema->resultset('Quality')->search(
@@ -321,7 +279,7 @@ sub restoredb {
 
 sub make_report {
 	my $self = shift;
-	my $schema = $self->schema;
+	my $schema = App::SimulateReads::DB->schema;
 	my %report;
 
 	my $quality_rs = $schema->resultset('Quality')->search(

@@ -2,7 +2,7 @@ package App::SimulateReads::Role::Digest;
 # ABSTRACT: Wrapper on Simulator class for genome/transcriptome sequencing
 
 use App::SimulateReads::Base 'role';
-use App::SimulateReads::Quality::Handle;
+use App::SimulateReads::DB::Handle::Quality;
 use App::SimulateReads::Fastq::SingleEnd;
 use App::SimulateReads::Fastq::PairedEnd;
 use App::SimulateReads::Simulator;
@@ -64,7 +64,7 @@ sub _log_msg_opt {
 }
 
 sub _quality_profile_report {
-	my $quality = App::SimulateReads::Quality::Handle->new;
+	my $quality = App::SimulateReads::DB::Handle::Quality->new;
 	return $quality->make_report;
 }
 
