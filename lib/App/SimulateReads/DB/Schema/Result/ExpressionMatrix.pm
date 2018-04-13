@@ -29,14 +29,9 @@ __PACKAGE__->table("expression_matrix");
   is_auto_increment: 1
   is_nullable: 0
 
-=head2 specie
+=head2 name
 
-  data_type: 'text'
-  is_nullable: 0
-
-=head2 tissue
-
-  data_type: 'text'
+  data_type: (empty string)
   is_nullable: 0
 
 =head2 source
@@ -56,21 +51,27 @@ __PACKAGE__->table("expression_matrix");
   data_type: 'blob'
   is_nullable: 0
 
+=head2 date
+
+  data_type: 'date'
+  default_value: CURRENT_DATE
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "specie",
-  { data_type => "text", is_nullable => 0 },
-  "tissue",
-  { data_type => "text", is_nullable => 0 },
+  "name",
+  { data_type => "", is_nullable => 0 },
   "source",
   { data_type => "text", default_value => "not defined", is_nullable => 1 },
   "is_user_provided",
   { data_type => "integer", default_value => 1, is_nullable => 1 },
   "matrix",
   { data_type => "blob", is_nullable => 0 },
+  "date",
+  { data_type => "date", default_value => \"CURRENT_DATE", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -87,23 +88,21 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<specie_tissue_unique>
+=head2 C<name_unique>
 
 =over 4
 
-=item * L</specie>
-
-=item * L</tissue>
+=item * L</name>
 
 =back
 
 =cut
 
-__PACKAGE__->add_unique_constraint("specie_tissue_unique", ["specie", "tissue"]);
+__PACKAGE__->add_unique_constraint("name_unique", ["name"]);
 
 
-# Created by DBIx::Class::Schema::Loader v0.07047 @ 2018-03-30 20:36:51
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2enh+436EyzLKFwqU5iD3w
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2018-04-13 19:51:15
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gRsjxnWmHajWbBYRAn5LUQ
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

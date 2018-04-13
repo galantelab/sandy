@@ -33,5 +33,6 @@ CREATE TABLE IF NOT EXISTS "expression_matrix" (
 	"source" TEXT DEFAULT "not defined",
 	"is_user_provided" INTEGER DEFAULT 1,
 	"matrix" BLOB NOT NULL,
+	"date" DATE DEFAULT CURRENT_DATE,
 	UNIQUE ("name")
 );
