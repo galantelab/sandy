@@ -1,27 +1,26 @@
-package App::SimulateReads::Command::Simulate::Genome;
-# ABSTRACT: simulate subcommand class. Simulate genome sequencing
+package App::SimulateReads::Command::Transcriptome;
+# ABSTRACT: simulate command class. Simulate transcriptome sequencing
 
 use App::SimulateReads::Base 'class';
 
-extends 'App::SimulateReads::Command::Simulate';
+extends 'App::SimulateReads::CLI::Command';
 
 with 'App::SimulateReads::Role::Digest';
 
 # VERSION
-
 sub default_opt {
-	'paired-end-id'    => '%i.%U_%c_%s_%S_%E',
-	'single-end-id'    => '%i.%U_%c_%s_%t_%n',
+	'paired-end-id'    => '%i.%U_%c %U',
+	'single-end-id'    => '%i.%U_%c %U',
 	'seed'             => time,
 	'verbose'          => 0,
 	'prefix'           => 'out',
 	'output-dir'       => '.',
 	'jobs'             => 1,
 	'gzip'             => 1,
-	'count-loops-by'   => 'coverage',
-	'coverage'         => 8,
-	'strand-bias'      => 'random',
-	'seqid-weight'     => 'length',
+	'count-loops-by'   => 'number-of-reads',
+	'number-of-reads'  => 1000000,
+	'strand-bias'      => 'minus',
+	'seqid-weight'     => 'file',
 	'sequencing-type'  => 'paired-end',
 	'fragment-mean'    => 300,
 	'fragment-stdd'    => 50,
@@ -32,19 +31,21 @@ sub default_opt {
 
 sub rm_opt {
 	'strand-bias',
-	'number-of-reads',
-	'seqid-weight',
-	'weight-file'
+	'coverage',
+	'seqid-weight'
 }
 
 __END__
 
 =head1 SYNOPSIS
 
- simulate_reads simulate genome [options] <fasta-file>
+ simulate_reads transcriptome [options] -f <expression-matrix> <fasta-file>
 
  Arguments:
   a fasta-file 
+
+ Mandatory options:
+  -f, --weight-file        an expression-matrix file
 
  Options:
   -h, --help               brief help message
@@ -58,7 +59,8 @@ __END__
   -z, --gzip               compress output file
   -s, --seed               set the seed of the base generator
                            [default:"time()"; Integer]
-  -c, --coverage           fastq-file coverage [default:"8", Number]
+  -n, --number-of-reads    set the number of reads
+                           [default:"1000000", Integer]
   -t, --sequencing-type    single-end or paired-end reads
                            [default:"paired-end"]
   -q, --quality-profile    illumina sequencing system profiles
@@ -104,8 +106,8 @@ See B<Format>
 =item B<--id>
 
 Overlap the default defined template id:
-I<single-end> %i.%U_%c_%s_%t_%n and I<paired-end> %i.%U_%c_%s_%S_%E
-e.g. SR123.1_chr1_P_1001_1101
+I<single-end> %i.%U %U and I<paired-end> %i.%U %U
+e.g. SR123.1 1
 See B<Format>
 
 =item B<Format>
@@ -165,11 +167,10 @@ same seed set before needs the same number of jobs set before as well.
 
 Sets the read size. For now the unique valid value is 101
 
-=item B<--coverage>
+=item B<--number-of-reads>
 
-Calculates the number of reads based on the sequence
-coverage: number_of_reads = (sequence_size * coverage) / read_size.
-This is the default option for genome sequencing simulation
+Sets the number of reads desired. This is the default option
+for transcriptome sequencing simulation
 
 =item B<--sequencing-type>
 
@@ -194,10 +195,15 @@ Sets the sequencing error rate. Valid values are between zero and one
 Sets the illumina sequencing system profile for quality. For now, the unique
 valid values are hiseq and poisson
 
+=item B<--weight-file>
+
+A valid weight file is an expression-matrix file with 2 columns. The first column is
+for the seqid and the second column is for the count. The counts will be treated as weights
+
 =back
 
 =head1 DESCRIPTION
 
-Simulate genome sequencing.
+Simulate transcriptome sequencing.
 
 =cut
