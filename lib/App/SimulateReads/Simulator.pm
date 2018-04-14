@@ -140,15 +140,15 @@ sub BUILD {
 
 	# If seqid_weight is 'file', then weight_file must be defined
 	if ($self->seqid_weight eq 'file' and not defined $self->weight_file) {
-		croak "seqid_weight=file requires a weight_file\n";
+		die "seqid_weight=file requires a weight_file\n";
 	}
 
 	# If count_loops_by is 'coverage', then coverage must be defined. Else if
 	# it is equal to 'number_of_reads', then number_of_reads must be defined
 	if ($self->count_loops_by eq 'coverage' and not defined $self->coverage) {
-		croak "count_loops_by=coverage requires a coverage number\n";
+		die "count_loops_by=coverage requires a coverage number\n";
 	} elsif ($self->count_loops_by eq 'number_of_reads' and not defined $self->number_of_reads) {
-		croak "count_loops_by=number_of_reads requires a number_of_reads number\n";
+		die "count_loops_by=number_of_reads requires a number_of_reads number\n";
 	}
 
 	## Just to ensure that the lazy attributes are built before &new returns
@@ -165,7 +165,7 @@ sub _build_strand {
 		when ('plus')   { $strand_sub = sub {1} }
 		when ('minus')  { $strand_sub = sub {0} }
 		when ('random') { $strand_sub = sub { int(rand(2)) }}
-		default         { croak "Unknown option '$_' for strand bias\n" }
+		default         { die "Unknown option '$_' for strand bias\n" }
 	}
 
 	return $strand_sub;
@@ -201,7 +201,7 @@ sub _index_fasta {
 				$fasta_rtree{$id} = $pid;
 			}
 		} else {
-			croak "Error reading fasta file '$fasta': Not defined id"
+			die "Error reading fasta file '$fasta': Not defined id"
 				unless defined $id;
 			$indexed_fasta{$id}{seq} .= $_;
 		}
@@ -212,11 +212,11 @@ sub _index_fasta {
 	}
 
 	unless (%indexed_fasta) {
-		croak "Error parsing '$fasta'. Maybe the file is empty\n";
+		die "Error parsing '$fasta'. Maybe the file is empty\n";
 	}
 
 	$fh->close
-		or croak "Cannot close file $fasta: $!\n";
+		or die "Cannot close file $fasta: $!\n";
 
 	$self->_set_fasta_rtree(%fasta_rtree) if %fasta_rtree;
 	return \%indexed_fasta;
@@ -256,13 +256,13 @@ sub _build_fasta {
 				}
 			}
 			default {
-				croak "Unknown option '$_' for sequencing type\n";
+				die "Unknown option '$_' for sequencing type\n";
 			}
 		}
 	}
 
 	unless (%$indexed_fasta) {
-		croak sprintf "Fasta file '%s' has no valid entry\n" => $self->fasta_file;
+		die sprintf "Fasta file '%s' has no valid entry\n" => $self->fasta_file;
 	}
 
 	# Remove no valid entries from id -> pid relation
@@ -306,11 +306,11 @@ sub _index_weight_file {
 
 		my @fields = split;
 
-		croak "Error parsing weight file '$weight_file': Seqid (first column) not found at line $line\n"
+		die "Error parsing weight file '$weight_file': Seqid (first column) not found at line $line\n"
 			unless defined $fields[0];
-		croak "Error parsing weight file '$weight_file': Weight (second column) not found at line $line\n"
+		die "Error parsing weight file '$weight_file': Weight (second column) not found at line $line\n"
 			unless defined $fields[1];
-		croak "Error parsing weight file '$weight_file': Weight (second column) does not look like a number at line $line\n"
+		die "Error parsing weight file '$weight_file': Weight (second column) does not look like a number at line $line\n"
 			if not looks_like_number($fields[1]);
 
 		# Only throws a warning, because it is common zero values in expression matrix
@@ -323,11 +323,11 @@ sub _index_weight_file {
 	}
 
 	unless (%indexed_file) {
-		croak "Error parsing weight-file '$weight_file': Maybe the file is empty\n"
+		die "Error parsing weight-file '$weight_file': Maybe the file is empty\n"
 	}
 
 	$fh->close
-		or croak "Cannot close weight-file $weight_file: $!\n";
+		or die "Cannot close weight-file $weight_file: $!\n";
 
 	return \%indexed_file;
 }
@@ -358,7 +358,7 @@ sub _build_seqid_raffle {
 			}
 
 			unless (%$indexed_file) {
-				croak sprintf "No valid seqid entry of the weight file '%s' is recorded into the indexed fasta file '%s'\n"
+				die sprintf "No valid seqid entry of the weight file '%s' is recorded into the indexed fasta file '%s'\n"
 					=> $self->weight_file, $self->fasta_file;
 			}
 
@@ -386,7 +386,7 @@ sub _build_seqid_raffle {
 			$seqid_sub = sub { $raffler->weighted_raffle };
 		}
 		default {
-			croak "Unknown option '$_' for seqid-raffle\n";
+			die "Unknown option '$_' for seqid-raffle\n";
 		}
 	}
 	return $seqid_sub;
@@ -407,7 +407,7 @@ sub _calculate_number_of_reads {
 			$number_of_reads = $self->number_of_reads;
 		}
 		default {
-			croak "Unknown option '$_' for calculating the number of reads\n";
+			die "Unknown option '$_' for calculating the number of reads\n";
 		}
 	}
 
@@ -419,7 +419,7 @@ sub _calculate_number_of_reads {
 
 	# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or fasta_file size
 	if ($number_of_reads <= 0 || ($class eq 'App::SimulateReads::Fastq::PairedEnd' && $number_of_reads == 1)) {
-		croak "The computed number of reads is equal to zero.\n" .
+		die "The computed number of reads is equal to zero.\n" .
 			"It may occur due to the low coverage, fasta-file sequence size or number of reads directly passed by the user\n";
 	}
 
@@ -558,13 +558,13 @@ sub run_simulation {
 				@fastq_entry = $self->sprint_fastq($tid, $i, $id,
 					\$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
 			} catch {
-				croak "Not defined entry for seqid '>$id' at job $tid: $_";
+				die "Not defined entry for seqid '>$id' at job $tid: $_";
 			} finally {
 				unless (@_) {
 					for my $fh_idx (0..$#fhs) {
 						$counter{$id}++;
 						$fhs[$fh_idx]->say(${$fastq_entry[$fh_idx]})
-							or croak "Cannot write to $files_t[$fh_idx]: $!\n";
+							or die "Cannot write to $files_t[$fh_idx]: $!\n";
 					}
 				}
 			};
@@ -574,7 +574,7 @@ sub run_simulation {
 		# Close temporary files
 		for my $fh_idx (0..$#fhs) {
 			$fhs[$fh_idx]->close
-				or croak "Cannot write file $files_t[$fh_idx]: $!\n";
+				or die "Cannot write file $files_t[$fh_idx]: $!\n";
 		}
 
 		# Child exit
@@ -599,14 +599,14 @@ sub run_simulation {
 	for my $i (0..$#tmp_files) {
 		my $fh_idx = $i % scalar @fh;
 		cat $tmp_files[$i] => $fh[$fh_idx]
-			or croak "Cannot concatenate $tmp_files[$i] to $files{$fastq_class}[$fh_idx]: $!\n";
+			or die "Cannot concatenate $tmp_files[$i] to $files{$fastq_class}[$fh_idx]: $!\n";
 	}
 
 	# Close files
 	log_msg ":: Writing and closing output file: @{ $files{$fastq_class} }";
 	for my $fh_idx (0..$#fh) {
 		$fh[$fh_idx]->close
-			or croak "Cannot write file $files{$fastq_class}[$fh_idx]: $!\n";
+			or die "Cannot write file $files{$fastq_class}[$fh_idx]: $!\n";
 	}
 
 	# Save counts
@@ -630,12 +630,12 @@ sub run_simulation {
 	# Close $count_file
 	log_msg ":; Writing and closing $count_file ...";
 	$count_fh->close
-		or croak "Cannot write file $count_file: $!\n";
+		or die "Cannot write file $count_file: $!\n";
 
 	# Clean up the mess
 	log_msg ":: Removing temporary files ...";
 	for my $file_t (@tmp_files) {
 		unlink $file_t
-			or croak "Cannot remove temporary file: $file_t: $!\n";
+			or die "Cannot remove temporary file: $file_t: $!\n";
 	}
 }

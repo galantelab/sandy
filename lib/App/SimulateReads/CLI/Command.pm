@@ -26,7 +26,7 @@ sub execute {
 sub fill_opts {
 	my ($self, $opts, $default_opt) = @_;
 	if (ref $opts ne 'HASH' || ref $default_opt ne 'HASH') {
-		croak '$opts and $default_opt need to be a hash reference';
+		die '$opts and $default_opt need to be a hash reference';
 	}
 
 	for my $opt (keys %$default_opt) {

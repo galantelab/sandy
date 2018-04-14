@@ -11,7 +11,7 @@ sub gen_read {
 	my ($self, $seq_ref, $seq_size, $is_leader) = @_;
 
 	if ($seq_size < $self->read_size) {
-		croak sprintf "seq_size (%d) must be greater or equal to read_size (%d)\n"
+		die sprintf "seq_size (%d) must be greater or equal to read_size (%d)\n"
 			=> $seq_size, $self->read_size;
 	}
 

@@ -37,7 +37,7 @@ sub _build_schema {
 		}
 	}
 
-	croak "$DB not found in @DB_PATH" unless defined $db;
+	die "$DB not found in @DB_PATH" unless defined $db;
 
 	return App::SimulateReads::DB::Schema->connect(
 		"dbi:SQLite:$db",

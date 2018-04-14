@@ -74,7 +74,7 @@ sub _search {
 	my ($self, $min_index, $max_index, $range) = @_;
 
 	if ($min_index > $max_index) {
-		croak "Random feature not found";
+		die "Random feature not found";
 	}
 
 	my $selected_index = int(($min_index + $max_index) / 2);

@@ -10,13 +10,23 @@ use feature ();
 use true ();
 use Carp ();
 use Try::Tiny ();
-use namespace::autoclean;
 use Hook::AfterRuntime;
 use Import::Into;
 use Data::OptList;
 use Module::Runtime 'use_module';
+use namespace::autoclean;
 
 # VERSION
+
+BEGIN {
+	$SIG{'__DIE__'} = sub {
+		if($^S) {
+			return;
+		}
+		Carp::confess(@_) if $ENV{DEBUG};
+		die(@_);
+	};
+}
 
 binmode STDERR, ":encoding(utf8)";
 our $LOG_VERBOSE = 1;

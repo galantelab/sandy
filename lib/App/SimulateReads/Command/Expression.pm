@@ -46,9 +46,9 @@ sub _print_report {
 	return if not defined $report_ref;
 
 	my $format = "\t%*s\t%*s\t%*s\t%*s\n";	
-	my ($s1, $s2, $s3, $s4) = map {length} qw/expression_matrix/x4;
+	my ($s1, $s2, $s3, $s4) = map {length} qw/expression-matrix/x4;
 
-	printf $format => $s1, "expression_matrix", $s2, "source", $s3, "provider", $s4, "date";
+	printf $format => $s1, "expression-matrix", $s2, "source", $s3, "provider", $s4, "date";
 	for my $expression_matrix (sort keys %$report_ref) {
 		my $attr = $report_ref->{$expression_matrix};
 		for my $entry (@$attr) {

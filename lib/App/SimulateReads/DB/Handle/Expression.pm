@@ -19,7 +19,7 @@ sub insertdb {
 	log_msg ":: Checking if there is already an expression-matrix '$name' ...";
 	my $rs = $schema->resultset('ExpressionMatrix')->find({ name => $name });
 	if ($rs) {
-		croak "There is already an expression-matrix '$name'\n";
+		die "There is already an expression-matrix '$name'\n";
 	} else {
 		log_msg ":: expression-matrix '$name' not found";
 	}
@@ -61,11 +61,11 @@ sub _index_expression_matrix {
 
 		my @fields = split;
 
-		croak "Error parsing expression-matrix '$file': Seqid (first column) not found at line $line\n"
+		die "Error parsing expression-matrix '$file': Seqid (first column) not found at line $line\n"
 			unless defined $fields[0];
-		croak "Error parsing expression-matrix '$file': Count (second column) not found at line $line\n"
+		die "Error parsing expression-matrix '$file': Count (second column) not found at line $line\n"
 			unless defined $fields[1];
-		croak "Error parsing expression-matrix '$file': Count (second column) does not look like a number at line $line\n"
+		die "Error parsing expression-matrix '$file': Count (second column) does not look like a number at line $line\n"
 			if not looks_like_number($fields[1]);
 
 		# Only throws a warning, because it is common zero values in expression matrix
@@ -78,11 +78,11 @@ sub _index_expression_matrix {
 	}
 
 	unless (%indexed_file) {
-		croak "Error parsing expression-matrix '$file': Maybe the file is empty\n"
+		die "Error parsing expression-matrix '$file': Maybe the file is empty\n"
 	}
 
 	$fh->close
-		or croak "Cannot close expression-matrix $file: $!\n";
+		or die "Cannot close expression-matrix $file: $!\n";
 
 	return \%indexed_file;
 }
@@ -92,10 +92,10 @@ sub retrievedb {
 	my $schema = App::SimulateReads::DB->schema;
 
 	my $rs = $schema->resultset('ExpressionMatrix')->find({ name => $expression_matrix });
-	croak "'$expression_matrix' not found into database\n" unless defined $rs;
+	die "'$expression_matrix' not found into database\n" unless defined $rs;
 
 	my $compressed = $rs->matrix;
-	croak "expression-matrix entry '$expression_matrix' exists, but the related data is missing\n"
+	die "expression-matrix entry '$expression_matrix' exists, but the related data is missing\n"
 		unless defined $compressed;
 
 	gunzip \$compressed => \my $bytes;
@@ -109,10 +109,10 @@ sub deletedb {
 
 	log_msg ":: Checking if there is an expression-matrix '$expression_matrix' ...";
 	my $rs = $schema->resultset('ExpressionMatrix')->find({ name => $expression_matrix });
-	croak "'$expression_matrix' not found into database\n" unless defined $rs;
+	die "'$expression_matrix' not found into database\n" unless defined $rs;
 
 	log_msg ":: Found '$expression_matrix'";
-	croak "'$expression_matrix' is not a user provided entry. Cannot be deleted\n"
+	die "'$expression_matrix' is not a user provided entry. Cannot be deleted\n"
 		unless $rs->is_user_provided;
 
 	log_msg ":: Removing '$expression_matrix' entry ...";
@@ -142,7 +142,7 @@ sub restoredb {
 			log_msg '   ==> ' . $entry->name;
 		} while ($entry = $user_provided->next);
 	} else {
-		croak "Not found user-provided entries. There is no need to restoring\n";
+		die "Not found user-provided entries. There is no need to restoring\n";
 	}
 
 	log_msg ":: Removing all user-provided entries ...";

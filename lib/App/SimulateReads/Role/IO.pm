@@ -13,7 +13,7 @@ sub my_open_r {
 	my $mode = $file =~ /\.gz$/ ? "<:gzip" : "<";
 
 	open $fh, $mode => $file
-		or croak "Not possible to read $file: $!";
+		or die "Not possible to read $file: $!";
 
 	return $fh;
 }
@@ -31,7 +31,7 @@ sub my_open_w {
 	}
 
 	open $fh, $mode => $file
-		or croak "Not possible to create $file: $!";
+		or die "Not possible to create $file: $!";
 
 	return $fh;
 }
