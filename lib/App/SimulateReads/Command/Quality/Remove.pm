@@ -1,9 +1,9 @@
-package App::SimulateReads::Command::QualityDB::Remove;
-# ABSTRACT: qualitydb subcommand class. Remove a quality profile from database.
+package App::SimulateReads::Command::Quality::Remove;
+# ABSTRACT: quality subcommand class. Remove a quality profile from database.
 
 use App::SimulateReads::Base 'class';
 
-extends 'App::SimulateReads::Command::QualityDB';
+extends 'App::SimulateReads::Command::Quality';
 
 # VERSION
 
@@ -34,23 +34,25 @@ sub validate_opts {
 sub execute {
 	my ($self, $opts, $args) = @_;
 	$LOG_VERBOSE = exists $opts->{verbose} ? $opts->{verbose} : 0;
-	log_msg "Attempting to remove $opts->{'quality-profile'}:$opts->{'read-size'}";
+	log_msg ":: Attempting to remove $opts->{'quality-profile'}:$opts->{'read-size'}";
 	$self->deletedb($opts->{'quality-profile'}, $opts->{'read-size'});
-	log_msg "Done!";
+	log_msg ":: Done!";
 }
 
 __END__
 
 =head1 SYNOPSIS
 
- simulate_reads qualitydb remove -q <entry name> -r <size>
+ simulate_reads quality remove -q <entry name> -r <size>
+
+ Mandatory options:
+  -q, --quality-profile    quality-profile name for the database
+  -r, --read-size          the read-size of the quality-profile [Integer]
 
  Options:
   -h, --help               brief help message
   -M, --man                full documentation
   -v, --verbose            print log messages
-  -q, --quality-profile    quality-profile name for the database [required]
-  -r, --read-size          the read-size of the quality-profile [required, Integer]
 
 =head1 DESCRIPTION
 

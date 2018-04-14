@@ -1,9 +1,9 @@
-package App::SimulateReads::Command::QualityDB::Restore;
-# ABSTRACT: qualitydb subcommand class. Restore database.
+package App::SimulateReads::Command::Expression::Remove;
+# ABSTRACT: expression subcommand class. Remove an expression-matrix from database.
 
 use App::SimulateReads::Base 'class';
 
-extends 'App::SimulateReads::Command::QualityDB';
+extends 'App::SimulateReads::Command::Expression';
 
 # VERSION
 
@@ -14,24 +14,35 @@ override 'opt_spec' => sub {
 
 sub validate_args {
 	my ($self, $args) = @_;
+	my $expression_matrix = shift @$args;
+
+	# Mandatory file
+	if (not defined $expression_matrix) {
+		die "Missing expression-matrix\n";
+	}
+
 	die "Too many arguments: '@$args'\n" if @$args;
 }
 
-sub validate_opts {}
-
 sub execute {
 	my ($self, $opts, $args) = @_;
+	my $expression_matrix = shift @$args;
+
 	$LOG_VERBOSE = exists $opts->{verbose} ? $opts->{verbose} : 0;
-	log_msg "Restoring quality database to vendor state ...";
-	$self->restoredb;
-	log_msg "Done!";
+
+	log_msg ":: Attempting to remove $expression_matrix ...";
+	$self->deletedb($expression_matrix);
+	log_msg ":: Done!";
 }
 
 __END__
 
 =head1 SYNOPSIS
 
- simulate_reads qualitydb restore
+ simulate_reads expression remove <expression-matrix>
+
+ Arguments:
+  an expression-matrix entry
 
  Options:
   -h, --help               brief help message

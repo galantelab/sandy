@@ -8,8 +8,9 @@ extends 'App::SimulateReads::CLI::App';
 # VERSION
 
 sub command_map {
-	simulate  => 'App::SimulateReads::Command::Simulate',
-	qualitydb => 'App::SimulateReads::Command::QualityDB'
+	simulate   => 'App::SimulateReads::Command::Simulate',
+	quality    => 'App::SimulateReads::Command::Quality',
+	expression => 'App::SimulateReads::Command::Expression'
 }
 
 __END__
@@ -30,7 +31,8 @@ __END__
 
  Main commands:
   simulate                 manage genome/transcriptome sequencing simulation
-  qualitydb                manage quality profile database
+  quality                  manage quality profile database
+  expression               manage expression-matrix database
 
 =head1 DESCRIPTION
 

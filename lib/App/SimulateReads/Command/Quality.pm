@@ -1,5 +1,5 @@
-package App::SimulateReads::Command::QualityDB;
-# ABSTRACT: qualitydb command class. Manage quality profile database.
+package App::SimulateReads::Command::Quality;
+# ABSTRACT: quality command class. Manage quality profile database.
 
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::DB::Handle::Quality;
@@ -25,9 +25,9 @@ override 'opt_spec' => sub {
 };
 
 sub subcommand_map {
-	add     => 'App::SimulateReads::Command::QualityDB::Add',
-	remove  => 'App::SimulateReads::Command::QualityDB::Remove',
-	restore => 'App::SimulateReads::Command::QualityDB::Restore'
+	add     => 'App::SimulateReads::Command::Quality::Add',
+	remove  => 'App::SimulateReads::Command::Quality::Remove',
+	restore => 'App::SimulateReads::Command::Quality::Restore'
 }
 
 sub validate_args {
@@ -61,9 +61,11 @@ __END__
 
 =head1 SYNOPSIS
 
- simulate_reads qualitydb
- simulate_reads qualitydb [options]
- simulate_reads qualitydb <command>
+ simulate_reads quality
+ simulate_reads quality [options]
+ simulate_reads quality <command>
+
+ Manage quality profile database
 
  Options:
   -h, --help               brief help message

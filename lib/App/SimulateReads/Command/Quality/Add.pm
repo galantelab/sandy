@@ -1,9 +1,9 @@
-package App::SimulateReads::Command::QualityDB::Add;
-# ABSTRACT: qualitydb subcommand class. Add a quality profile to the database.
+package App::SimulateReads::Command::Quality::Add;
+# ABSTRACT: quality subcommand class. Add a quality profile to the database.
 
 use App::SimulateReads::Base 'class';
 
-extends 'App::SimulateReads::Command::QualityDB';
+extends 'App::SimulateReads::Command::Quality';
 
 # VERSION
 
@@ -76,7 +76,7 @@ sub execute {
 	}
 
 	# Go go go
-	log_msg "Inserting $opts->{'quality-profile'}:$opts->{'read-size'} from $file ...";
+	log_msg ":: Inserting $opts->{'quality-profile'}:$opts->{'read-size'} from $file ...";
 	$self->insertdb(
 		$file,
 		$opts->{'quality-profile'},
@@ -86,24 +86,26 @@ sub execute {
 		$opts->{'type'}
 	);
 
-	log_msg "Done!";
+	log_msg ":: Done!";
 }
 
 __END__
 
 =head1 SYNOPSIS
 
- simulate_reads qualitydb add -q <entry name> -r <size> [-s <source>] FILE
+ simulate_reads quality add -q <entry name> -r <size> [-s <source>] FILE
 
  Arguments:
   a quality-profile file (fastq or a matrix with only quality entries)
+
+ Mandatory options:
+  -q, --quality-profile    quality-profile name for the database [required]
+  -r, --read-size          the read-size to be used for the quality [required, Integer]
 
  Options:
   -h, --help               brief help message
   -M, --man                full documentation
   -v, --verbose            print log messages
-  -q, --quality-profile    quality-profile name for the database [required]
-  -r, --read-size          the read-size to be used for the quality [required, Integer]
   -s, --source             qaulity-profile source detail for database
 
 =head1 DESCRIPTION

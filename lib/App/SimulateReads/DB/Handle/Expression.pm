@@ -19,7 +19,7 @@ sub insertdb {
 	log_msg ":: Checking if there is already an expression-matrix '$name' ...";
 	my $rs = $schema->resultset('ExpressionMatrix')->find({ name => $name });
 	if ($rs) {
-		croak "There is already an expression-matrix '$name'";
+		croak "There is already an expression-matrix '$name'\n";
 	} else {
 		log_msg ":: expression-matrix '$name' not found";
 	}
@@ -95,7 +95,7 @@ sub retrievedb {
 	croak "'$expression_matrix' not found into database\n" unless defined $rs;
 
 	my $compressed = $rs->matrix;
-	croak "expression-matrix entry '$expression_matrix' exists, but the related data is missing"
+	croak "expression-matrix entry '$expression_matrix' exists, but the related data is missing\n"
 		unless defined $compressed;
 
 	gunzip \$compressed => \my $bytes;
