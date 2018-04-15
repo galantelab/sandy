@@ -3,7 +3,7 @@ package App::SimulateReads::WeightedRaffle;
 
 use App::SimulateReads::Base 'class';
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
 has 'weights' => (
 	is         => 'ro',
@@ -74,7 +74,7 @@ sub _search {
 	my ($self, $min_index, $max_index, $range) = @_;
 
 	if ($min_index > $max_index) {
-		croak "Random feature not found";
+		die "Random feature not found";
 	}
 
 	my $selected_index = int(($min_index + $max_index) / 2);
@@ -104,7 +104,7 @@ App::SimulateReads::WeightedRaffle - Weighted raffle interface.
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 AUTHOR
 

@@ -8,7 +8,7 @@ extends 'App::SimulateReads::Fastq';
 
 with 'App::SimulateReads::Role::RunTimeTemplate';
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
 has 'template_id' => (
 	is         => 'ro',
@@ -201,7 +201,7 @@ App::SimulateReads::Fastq::PairedEnd - App::SimulateReads::Fastq subclass for si
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 AUTHOR
 

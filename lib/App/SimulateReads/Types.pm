@@ -3,7 +3,7 @@ package App::SimulateReads::Types;
  
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
 subtype 'My:IntGt0'
 	=> as      'Int'
@@ -77,8 +77,8 @@ subtype 'My:StrandBias'
 
 subtype 'My:SeqIdWeight'
 	=> as      'Str'
-	=> where   { $_ eq 'length' || $_ eq 'same' || $_ eq 'file' }
-	=> message { "'$_' is not a valid seqid-weight: 'length', 'same' or 'file'" };
+	=> where   { $_ eq 'length' || $_ eq 'same' || $_ eq 'count' }
+	=> message { "'$_' is not a valid seqid-weight: 'length', 'same' or 'count'" };
 
 subtype 'My:SeqType'
 	=> as      'Str'
@@ -109,7 +109,7 @@ App::SimulateReads::Types - Moose type constraints for App::SimulateReads projec
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 AUTHOR
 

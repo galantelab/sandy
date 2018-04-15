@@ -1,5 +1,5 @@
 {
-   "abstract" : "Creates single-end and paired-end fastq reads for transcriptome and genome simulation",
+   "abstract" : "Creates single-end and paired-end fastq reads for transcriptome and genome sequencing simulation",
    "author" : [
       "Thiago L. A. Miller <tmiller@mochsl.org.br>"
    ],
@@ -21,6 +21,12 @@
             "perl" : "5.010"
          }
       },
+      "develop" : {
+         "requires" : {
+            "Test::Perl::Critic" : "0",
+            "Test::Pod" : "1.41"
+         }
+      },
       "runtime" : {
          "requires" : {
             "Carp" : "0",
@@ -39,6 +45,7 @@
             "Moose" : "0",
             "Moose::Role" : "0",
             "Moose::Util::TypeConstraints" : "0",
+            "MooseX::Singleton" : "0",
             "MooseX::StrictConstructor" : "0",
             "MooseX::UndefTolerant" : "0",
             "Parallel::ForkManager" : "1.19",
@@ -86,7 +93,7 @@
          "web" : "https://github.com/galantelab/simulate_reads"
       }
    },
-   "version" : "0.14",
+   "version" : "0.15",
    "x_serialization_backend" : "Cpanel::JSON::XS version 3.0239"
 }
 

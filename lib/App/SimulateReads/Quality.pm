@@ -2,9 +2,9 @@ package App::SimulateReads::Quality;
 # ABSTRACT: Class to simulate quality entries
 
 use App::SimulateReads::Base 'class';
-use App::SimulateReads::Quality::Handle;
+use App::SimulateReads::DB::Handle::Quality;
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
 has 'quality_profile' => (
 	is         => 'ro',
@@ -97,7 +97,7 @@ sub _build_phred_score {
 
 sub _build_quality_by_system {
 	my $self = shift;
-	my $db = App::SimulateReads::Quality::Handle->new;
+	my $db = App::SimulateReads::DB::Handle::Quality->new;
 	my ($matrix, $deepth) = $db->retrievedb($self->quality_profile, $self->read_size);
 	return { matrix => $matrix, deepth => $deepth };
 }
@@ -154,7 +154,7 @@ App::SimulateReads::Quality - Class to simulate quality entries
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 AUTHOR
 

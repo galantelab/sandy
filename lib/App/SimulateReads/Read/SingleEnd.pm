@@ -5,13 +5,13 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Read';
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
 sub gen_read {
 	my ($self, $seq_ref, $seq_size, $is_leader) = @_;
 
 	if ($seq_size < $self->read_size) {
-		croak sprintf "seq_size (%d) must be greater or equal to read_size (%d)\n"
+		die sprintf "seq_size (%d) must be greater or equal to read_size (%d)\n"
 			=> $seq_size, $self->read_size;
 	}
 
@@ -39,7 +39,7 @@ App::SimulateReads::Read::SingleEnd - App::SimulateReads::Read subclass for simu
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 AUTHOR
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env perl 
+#!perl
 
 BEGIN {
   unless ($ENV{AUTHOR_TESTING}) {
