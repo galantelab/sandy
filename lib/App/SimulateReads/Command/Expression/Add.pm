@@ -86,14 +86,20 @@ __END__
   -v, --verbose              print log messages
   -s, --source               expression-matrix source detail for database
 
-=head1 DESCRIPTION
+=head1 OPTIONS
 
-B<simulate_reads> will read the given input file and do something
-useful with the contents thereof.
+=over 8
 
 =item B<--expression-matrix>
 
 A valid expression-matrix is a file with 2 columns. The first column is for the seqid
 and the second column is for the count. The counts will be treated as weights
+
+=back
+
+=head1 DESCRIPTION
+
+B<simulate_reads> will read the given input file and do something
+useful with the contents thereof.
 
 =cut
