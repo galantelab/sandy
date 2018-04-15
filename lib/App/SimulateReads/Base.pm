@@ -10,13 +10,23 @@ use feature ();
 use true ();
 use Carp ();
 use Try::Tiny ();
-use namespace::autoclean;
 use Hook::AfterRuntime;
 use Import::Into;
 use Data::OptList;
 use Module::Runtime 'use_module';
+use namespace::autoclean;
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
+
+BEGIN {
+	$SIG{'__DIE__'} = sub {
+		if($^S) {
+			return;
+		}
+		Carp::confess(@_) if $ENV{DEBUG};
+		die(@_);
+	};
+}
 
 binmode STDERR, ":encoding(utf8)";
 our $LOG_VERBOSE = 1;
@@ -55,7 +65,7 @@ sub import {
 
 	my @no_clean;
 	for my $opt_spec (@opts) {
-		my ($opt, $opt_args) = @$opt_spec;		
+		my ($opt, $opt_args) = @$opt_spec;
 		given ($opt) {
 			when ('dont_clean') {
 				if (!$opt_args) {
@@ -133,7 +143,7 @@ App::SimulateReads::Base - Policy and base module to App::SimulateReads project.
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 AUTHOR
 

@@ -1,5 +1,5 @@
 ---
-abstract: 'Creates single-end and paired-end fastq reads for transcriptome and genome simulation'
+abstract: 'Creates single-end and paired-end fastq reads for transcriptome and genome sequencing simulation'
 author:
   - 'Thiago L. A. Miller <tmiller@mochsl.org.br>'
 build_requires:
@@ -37,6 +37,7 @@ requires:
   Moose: '0'
   Moose::Role: '0'
   Moose::Util::TypeConstraints: '0'
+  MooseX::Singleton: '0'
   MooseX::StrictConstructor: '0'
   MooseX::UndefTolerant: '0'
   Parallel::ForkManager: '1.19'
@@ -59,5 +60,5 @@ requires:
 resources:
   bugtracker: https://github.com/galantelab/simulate_reads/issues
   repository: git://github.com/galantelab/simulate_reads.git
-version: '0.14'
+version: '0.15'
 x_serialization_backend: 'YAML::Tiny version 1.70'

@@ -13,7 +13,7 @@ install_share dist => "share";
 
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "Creates single-end and paired-end fastq reads for transcriptome and genome simulation",
+  "ABSTRACT" => "Creates single-end and paired-end fastq reads for transcriptome and genome sequencing simulation",
   "AUTHOR" => "Thiago L. A. Miller <tmiller\@mochsl.org.br>",
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => 0,
@@ -43,6 +43,7 @@ my %WriteMakefileArgs = (
     "Moose" => 0,
     "Moose::Role" => 0,
     "Moose::Util::TypeConstraints" => 0,
+    "MooseX::Singleton" => 0,
     "MooseX::StrictConstructor" => 0,
     "MooseX::UndefTolerant" => 0,
     "Parallel::ForkManager" => "1.19",
@@ -69,7 +70,7 @@ my %WriteMakefileArgs = (
     "Test::UseAllModules" => 0,
     "autodie" => 0
   },
-  "VERSION" => "0.14",
+  "VERSION" => "0.15",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -94,6 +95,7 @@ my %FallbackPrereqs = (
   "Moose" => 0,
   "Moose::Role" => 0,
   "Moose::Util::TypeConstraints" => 0,
+  "MooseX::Singleton" => 0,
   "MooseX::StrictConstructor" => 0,
   "MooseX::UndefTolerant" => 0,
   "Parallel::ForkManager" => "1.19",

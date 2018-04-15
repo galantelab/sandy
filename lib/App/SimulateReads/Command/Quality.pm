@@ -1,23 +1,23 @@
-package App::SimulateReads::Command::QualityDB;
-# ABSTRACT: qualitydb command class. Manage quality profile database.
+package App::SimulateReads::Command::Quality;
+# ABSTRACT: quality command class. Manage quality profile database.
 
 use App::SimulateReads::Base 'class';
-use App::SimulateReads::Quality::Handle;
+use App::SimulateReads::DB::Handle::Quality;
 
 extends 'App::SimulateReads::CLI::Command';
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
 has 'db' => (
 	is         => 'ro',
-	isa        => 'App::SimulateReads::Quality::Handle',
+	isa        => 'App::SimulateReads::DB::Handle::Quality',
 	builder    => '_build_db',
 	lazy_build => 1,
 	handles    => [qw/insertdb restoredb deletedb make_report/]
 );
 
 sub _build_db {
-	return App::SimulateReads::Quality::Handle->new;
+	return App::SimulateReads::DB::Handle::Quality->new;
 }
 
 override 'opt_spec' => sub {
@@ -25,9 +25,9 @@ override 'opt_spec' => sub {
 };
 
 sub subcommand_map {
-	add     => 'App::SimulateReads::Command::QualityDB::Add',
-	remove  => 'App::SimulateReads::Command::QualityDB::Remove',
-	restore => 'App::SimulateReads::Command::QualityDB::Restore'
+	add     => 'App::SimulateReads::Command::Quality::Add',
+	remove  => 'App::SimulateReads::Command::Quality::Remove',
+	restore => 'App::SimulateReads::Command::Quality::Restore'
 }
 
 sub validate_args {
@@ -65,17 +65,19 @@ __END__
 
 =head1 NAME
 
-App::SimulateReads::Command::QualityDB - qualitydb command class. Manage quality profile database.
+App::SimulateReads::Command::Quality - quality command class. Manage quality profile database.
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 SYNOPSIS
 
- simulate_reads qualitydb
- simulate_reads qualitydb [options]
- simulate_reads qualitydb <command>
+ simulate_reads quality
+ simulate_reads quality [options]
+ simulate_reads quality <command>
+
+ Manage quality profile database
 
  Options:
   -h, --help               brief help message

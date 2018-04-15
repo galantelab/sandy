@@ -4,7 +4,7 @@ package App::SimulateReads::Role::IO;
 use App::SimulateReads::Base 'role';
 use PerlIO::gzip;
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
 sub my_open_r {
 	my ($self, $file) = @_;
@@ -13,7 +13,7 @@ sub my_open_r {
 	my $mode = $file =~ /\.gz$/ ? "<:gzip" : "<";
 
 	open $fh, $mode => $file
-		or croak "Not possible to read $file: $!";
+		or die "Not possible to read $file: $!";
 
 	return $fh;
 }
@@ -31,7 +31,7 @@ sub my_open_w {
 	}
 
 	open $fh, $mode => $file
-		or croak "Not possible to create $file: $!";
+		or die "Not possible to create $file: $!";
 
 	return $fh;
 }
@@ -48,7 +48,7 @@ App::SimulateReads::Role::IO - Input and output custom wrappers.
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 AUTHOR
 

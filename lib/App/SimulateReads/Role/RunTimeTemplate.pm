@@ -3,11 +3,11 @@ package App::SimulateReads::Role::RunTimeTemplate;
 
 use App::SimulateReads::Base 'role';
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
 sub compile_template {
 	my ($self, $template, $input_name, $sym_table) = @_;
-	croak "sym_table is not a hashref" unless ref $sym_table eq 'HASH';
+	die "sym_table is not a hashref" unless ref $sym_table eq 'HASH';
 
 	while (my ($sym, $variable) = each %$sym_table) {
 		$template =~ s/$sym/$variable/g;
@@ -16,7 +16,7 @@ sub compile_template {
 	## no critic
 
 	my $sub = eval "sub { my \$$input_name = shift; return \"$template\"; }";
-	croak "Error compiling template '$template': $@" if $@;
+	die "Error compiling template '$template': $@" if $@;
 
 	## use critic
 
@@ -35,7 +35,7 @@ App::SimulateReads::Role::RunTimeTemplate - Extends class with runtime printf li
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 AUTHOR
 

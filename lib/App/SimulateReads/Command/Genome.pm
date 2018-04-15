@@ -1,26 +1,27 @@
-package App::SimulateReads::Command::Simulate::Transcriptome;
-# ABSTRACT: simulate subcommand class. Simulate transcriptome sequencing
+package App::SimulateReads::Command::Genome;
+# ABSTRACT: simulate command class. Simulate genome sequencing
 
 use App::SimulateReads::Base 'class';
 
-extends 'App::SimulateReads::Command::Simulate';
+extends 'App::SimulateReads::CLI::Command';
 
 with 'App::SimulateReads::Role::Digest';
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
+
 sub default_opt {
-	'paired-end-id'    => '%i.%U_%c %U',
-	'single-end-id'    => '%i.%U_%c %U',
+	'paired-end-id'    => '%i.%U_%c_%s_%S_%E',
+	'single-end-id'    => '%i.%U_%c_%s_%t_%n',
 	'seed'             => time,
 	'verbose'          => 0,
 	'prefix'           => 'out',
 	'output-dir'       => '.',
 	'jobs'             => 1,
 	'gzip'             => 1,
-	'count-loops-by'   => 'number-of-reads',
-	'number-of-reads'  => 1000000,
-	'strand-bias'      => 'minus',
-	'seqid-weight'     => 'file',
+	'count-loops-by'   => 'coverage',
+	'coverage'         => 8,
+	'strand-bias'      => 'random',
+	'seqid-weight'     => 'length',
 	'sequencing-type'  => 'paired-end',
 	'fragment-mean'    => 300,
 	'fragment-stdd'    => 50,
@@ -31,8 +32,9 @@ sub default_opt {
 
 sub rm_opt {
 	'strand-bias',
-	'coverage',
-	'seqid-weight'
+	'number-of-reads',
+	'seqid-weight',
+	'expression-matrix'
 }
 
 __END__
@@ -43,51 +45,47 @@ __END__
 
 =head1 NAME
 
-App::SimulateReads::Command::Simulate::Transcriptome - simulate subcommand class. Simulate transcriptome sequencing
+App::SimulateReads::Command::Genome - simulate command class. Simulate genome sequencing
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 SYNOPSIS
 
- simulate_reads simulate transcriptome [options] -f <expression-matrix> <fasta-file>
+ simulate_reads genome [options] <fasta-file>
 
  Arguments:
   a fasta-file 
 
- Mandatory options:
-  -f, --weight-file        an expression-matrix file
-
  Options:
-  -h, --help               brief help message
-  -M, --man                full documentation
-  -v, --verbose            print log messages
-  -p, --prefix             prefix output [default:"out"]	
-  -o, --output-dir         output directory [default:"."]
-  -i, --append-id          append to the defined template id [Format]
-  -I, --id                 overlap the default template id [Format]
-  -j, --jobs               number of jobs [default:"1"; Integer]
-  -z, --gzip               compress output file
-  -s, --seed               set the seed of the base generator
-                           [default:"time()"; Integer]
-  -n, --number-of-reads    set the number of reads
-                           [default:"1000000", Integer]
-  -t, --sequencing-type    single-end or paired-end reads
-                           [default:"paired-end"]
-  -q, --quality-profile    illumina sequencing system profiles
-                           [default:"hiseq"]
-  -e, --sequencing-error   sequencing error rate
-                           [default:"0.005"; Number]
-  -r, --read-size          the read size [default:"101"; Integer]
-  -m, --fragment-mean      the fragment mean size for paired-end reads
-                           [default:"300"; Integer]
-  -d, --fragment-stdd      the fragment standard deviation size for
-                           paired-end reads [default:"50"; Integer]
+  -h, --help                     brief help message
+  -M, --man                      full documentation
+  -v, --verbose                  print log messages
+  -p, --prefix                   prefix output [default:"out"]	
+  -o, --output-dir               output directory [default:"."]
+  -i, --append-id                append to the defined template id [Format]
+  -I, --id                       overlap the default template id [Format]
+  -j, --jobs                     number of jobs [default:"1"; Integer]
+  -z, --gzip                     compress output file
+  -s, --seed                     set the seed of the base generator
+                                 [default:"time()"; Integer]
+  -c, --coverage                 fastq-file coverage [default:"8", Number]
+  -t, --sequencing-type          single-end or paired-end reads
+                                 [default:"paired-end"]
+  -q, --quality-profile          illumina sequencing system profiles
+                                 [default:"hiseq"]
+  -e, --sequencing-error         sequencing error rate
+                                 [default:"0.005"; Number]
+  -r, --read-size                the read size [default:"101"; Integer]
+  -m, --fragment-mean            the fragment mean size for paired-end reads
+                                 [default:"300"; Integer]
+  -d, --fragment-stdd            the fragment standard deviation size for
+                                 paired-end reads [default:"50"; Integer]
 
 =head1 DESCRIPTION
 
-Simulate transcriptome sequencing.
+Simulate genome sequencing.
 
 =head1 OPTIONS
 
@@ -122,8 +120,8 @@ See B<Format>
 =item B<--id>
 
 Overlap the default defined template id:
-I<single-end> %i.%U %U and I<paired-end> %i.%U %U
-e.g. SR123.1 1
+I<single-end> %i.%U_%c_%s_%t_%n and I<paired-end> %i.%U_%c_%s_%S_%E
+e.g. SR123.1_chr1_P_1001_1101
 See B<Format>
 
 =item B<Format>
@@ -183,10 +181,11 @@ same seed set before needs the same number of jobs set before as well.
 
 Sets the read size. For now the unique valid value is 101
 
-=item B<--number-of-reads>
+=item B<--coverage>
 
-Sets the number of reads desired. This is the default option
-for transcriptome sequencing simulation
+Calculates the number of reads based on the sequence
+coverage: number_of_reads = (sequence_size * coverage) / read_size.
+This is the default option for genome sequencing simulation
 
 =item B<--sequencing-type>
 
@@ -210,11 +209,6 @@ Sets the sequencing error rate. Valid values are between zero and one
 
 Sets the illumina sequencing system profile for quality. For now, the unique
 valid values are hiseq and poisson
-
-=item B<--weight-file>
-
-A valid weight file is an expression-matrix file with 2 columns. The first column is
-for the seqid and the second column is for the count. The counts will be treated as weights
 
 =back
 

@@ -26,7 +26,8 @@ use constant {
 	COVERAGE          => 5,
 	PREFIX            => 'ponga',
 	OUTPUT_SINGLE_END => 'ponga_R1_001.fastq',
-	OUTPUT_PAIRED_END => ['ponga_R1_001.fastq', 'ponga_R2_001.fastq']
+	OUTPUT_PAIRED_END => ['ponga_R1_001.fastq', 'ponga_R2_001.fastq'],
+	OUTPUT_COUNTS     => 'ponga_counts.tsv'
 };
 
 sub startup : Tests(startup) {
@@ -153,6 +154,7 @@ sub run_simulation : Tests(9) {
 	my $test = shift;
 	my $output_single_end = OUTPUT_SINGLE_END;
 	my $output_paired_end = OUTPUT_PAIRED_END;
+	my $output_counts = OUTPUT_COUNTS;
 
 	my $fastq_count = sub {
 		my $file = shift;
@@ -213,6 +215,8 @@ sub run_simulation : Tests(9) {
 			
 		unlink $output_paired_end->[$i];
 	}
+
+	unlink $output_counts;
 }
 
 ## --- end class TestsFor::Simulator

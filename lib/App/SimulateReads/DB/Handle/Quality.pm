@@ -1,61 +1,19 @@
-package App::SimulateReads::Quality::Handle;
-# ABSTRACT: Class to handle database schemas.
+package App::SimulateReads::DB::Handle::Quality;
+# ABSTRACT: Class to handle quality database schemas.
 
 use App::SimulateReads::Base 'class';
-use App::SimulateReads::Quality::Schema;
-use Path::Class 'file';
+use App::SimulateReads::DB;
 use IO::Compress::Gzip 'gzip';
 use IO::Uncompress::Gunzip 'gunzip';
 use Storable qw/nfreeze thaw/;
 
 with 'App::SimulateReads::Role::IO';
 
-our $VERSION = '0.14'; # VERSION
- 
-#-------------------------------------------------------------------------------
-#  Hardcoded paths for quality_profile
-#-------------------------------------------------------------------------------
-my $DB = 'quality_profile.db';
-my @DB_PATH = (
-	file(__FILE__)->dir->parent->parent->parent->parent->file('share'),
-	file(__FILE__)->dir->parent->parent->parent->file('auto', 'share', 'dist', 'App-SimulateReads')
-);
-
-has 'schema' => (
-	is         => 'ro',
-	isa        => 'App::SimulateReads::Quality::Schema',
-	builder    => '_build_schema',
-	lazy_build => 1,
-);
-
-sub _build_schema {
-	my $self = shift;
-	my $db;
-
-	for my $path (@DB_PATH) {
-		my $file = file($path, $DB);
-		if (-f $file) {
-			$db = $file;
-			last;
-		}
-	}
-
-	croak "$DB not found in @DB_PATH" unless defined $db;
-	return App::SimulateReads::Quality::Schema->connect(
-		"dbi:SQLite:$db",
-		"", 
-		"", 
-		{
-			RaiseError    => 1,
-			PrintError    => 0,
-			on_connect_do => 'PRAGMA foreign_keys = ON'
-		}
-	);
-}
+our $VERSION = '0.15'; # VERSION
 
 sub insertdb {
 	my ($self, $file, $sequencing_system, $size, $source, $is_user_provided, $type) = @_;
-	my $schema = $self->schema;
+	my $schema = App::SimulateReads::DB->schema;
 
 	log_msg ":: Checking if there is already a sequencing-system '$sequencing_system' ...";
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
@@ -64,7 +22,7 @@ sub insertdb {
 		log_msg ":: Searching for a quality entry '$sequencing_system:$size' ...";
 		my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
 		if ($quality_rs) {
-			croak "There is already a quality entry for $sequencing_system:$size";
+			die "There is already a quality entry for $sequencing_system:$size\n";
 		}
 		log_msg ":: Not found '$sequencing_system:$size'";
 	} else {
@@ -74,7 +32,7 @@ sub insertdb {
 	my ($arr, $deepth);
 
 	if ($type !~ /^(fastq|raw)$/) {
-		croak "Unknown indexing type '$type': Valids are 'raw' and 'fastq'";
+		die "Unknown indexing type '$type': Valids are 'raw' and 'fastq'\n";
 	}
 
 	log_msg ":: Indexing '$file'. It may take several minutes ...";
@@ -150,18 +108,18 @@ sub _index_quality_type {
 				for (1..4) {
 					$line++;
 					defined(my $entry = <$fh>)
-						or croak "Truncated fastq entry in '$file' at line $line";
+						or die "Truncated fastq entry in '$file' at line $line\n";
 					push @stack => $entry;
 				}
 
 				chomp @stack;
 
 				if ($stack[0] !~ /^\@/ || $stack[2] !~ /^\+/) {
-					croak "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read";	
+					die "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read\n";
 				}
 
 				if (length $stack[3] != $size) {
-					croak "Fastq entry in '$file' at line '$line' do not have length $size";
+					die "Fastq entry in '$file' at line '$line' do not have length $size\n";
 				}
 
 				return $stack[3];
@@ -176,7 +134,7 @@ sub _index_quality_type {
 				chomp(my $entry = <$fh>);
 
 				if (length $entry != $size) {
-					croak "Error parsing '$file': Line $line do not have length $size";
+					die "Error parsing '$file': Line $line do not have length $size\n";
 				}
 
 				return $entry;
@@ -198,7 +156,7 @@ sub _index_quality_type {
 		if ($rand < $picks_left) {
 			push @quality => $entry;
 			$picks_left--;
-			if (++$acm % int($picks/10) == 0) {
+			if ($picks >= 10 && (++$acm % int($picks/10) == 0)) {
 				log_msg sprintf "   ==> %d%% processed\n", ($acm / $picks) * 100;
 			}
 		}
@@ -207,7 +165,7 @@ sub _index_quality_type {
 	}
 
 	$fh->close
-		or croak "Cannot close file '$file'";
+		or die "Cannot close file '$file'\n";
 
 	return $self->_index_quality(\@quality, $size);
 }
@@ -223,17 +181,17 @@ sub _wcl {
 
 sub retrievedb {
 	my ($self, $sequencing_system, $size) = @_;
-	my $schema = $self->schema;
+	my $schema = App::SimulateReads::DB->schema;
 
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
-	croak "'$sequencing_system' not found into database" unless defined $seq_sys_rs;
+	die "'$sequencing_system' not found into database\n" unless defined $seq_sys_rs;
 
 	my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
-	croak "Not found size '$size' for sequencing system '$sequencing_system'" unless defined $quality_rs;
+	die "Not found size '$size' for sequencing system '$sequencing_system'\n" unless defined $quality_rs;
 
 	my $compressed = $quality_rs->matrix;
 	my $deepth = $quality_rs->deepth;
-	croak "Quality profile not found for '$sequencing_system:$size'" unless defined $compressed;
+	die "Quality profile not found for '$sequencing_system:$size'\n" unless defined $compressed;
 
 	gunzip \$compressed => \my $bytes;
 	my $matrix = thaw $bytes;
@@ -242,23 +200,23 @@ sub retrievedb {
 
 sub deletedb {
 	my ($self, $sequencing_system, $size) = @_;
-	my $schema = $self->schema;
+	my $schema = App::SimulateReads::DB->schema;
 
 	log_msg ":: Checking if there is a sequencing-system '$sequencing_system' ...";
 	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
-	croak "'$sequencing_system' not found into database" unless defined $seq_sys_rs;
+	die "'$sequencing_system' not found into database\n" unless defined $seq_sys_rs;
 	log_msg ":: Found '$sequencing_system'";
 
 	log_msg ":: Searching for a quality entry '$sequencing_system:$size' ...";
 	my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
-	croak "'$sequencing_system:$size' not found into database" unless defined $quality_rs;
-	croak "'$sequencing_system:$size' is not a user provided entry. Cannot be deleted" unless $quality_rs->is_user_provided;
+	die "'$sequencing_system:$size' not found into database\n" unless defined $quality_rs;
+	die "'$sequencing_system:$size' is not a user provided entry. Cannot be deleted\n" unless $quality_rs->is_user_provided;
 
 	log_msg ":: Found. Removing '$sequencing_system:$size' entry ...";
 
 	# Begin transation
 	my $guard = $schema->txn_scope_guard;
-	
+
 	$quality_rs->delete;
 	$seq_sys_rs->search_related('qualities' => undef)->single
 		or $seq_sys_rs->delete;
@@ -269,7 +227,7 @@ sub deletedb {
 
 sub restoredb {
 	my $self = shift;
-	my $schema = $self->schema;
+	my $schema = App::SimulateReads::DB->schema;
 
 	log_msg ":: Searching for user-provided entries ...";
 	my $user_provided = $schema->resultset('Quality')->search(
@@ -284,7 +242,7 @@ sub restoredb {
 			log_msg '   ==> ' . $entry->sequencing_system->name . ':' . $entry->size;
 		} while ($entry = $user_provided->next);
 	} else {
-		croak "Not found user-provided entries. There is no need to restoring\n";
+		die "Not found user-provided entries. There is no need to restoring\n";
 	}
 
 	log_msg ":: Removing all user-provided entries ...";
@@ -321,7 +279,7 @@ sub restoredb {
 
 sub make_report {
 	my $self = shift;
-	my $schema = $self->schema;
+	my $schema = App::SimulateReads::DB->schema;
 	my %report;
 
 	my $quality_rs = $schema->resultset('Quality')->search(
@@ -349,11 +307,11 @@ __END__
 
 =head1 NAME
 
-App::SimulateReads::Quality::Handle - Class to handle database schemas.
+App::SimulateReads::DB::Handle::Quality - Class to handle quality database schemas.
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 AUTHOR
 

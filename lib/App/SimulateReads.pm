@@ -5,11 +5,14 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::CLI::App';
 
-our $VERSION = '0.14'; # VERSION
+our $VERSION = '0.15'; # VERSION
 
 sub command_map {
-	simulate  => 'App::SimulateReads::Command::Simulate',
-	qualitydb => 'App::SimulateReads::Command::QualityDB'
+	custom        => 'App::SimulateReads::Command::Custom',
+	genome        => 'App::SimulateReads::Command::Genome',
+	transcriptome => 'App::SimulateReads::Command::Transcriptome',
+	quality       => 'App::SimulateReads::Command::Quality',
+	expression    => 'App::SimulateReads::Command::Expression'
 }
 
 __END__
@@ -24,7 +27,7 @@ App::SimulateReads - App builder that simulates single-end and paired-end reads.
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 SYNOPSIS
 
@@ -41,8 +44,11 @@ version 0.14
   man                      show application or command-specific documentation
 
  Main commands:
-  simulate                 manage genome/transcriptome sequencing simulation
-  qualitydb                manage quality profile database
+  genome                   simulate genome sequencing
+  transcriptome            simulate transcriptome sequencing
+  custom                   simulate custom sequencing
+  quality                  manage quality profile database
+  expression               manage expression-matrix database
 
 =head1 DESCRIPTION
 
