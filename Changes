@@ -2,6 +2,15 @@ Revision history for App-SimulateReads
 
 {{$NEXT}}
 
+0.15      2018-04-15 02:15:43-03:00 America/Sao_Paulo
+
+	- Substitute expression-matrix for weight-file
+	- Add an expression-matrix database to provide vendor
+	  options for the users
+	- Change main commands to: genome, transcriptome, custom,
+	  quality and expression. The first three manage simulations
+		and the last two manage databases
+
 0.14      2018-03-29 03:29:43-03:00 America/Sao_Paulo
 
 	- Add seed option for reproducible simulations
