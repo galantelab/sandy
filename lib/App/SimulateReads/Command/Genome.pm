@@ -34,7 +34,7 @@ sub rm_opt {
 	'strand-bias',
 	'number-of-reads',
 	'seqid-weight',
-	'weight-file'
+	'expression-matrix'
 }
 
 __END__
@@ -47,29 +47,29 @@ __END__
   a fasta-file 
 
  Options:
-  -h, --help               brief help message
-  -M, --man                full documentation
-  -v, --verbose            print log messages
-  -p, --prefix             prefix output [default:"out"]	
-  -o, --output-dir         output directory [default:"."]
-  -i, --append-id          append to the defined template id [Format]
-  -I, --id                 overlap the default template id [Format]
-  -j, --jobs               number of jobs [default:"1"; Integer]
-  -z, --gzip               compress output file
-  -s, --seed               set the seed of the base generator
-                           [default:"time()"; Integer]
-  -c, --coverage           fastq-file coverage [default:"8", Number]
-  -t, --sequencing-type    single-end or paired-end reads
-                           [default:"paired-end"]
-  -q, --quality-profile    illumina sequencing system profiles
-                           [default:"hiseq"]
-  -e, --sequencing-error   sequencing error rate
-                           [default:"0.005"; Number]
-  -r, --read-size          the read size [default:"101"; Integer]
-  -m, --fragment-mean      the fragment mean size for paired-end reads
-                           [default:"300"; Integer]
-  -d, --fragment-stdd      the fragment standard deviation size for
-                           paired-end reads [default:"50"; Integer]
+  -h, --help                     brief help message
+  -M, --man                      full documentation
+  -v, --verbose                  print log messages
+  -p, --prefix                   prefix output [default:"out"]	
+  -o, --output-dir               output directory [default:"."]
+  -i, --append-id                append to the defined template id [Format]
+  -I, --id                       overlap the default template id [Format]
+  -j, --jobs                     number of jobs [default:"1"; Integer]
+  -z, --gzip                     compress output file
+  -s, --seed                     set the seed of the base generator
+                                 [default:"time()"; Integer]
+  -c, --coverage                 fastq-file coverage [default:"8", Number]
+  -t, --sequencing-type          single-end or paired-end reads
+                                 [default:"paired-end"]
+  -q, --quality-profile          illumina sequencing system profiles
+                                 [default:"hiseq"]
+  -e, --sequencing-error         sequencing error rate
+                                 [default:"0.005"; Number]
+  -r, --read-size                the read size [default:"101"; Integer]
+  -m, --fragment-mean            the fragment mean size for paired-end reads
+                                 [default:"300"; Integer]
+  -d, --fragment-stdd            the fragment standard deviation size for
+                                 paired-end reads [default:"50"; Integer]
 
 =head1 OPTIONS
 

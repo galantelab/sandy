@@ -91,4 +91,9 @@ __END__
 B<simulate_reads> will read the given input file and do something
 useful with the contents thereof.
 
+=item B<--expression-matrix>
+
+A valid expression-matrix is a file with 2 columns. The first column is for the seqid
+and the second column is for the count. The counts will be treated as weights
+
 =cut

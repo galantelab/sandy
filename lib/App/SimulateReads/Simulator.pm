@@ -6,6 +6,7 @@ use App::SimulateReads::Fastq::SingleEnd;
 use App::SimulateReads::Fastq::PairedEnd;
 use App::SimulateReads::InterlaceProcesses;
 use App::SimulateReads::WeightedRaffle;
+use App::SimulateReads::DB::Handle::Expression;
 use Scalar::Util 'looks_like_number';
 use File::Cat 'cat';
 use Parallel::ForkManager;
@@ -74,9 +75,9 @@ has 'seqid_weight' => (
 	required   => 1
 );
 
-has 'weight_file' => (
+has 'expression_matrix' => (
 	is         => 'ro',
-	isa        => 'My:File',
+	isa        => 'Str',
 	required   => 0
 );
 
@@ -138,9 +139,9 @@ has '_seqid_raffle' => (
 sub BUILD {
 	my $self = shift;
 
-	# If seqid_weight is 'file', then weight_file must be defined
-	if ($self->seqid_weight eq 'file' and not defined $self->weight_file) {
-		die "seqid_weight=file requires a weight_file\n";
+	# If seqid_weight is 'count', then expression_matrix must be defined
+	if ($self->seqid_weight eq 'count' and not defined $self->expression_matrix) {
+		die "seqid_weight=count requires a expression_matrix\n";
 	}
 
 	# If count_loops_by is 'coverage', then coverage must be defined. Else if
@@ -291,45 +292,10 @@ sub _build_fasta {
 	return $indexed_fasta;
 }
 
-sub _index_weight_file {
+sub _retrieve_expression_matrix {
 	my $self = shift;
-	my $weight_file = $self->weight_file;
-
-	my $fh = $self->my_open_r($weight_file);
-	my %indexed_file;
-
-	my $line = 0;
-	while (<$fh>) {
-		$line++;
-		chomp;
-		next if /^\s*$/;
-
-		my @fields = split;
-
-		die "Error parsing weight file '$weight_file': Seqid (first column) not found at line $line\n"
-			unless defined $fields[0];
-		die "Error parsing weight file '$weight_file': Weight (second column) not found at line $line\n"
-			unless defined $fields[1];
-		die "Error parsing weight file '$weight_file': Weight (second column) does not look like a number at line $line\n"
-			if not looks_like_number($fields[1]);
-
-		# Only throws a warning, because it is common zero values in expression matrix
-		if ($fields[1] <= 0) {
-			log_msg ":: Parsing weight file '$weight_file': Ignoring seqid '$fields[0]': Weight (second column) lesser or equal to zero at line $line\n";
-			next;
-		}
-
-		$indexed_file{$fields[0]} = $fields[1];
-	}
-
-	unless (%indexed_file) {
-		die "Error parsing weight-file '$weight_file': Maybe the file is empty\n"
-	}
-
-	$fh->close
-		or die "Cannot close weight-file $weight_file: $!\n";
-
-	return \%indexed_file;
+	my $expression = App::SimulateReads::DB::Handle::Expression->new;
+	return $expression->retrievedb($self->expression_matrix);
 }
 
 sub _build_seqid_raffle {
@@ -341,25 +307,25 @@ sub _build_seqid_raffle {
 			my $seqids_size = scalar @seqids;
 			$seqid_sub = sub { $seqids[int(rand($seqids_size))] };
 		}
-		when ('file') {
-			log_msg sprintf ":: Indexing weight file '%s' ..." => $self->weight_file;
-			my $indexed_file = $self->_index_weight_file($self->weight_file);
+		when ('count') {
+			# Catch expression-matrix entry from database
+			my $indexed_file = $self->_retrieve_expression_matrix;
 
-			# Validate weight_file
+			# Validate expression_matrix
 			my $indexed_fasta = $self->_fasta;
 
 			for my $id (keys %$indexed_file) {
 				# If not exists into indexed_fasta, it must then exist into fasta_tree
 				unless (exists $indexed_fasta->{$id} || $self->_exists_fasta_tree($id)) {
-					log_msg sprintf ":: Ignoring seqid '$id' from weight file '%s': It is not found into the indexed fasta file '%s'"
-						=> $self->weight_file, $self->fasta_file;
+					log_msg sprintf ":: Ignoring seqid '$id' from expression-matrix '%s': It is not found into the indexed fasta file '%s'"
+						=> $self->expression_matrix, $self->fasta_file;
 					delete $indexed_file->{$id};
 				}
 			}
 
 			unless (%$indexed_file) {
-				die sprintf "No valid seqid entry of the weight file '%s' is recorded into the indexed fasta file '%s'\n"
-					=> $self->weight_file, $self->fasta_file;
+				die sprintf "No valid seqid entry of the expression-matrix '%s' is recorded into the indexed fasta file '%s'\n"
+					=> $self->expression_matrix, $self->fasta_file;
 			}
 
 			my $raffler = App::SimulateReads::WeightedRaffle->new(

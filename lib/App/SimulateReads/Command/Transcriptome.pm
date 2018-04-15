@@ -20,7 +20,7 @@ sub default_opt {
 	'count-loops-by'   => 'number-of-reads',
 	'number-of-reads'  => 1000000,
 	'strand-bias'      => 'minus',
-	'seqid-weight'     => 'file',
+	'seqid-weight'     => 'count',
 	'sequencing-type'  => 'paired-end',
 	'fragment-mean'    => 300,
 	'fragment-stdd'    => 50,
@@ -45,33 +45,33 @@ __END__
   a fasta-file 
 
  Mandatory options:
-  -f, --weight-file        an expression-matrix file
+  -f, --expression-matrix        an expression-matrix entry from database
 
  Options:
-  -h, --help               brief help message
-  -M, --man                full documentation
-  -v, --verbose            print log messages
-  -p, --prefix             prefix output [default:"out"]	
-  -o, --output-dir         output directory [default:"."]
-  -i, --append-id          append to the defined template id [Format]
-  -I, --id                 overlap the default template id [Format]
-  -j, --jobs               number of jobs [default:"1"; Integer]
-  -z, --gzip               compress output file
-  -s, --seed               set the seed of the base generator
-                           [default:"time()"; Integer]
-  -n, --number-of-reads    set the number of reads
-                           [default:"1000000", Integer]
-  -t, --sequencing-type    single-end or paired-end reads
-                           [default:"paired-end"]
-  -q, --quality-profile    illumina sequencing system profiles
-                           [default:"hiseq"]
-  -e, --sequencing-error   sequencing error rate
-                           [default:"0.005"; Number]
-  -r, --read-size          the read size [default:"101"; Integer]
-  -m, --fragment-mean      the fragment mean size for paired-end reads
-                           [default:"300"; Integer]
-  -d, --fragment-stdd      the fragment standard deviation size for
-                           paired-end reads [default:"50"; Integer]
+  -h, --help                     brief help message
+  -M, --man                      full documentation
+  -v, --verbose                  print log messages
+  -p, --prefix                   prefix output [default:"out"]	
+  -o, --output-dir               output directory [default:"."]
+  -i, --append-id                append to the defined template id [Format]
+  -I, --id                       overlap the default template id [Format]
+  -j, --jobs                     number of jobs [default:"1"; Integer]
+  -z, --gzip                     compress output file
+  -s, --seed                     set the seed of the base generator
+                                 [default:"time()"; Integer]
+  -n, --number-of-reads          set the number of reads
+                                 [default:"1000000", Integer]
+  -t, --sequencing-type          single-end or paired-end reads
+                                 [default:"paired-end"]
+  -q, --quality-profile          illumina sequencing system profiles
+                                 [default:"hiseq"]
+  -e, --sequencing-error         sequencing error rate
+                                 [default:"0.005"; Number]
+  -r, --read-size                the read size [default:"101"; Integer]
+  -m, --fragment-mean            the fragment mean size for paired-end reads
+                                 [default:"300"; Integer]
+  -d, --fragment-stdd            the fragment standard deviation size for
+                                 paired-end reads [default:"50"; Integer]
 
 =head1 OPTIONS
 
@@ -195,10 +195,10 @@ Sets the sequencing error rate. Valid values are between zero and one
 Sets the illumina sequencing system profile for quality. For now, the unique
 valid values are hiseq and poisson
 
-=item B<--weight-file>
+=item B<--expression-matrix>
 
-A valid weight file is an expression-matrix file with 2 columns. The first column is
-for the seqid and the second column is for the count. The counts will be treated as weights
+The expression-matrix entries are found into the database.
+See B<expression> command for more details
 
 =back
 

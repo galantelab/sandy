@@ -43,35 +43,36 @@ __END__
   a fasta-file 
 
  Options:
-  -h, --help               brief help message
-  -M, --man                full documentation
-  -v, --verbose            print log messages
-  -p, --prefix             prefix output [default:"out"]	
-  -o, --output-dir         output directory [default:"."]
-  -i, --append-id          append to the defined template id [Format]
-  -I, --id                 overlap the default template id [Format]
-  -j, --jobs               number of jobs [default:"1"; Integer]
-  -z, --gzip               compress output file
-  -s, --seed               set the seed of the base generator
-                           [default:"time()"; Integer]
-  -c, --coverage           fastq-file coverage [default:"8", Number]
-  -n, --number-of-reads    directly set the number of reads [Integer]
-  -t, --sequencing-type    single-end or paired-end reads
-                           [default:"paired-end"]
-  -q, --quality-profile    illumina sequencing system profiles
-                           [default:"hiseq"]
-  -e, --sequencing-error   sequencing error rate
-                           [default:"0.005"; Number]
-  -r, --read-size          the read size [default:"101"; Integer]
-  -m, --fragment-mean      the mean size fragments for paired-end reads
-                           [default:"300"; Integer]
-  -d, --fragment-stdd      the standard deviation for fragment sizes
-                           [default:"50"; Integer]
-  -b, --strand-bias        which strand to be used: plus, minus and random
-                           [default:"random"]
-  -w, --seqid-weight       seqid raffle type: length, same, file
-                           [default: "length"]
-  -f, --weight-file        an expression-matrix when seqid-weight=file
+  -h, --help                     brief help message
+  -M, --man                      full documentation
+  -v, --verbose                  print log messages
+  -p, --prefix                   prefix output [default:"out"]	
+  -o, --output-dir               output directory [default:"."]
+  -i, --append-id                append to the defined template id [Format]
+  -I, --id                       overlap the default template id [Format]
+  -j, --jobs                     number of jobs [default:"1"; Integer]
+  -z, --gzip                     compress output file
+  -s, --seed                     set the seed of the base generator
+                                 [default:"time()"; Integer]
+  -c, --coverage                 fastq-file coverage [default:"8", Number]
+  -n, --number-of-reads          directly set the number of reads [Integer]
+  -t, --sequencing-type          single-end or paired-end reads
+                                 [default:"paired-end"]
+  -q, --quality-profile          illumina sequencing system profiles
+                                 [default:"hiseq"]
+  -e, --sequencing-error         sequencing error rate
+                                 [default:"0.005"; Number]
+  -r, --read-size                the read size [default:"101"; Integer]
+  -m, --fragment-mean            the mean size fragments for paired-end reads
+                                 [default:"300"; Integer]
+  -d, --fragment-stdd            the standard deviation for fragment sizes
+                                 [default:"50"; Integer]
+  -b, --strand-bias              which strand to be used: plus, minus and random
+                                 [default:"random"]
+  -w, --seqid-weight             seqid raffle type: length, same, file
+                                 [default: "length"]
+  -f, --expression-matrix        an expression-matrix entry from database,
+                                 when seqid-weight=count
 
 =head1 OPTIONS
 
@@ -208,16 +209,15 @@ random - if you want to randomly calculte the strand for each read
 =item B<--seqid-weight>
 
 Sets the seqid (e.g. chromossome, ensembl id) raffle behavior. Valid options are
-length, same and file. If it is set to 'same', all seqid receives the same weight
+length, same and count. If it is set to 'same', all seqid receives the same weight
 when raffling. If it is set to 'length', the seqid weight is calculated based on
-the seqid sequence length. And finally, if it is set to 'file', the user must set
-the option --weight-file. For details, see B<--weight-file>
+the seqid sequence length. And finally, if it is set to 'count', the user must set
+the option --expression-matrix. For details, see B<--expression-matrix>
 
-=item B<--weight-file>
+=item B<--expression-matrix>
 
-If --seqid-weight is set to file, then this option becomes mandatory. A valid
-weight file is an expression-matrix file with 2 columns. The first column is
-for the seqid and the second column is for the count. The counts will be treated as weights
+If --seqid-weight is set to count, then this option becomes mandatory. The expression-matrix
+entries are found into the database. See B<expression> command for more details
 
 =back
 

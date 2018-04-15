@@ -3,6 +3,7 @@ package App::SimulateReads::Role::Digest;
 
 use App::SimulateReads::Base 'role';
 use App::SimulateReads::DB::Handle::Quality;
+use App::SimulateReads::DB::Handle::Expression;
 use App::SimulateReads::Fastq::SingleEnd;
 use App::SimulateReads::Fastq::PairedEnd;
 use App::SimulateReads::Simulator;
@@ -16,7 +17,7 @@ requires qw/default_opt opt_spec rm_opt/;
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
 	STRAND_BIAS_OPT       => ['random', 'plus', 'minus'],
-	SEQID_WEIGHT_OPT      => ['length', 'same', 'file'],
+	SEQID_WEIGHT_OPT      => ['length', 'same', 'count'],
 	SEQUENCING_TYPE_OPT   => ['single-end', 'paired-end']
 };
 
@@ -25,25 +26,25 @@ override 'opt_spec' => sub {
 	my @rm_opt = $self->rm_opt;
 
 	my %all_opt = (
-		'seed'             => 'seed|s=i',
-		'prefix'           => 'prefix|p=s',
-		'id'               => 'id|I=s',
-		'append-id'        => 'append-id|i=s',
-		'verbose'          => 'verbose|v',
-		'output-dir'       => 'output-dir|o=s',
-		'jobs'             => 'jobs|j=i',
-		'gzip'             => 'gzip|z!',
-		'coverage'         => 'coverage|c=f',
-		'read-size'        => 'read-size|r=i',
-		'fragment-mean'    => 'fragment-mean|m=i',
-		'fragment-stdd'    => 'fragment-stdd|d=i',
-		'sequencing-error' => 'sequencing-error|e=f',
-		'sequencing-type'  => 'sequencing-type|t=s',
-		'quality-profile'  => 'quality-profile|q=s',
-		'strand-bias'      => 'strand-bias|b=s',
-		'seqid-weight'     => 'seqid-weight|w=s',
-		'number-of-reads'  => 'number-of-reads|n=i',
-		'weight-file'      => 'weight-file|f=s'
+		'seed'              => 'seed|s=i',
+		'prefix'            => 'prefix|p=s',
+		'id'                => 'id|I=s',
+		'append-id'         => 'append-id|i=s',
+		'verbose'           => 'verbose|v',
+		'output-dir'        => 'output-dir|o=s',
+		'jobs'              => 'jobs|j=i',
+		'gzip'              => 'gzip|z!',
+		'coverage'          => 'coverage|c=f',
+		'read-size'         => 'read-size|r=i',
+		'fragment-mean'     => 'fragment-mean|m=i',
+		'fragment-stdd'     => 'fragment-stdd|d=i',
+		'sequencing-error'  => 'sequencing-error|e=f',
+		'sequencing-type'   => 'sequencing-type|t=s',
+		'quality-profile'   => 'quality-profile|q=s',
+		'strand-bias'       => 'strand-bias|b=s',
+		'seqid-weight'      => 'seqid-weight|w=s',
+		'number-of-reads'   => 'number-of-reads|n=i',
+		'expression-matrix' => 'expression-matrix|f=s'
 	);
 
 	for my $opt (@rm_opt) {
@@ -66,6 +67,11 @@ sub _log_msg_opt {
 sub _quality_profile_report {
 	my $quality = App::SimulateReads::DB::Handle::Quality->new;
 	return $quality->make_report;
+}
+
+sub _expression_matrix_report {
+	my $expression = App::SimulateReads::DB::Handle::Expression->new;
+	return $expression->make_report;
 }
 
 sub validate_args {
@@ -101,6 +107,7 @@ sub validate_opts {
 	my %SEQUENCING_TYPE   = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT };
 	my %COUNT_LOOPS_BY    = map { $_ => 1 } @{ &COUNT_LOOPS_BY_OPT  };
 	my %QUALITY_PROFILE   = %{ $self->_quality_profile_report };
+	my %EXPRESSION_MATRIX = %{ $self->_expression_matrix_report };
 
 	#  prefix
 	if ($opts->{prefix} =~ /([\/\\])/) {
@@ -129,6 +136,7 @@ sub validate_opts {
 	}
 
 	# read-size if quality-profile is not poisson, test for available sizes
+	# TODO: I will be change
 	my $quality_entry = $QUALITY_PROFILE{$opts->{'quality-profile'}};
 	my %sizes = map { $_->{size} => 1 } @$quality_entry;
 	if ((not $sizes{$opts->{'read-size'}}) && ($opts->{'quality-profile'} ne 'poisson')) {
@@ -209,15 +217,16 @@ sub validate_opts {
 		die "Option 'seqid-weight' requires one of these arguments: $opt not $opts->{'seqid_weight'}\n";
 	}
 
-	# seqid-weight eq 'file' requires a weight-file
-	if ($opts->{'seqid-weight'} eq 'file') {
-		if (not defined $opts->{'weight-file'}) {
-			die "Option 'weight-file' requires an expression matrix file\n";
+	# seqid-weight eq 'count' requires an expression-matrix
+	if ($opts->{'seqid-weight'} eq 'count') {
+		if (not defined $opts->{'expression-matrix'}) {
+			die "Option 'expression-matrix' requires a database entry\n";
 		}
 
-		# It is defined, but the file exists?
-		if (not -f $opts->{'weight-file'}) {
-			die "Option 'weight-file' requires a valid file, not $opts->{'weight-file'}\n";
+		# It is defined, but the entry exists?
+		if (not exists $EXPRESSION_MATRIX{$opts->{'expression-matrix'}}) {
+			my $opt = join ', ' => keys %EXPRESSION_MATRIX;
+			die "Option 'expression-matrix' requires one of these arguments: $opt. Not $opts->{'expression-matrix'}\n";
 		}
 	}
 }
@@ -257,7 +266,7 @@ sub execute {
 			my ($dir, $message) = %$_;
 			$err_dir .= "Problem creating '$dir': $message\n";
 		}
-		die "$err_dir";
+		die "$err_dir\n";
 	}
 
 	# Concatenate output-dir to prefix
@@ -268,12 +277,12 @@ sub execute {
 	#  Log presentation header
 	#-------------------------------------------------------------------------------
 	my $time_stamp = localtime;
-	my $progname   = $self->progname;
+	my $progname = $self->progname;
 	my $argv = $self->argv;
 	log_msg <<"HEADER";
 --------------------------------------------------------
-Date $time_stamp
 $progname
+Date $time_stamp
 --------------------------------------------------------
 :: Arguments passed by the user:
   => '@$argv'
@@ -321,7 +330,7 @@ HEADER
 		jobs              => $opts->{'jobs'},
 		strand_bias       => $opts->{'strand-bias'},
 		seqid_weight      => $opts->{'seqid-weight'},
-		weight_file       => $opts->{'weight-file'}
+		expression_matrix => $opts->{'expression-matrix'}
 	);
 
 	my $simulator;
