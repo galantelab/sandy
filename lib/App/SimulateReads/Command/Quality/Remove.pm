@@ -29,7 +29,7 @@ sub execute {
 
 	$LOG_VERBOSE = exists $opts->{verbose} ? $opts->{verbose} : 0;
 
-	log_msg ":: Attempting to remove $opts->{'quality-profile'}";
+	log_msg ":: Attempting to remove '$quality_profile' ...";
 	$self->deletedb($quality_profile);
 	log_msg ":: Done!";
 }

@@ -96,7 +96,7 @@ __END__
  simulate_reads quality add -q <entry name> -r <size> [-s <source>] FILE
 
  Arguments:
-  a quality-profile file (fastq or a matrix with only quality entries)
+  a file (fastq or a matrix with only quality entries)
 
  Mandatory options:
   -q, --quality-profile    quality-profile name for the database [required]

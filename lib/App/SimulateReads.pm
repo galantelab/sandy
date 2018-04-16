@@ -27,7 +27,7 @@ __END__
   -h, --help               brief help message
   -M, --man                full documentation
  
- Help commands
+ Help commands:
   help                     show application or command-specific help
   man                      show application or command-specific documentation
 
