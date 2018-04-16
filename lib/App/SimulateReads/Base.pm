@@ -16,7 +16,7 @@ use Data::OptList;
 use Module::Runtime 'use_module';
 use namespace::autoclean;
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 BEGIN {
 	$SIG{'__DIE__'} = sub {
@@ -143,7 +143,7 @@ App::SimulateReads::Base - Policy and base module to App::SimulateReads project.
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 AUTHOR
 

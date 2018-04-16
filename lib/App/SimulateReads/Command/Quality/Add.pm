@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Command::Quality';
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 use constant {
 	TYPE_OPT => ['raw', 'fastq']
@@ -76,7 +76,7 @@ sub execute {
 	}
 
 	# Go go go
-	log_msg ":: Inserting $opts->{'quality-profile'}:$opts->{'read-size'} from $file ...";
+	log_msg ":: Inserting $opts->{'quality-profile'} from $file ...";
 	$self->insertdb(
 		$file,
 		$opts->{'quality-profile'},
@@ -101,7 +101,7 @@ App::SimulateReads::Command::Quality::Add - quality subcommand class. Add a qual
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 

@@ -6,7 +6,7 @@ use App::SimulateReads::DB::Schema;
 use MooseX::Singleton;
 use Path::Class 'file';
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 has 'schema' => (
 	is         => 'ro',
@@ -63,7 +63,7 @@ App::SimulateReads::DB - Singleton class to manage database
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 AUTHOR
 

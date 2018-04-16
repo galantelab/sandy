@@ -3,7 +3,7 @@ package App::SimulateReads::Types;
  
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 subtype 'My:IntGt0'
 	=> as      'Int'
@@ -109,7 +109,7 @@ App::SimulateReads::Types - Moose type constraints for App::SimulateReads projec
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 AUTHOR
 

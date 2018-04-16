@@ -1,5 +1,5 @@
 use utf8;
-package App::SimulateReads::DB::Schema::Result::Quality;
+package App::SimulateReads::DB::Schema::Result::QualityProfile;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
@@ -11,14 +11,14 @@ use warnings;
 use base 'DBIx::Class::Core';
 
 
-__PACKAGE__->table("quality");
+__PACKAGE__->table("quality_profile");
 
 
 __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
-  "sequencing_system_id",
-  { data_type => "integer", is_foreign_key => 1, is_nullable => 0 },
+  "name",
+  { data_type => "text", is_nullable => 0 },
   "source",
   { data_type => "text", default_value => "not defined", is_nullable => 1 },
   "is_user_provided",
@@ -29,28 +29,19 @@ __PACKAGE__->add_columns(
   { data_type => "integer", is_nullable => 0 },
   "matrix",
   { data_type => "blob", is_nullable => 0 },
+  "date",
+  { data_type => "date", default_value => \"CURRENT_DATE", is_nullable => 1 },
 );
 
 
 __PACKAGE__->set_primary_key("id");
 
 
-__PACKAGE__->add_unique_constraint(
-  "sequencing_system_id_size_unique",
-  ["sequencing_system_id", "size"],
-);
+__PACKAGE__->add_unique_constraint("name_unique", ["name"]);
 
 
-__PACKAGE__->belongs_to(
-  "sequencing_system",
-  "App::SimulateReads::DB::Schema::Result::SequencingSystem",
-  { id => "sequencing_system_id" },
-  { is_deferrable => 1, on_delete => "CASCADE", on_update => "NO ACTION" },
-);
-
-
-# Created by DBIx::Class::Schema::Loader v0.07047 @ 2018-03-30 20:36:51
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:9uv6FbTqlkXAN55xJER1fQ
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2018-04-15 19:27:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:wp4VBy5i+BE7wBXCbmV5aA
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
@@ -64,17 +55,17 @@ __END__
 
 =head1 NAME
 
-App::SimulateReads::DB::Schema::Result::Quality
+App::SimulateReads::DB::Schema::Result::QualityProfile
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 NAME
 
-App::SimulateReads::DB::Schema::Result::Quality
+App::SimulateReads::DB::Schema::Result::QualityProfile
 
-=head1 TABLE: C<quality>
+=head1 TABLE: C<quality_profile>
 
 =head1 ACCESSORS
 
@@ -84,10 +75,9 @@ App::SimulateReads::DB::Schema::Result::Quality
   is_auto_increment: 1
   is_nullable: 0
 
-=head2 sequencing_system_id
+=head2 name
 
-  data_type: 'integer'
-  is_foreign_key: 1
+  data_type: 'text'
   is_nullable: 0
 
 =head2 source
@@ -117,6 +107,12 @@ App::SimulateReads::DB::Schema::Result::Quality
   data_type: 'blob'
   is_nullable: 0
 
+=head2 date
+
+  data_type: 'date'
+  default_value: CURRENT_DATE
+  is_nullable: 1
+
 =head1 PRIMARY KEY
 
 =over 4
@@ -127,23 +123,13 @@ App::SimulateReads::DB::Schema::Result::Quality
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<sequencing_system_id_size_unique>
+=head2 C<name_unique>
 
 =over 4
 
-=item * L</sequencing_system_id>
-
-=item * L</size>
+=item * L</name>
 
 =back
-
-=head1 RELATIONS
-
-=head2 sequencing_system
-
-Type: belongs_to
-
-Related object: L<App::SimulateReads::DB::Schema::Result::SequencingSystem>
 
 =head1 AUTHOR
 

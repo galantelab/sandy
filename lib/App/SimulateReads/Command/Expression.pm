@@ -6,7 +6,7 @@ use App::SimulateReads::DB::Handle::Expression;
 
 extends 'App::SimulateReads::CLI::Command';
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 has 'db' => (
 	is         => 'ro',
@@ -51,9 +51,7 @@ sub _print_report {
 	printf $format => $s1, "expression-matrix", $s2, "source", $s3, "provider", $s4, "date";
 	for my $expression_matrix (sort keys %$report_ref) {
 		my $attr = $report_ref->{$expression_matrix};
-		for my $entry (@$attr) {
-			printf $format => $s1, $expression_matrix, $s2, $entry->{source}, $s3, $entry->{provider}, $s4, $entry->{date};
-		}
+		printf $format => $s1, $expression_matrix, $s2, $attr->{source}, $s3, $attr->{provider}, $s4, $attr->{date};
 	}
 }
 
@@ -69,7 +67,7 @@ App::SimulateReads::Command::Expression - expression command class. Manage expre
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 

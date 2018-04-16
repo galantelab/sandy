@@ -5,37 +5,32 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Command::Quality';
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 override 'opt_spec' => sub {
 	super,
-	'verbose|v',
-	'quality-profile|q=s',
-	'read-size|r=i'
+	'verbose|v'
 };
 
 sub validate_args {
 	my ($self, $args) = @_;
+	my $quality_profile = shift @$args;
+
+	if (not defined $quality_profile) {
+		die "Missing quality-profile\n";
+	}
+
 	die "Too many arguments: '@$args'\n" if @$args;
-}
-
-sub validate_opts {
-	my ($self, $opts) = @_;
-	
-	if (not exists $opts->{'quality-profile'}) {
-		die "Option 'quality-profile' not defined\n";
-	}
-
-	if (not exists $opts->{'read-size'}) {
-		die "Option 'read-size' not defined\n";
-	}
 }
 
 sub execute {
 	my ($self, $opts, $args) = @_;
+	my $quality_profile = shift @$args;
+
 	$LOG_VERBOSE = exists $opts->{verbose} ? $opts->{verbose} : 0;
-	log_msg ":: Attempting to remove $opts->{'quality-profile'}:$opts->{'read-size'}";
-	$self->deletedb($opts->{'quality-profile'}, $opts->{'read-size'});
+
+	log_msg ":: Attempting to remove $opts->{'quality-profile'}";
+	$self->deletedb($quality_profile);
 	log_msg ":: Done!";
 }
 
@@ -51,15 +46,14 @@ App::SimulateReads::Command::Quality::Remove - quality subcommand class. Remove 
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 
- simulate_reads quality remove -q <entry name> -r <size>
+ simulate_reads quality remove <quality-profile>
 
- Mandatory options:
-  -q, --quality-profile    quality-profile name for the database
-  -r, --read-size          the read-size of the quality-profile [Integer]
+ Arguments:
+  a quality-profile entry
 
  Options:
   -h, --help               brief help message

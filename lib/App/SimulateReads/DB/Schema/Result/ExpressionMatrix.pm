@@ -18,7 +18,7 @@ __PACKAGE__->add_columns(
   "id",
   { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "name",
-  { data_type => "", is_nullable => 0 },
+  { data_type => "text", is_nullable => 0 },
   "source",
   { data_type => "text", default_value => "not defined", is_nullable => 1 },
   "is_user_provided",
@@ -36,8 +36,8 @@ __PACKAGE__->set_primary_key("id");
 __PACKAGE__->add_unique_constraint("name_unique", ["name"]);
 
 
-# Created by DBIx::Class::Schema::Loader v0.07047 @ 2018-04-13 19:51:15
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:gRsjxnWmHajWbBYRAn5LUQ
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2018-04-15 19:27:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:eAULX/q9MlNl1u71G7bQng
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
@@ -55,7 +55,7 @@ App::SimulateReads::DB::Schema::Result::ExpressionMatrix
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 NAME
 
@@ -73,7 +73,7 @@ App::SimulateReads::DB::Schema::Result::ExpressionMatrix
 
 =head2 name
 
-  data_type: (empty string)
+  data_type: 'text'
   is_nullable: 0
 
 =head2 source
