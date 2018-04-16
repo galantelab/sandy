@@ -107,7 +107,7 @@ sub deletedb {
 	my ($self, $expression_matrix) = @_;
 	my $schema = App::SimulateReads::DB->schema;
 
-	log_msg ":: Checking if there is an expression-matrix '$expression_matrix' ...";
+	log_msg ":: Checking if there is already an expression-matrix '$expression_matrix' ...";
 	my $rs = $schema->resultset('ExpressionMatrix')->find({ name => $expression_matrix });
 	die "'$expression_matrix' not found into database\n" unless defined $rs;
 
@@ -119,7 +119,7 @@ sub deletedb {
 
 	# Begin transation
 	my $guard = $schema->txn_scope_guard;
-	
+
 	$rs->delete;
 
 	# End transation
@@ -169,7 +169,7 @@ sub make_report {
 			provider => $expression_matrix->is_user_provided ? "user" : "vendor",
 			date     => $expression_matrix->date
 		);
-		push @{ $report{$expression_matrix->name} } => \%hash;
+		$report{$expression_matrix->name} = \%hash;
 	}
 
 	return \%report;

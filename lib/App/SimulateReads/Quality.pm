@@ -98,7 +98,14 @@ sub _build_phred_score {
 sub _build_quality_by_system {
 	my $self = shift;
 	my $db = App::SimulateReads::DB::Handle::Quality->new;
-	my ($matrix, $deepth) = $db->retrievedb($self->quality_profile, $self->read_size);
+
+	my ($matrix, $deepth, $size) = $db->retrievedb($self->quality_profile);
+
+	if ($self->read_size != $size) {
+		die sprintf "quality-profile '%s' requires read-size '%d', not '%d'\n" =>
+			$self->quality_profile, $size, $self->read_size;
+	}
+
 	return { matrix => $matrix, deepth => $deepth };
 }
 

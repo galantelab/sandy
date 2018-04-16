@@ -12,31 +12,23 @@ with 'App::SimulateReads::Role::IO';
 # VERSION
 
 sub insertdb {
-	my ($self, $file, $sequencing_system, $size, $source, $is_user_provided, $type) = @_;
+	my ($self, $file, $name, $size, $source, $is_user_provided, $type) = @_;
 	my $schema = App::SimulateReads::DB->schema;
 
-	log_msg ":: Checking if there is already a sequencing-system '$sequencing_system' ...";
-	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
-	if ($seq_sys_rs) {
-		log_msg ":: Found '$sequencing_system'";
-		log_msg ":: Searching for a quality entry '$sequencing_system:$size' ...";
-		my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
-		if ($quality_rs) {
-			die "There is already a quality entry for $sequencing_system:$size\n";
-		}
-		log_msg ":: Not found '$sequencing_system:$size'";
+	log_msg ":: Checking if there is already a quality-profile '$name' ...";
+	my $rs = $schema->resultset('QualityProfile')->find({ name => $name });
+	if ($rs) {
+		die "There is already a quality-profile '$name'\n";
 	} else {
-		log_msg ":: sequencing-system '$sequencing_system' not found";
+		log_msg ":: quality-profile '$name' not found";
 	}
-
-	my ($arr, $deepth);
 
 	if ($type !~ /^(fastq|raw)$/) {
 		die "Unknown indexing type '$type': Valids are 'raw' and 'fastq'\n";
 	}
 
 	log_msg ":: Indexing '$file'. It may take several minutes ...";
-	($arr, $deepth) = $self->_index_quality_type($file, $size, $type);
+	my ($arr, $deepth) = $self->_index_quality_type($file, $size, $type);
 
 	log_msg ":: Converting array to bytes ...";
 	my $bytes = nfreeze $arr;
@@ -46,13 +38,9 @@ sub insertdb {
 	# Begin transation
 	my $guard = $schema->txn_scope_guard;
 
-	unless ($seq_sys_rs) {
-		log_msg ":: Creating sequencing-system entry for '$sequencing_system' ...";
-		$seq_sys_rs = $schema->resultset('SequencingSystem')->create({ name => $sequencing_system });
-	}
-
-	log_msg ":: Storing quality matrix entry at '$sequencing_system:$size'...";
-	my $quality_rs = $seq_sys_rs->create_related( qualities => {
+	log_msg ":: Storing quality matrix entry at '$name' ...";
+	$rs = $schema->resultset('QualityProfile')->create({
+		name             => $name,
 		source           => $source,
 		is_user_provided => $is_user_provided,
 		size             => $size,
@@ -180,46 +168,42 @@ sub _wcl {
 }
 
 sub retrievedb {
-	my ($self, $sequencing_system, $size) = @_;
+	my ($self, $quality_profile) = @_;
 	my $schema = App::SimulateReads::DB->schema;
 
-	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
-	die "'$sequencing_system' not found into database\n" unless defined $seq_sys_rs;
+	my $rs = $schema->resultset('QualityProfile')->find({ name => $quality_profile });
+	die "'$quality_profile' not found into database\n" unless defined $rs;
 
-	my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
-	die "Not found size '$size' for sequencing system '$sequencing_system'\n" unless defined $quality_rs;
+	my $compressed = $rs->matrix;
+	die "quality-profile entry '$quality_profile' exists, but the related data is missing\n"
+		unless defined $compressed;
 
-	my $compressed = $quality_rs->matrix;
-	my $deepth = $quality_rs->deepth;
-	die "Quality profile not found for '$sequencing_system:$size'\n" unless defined $compressed;
+	my $deepth = $rs->deepth;
+	my $size = $rs->size;
 
 	gunzip \$compressed => \my $bytes;
 	my $matrix = thaw $bytes;
-	return ($matrix, $deepth);
+	return ($matrix, $deepth, $size);
 }
 
 sub deletedb {
-	my ($self, $sequencing_system, $size) = @_;
+	my ($self, $quality_profile) = @_;
 	my $schema = App::SimulateReads::DB->schema;
 
-	log_msg ":: Checking if there is a sequencing-system '$sequencing_system' ...";
-	my $seq_sys_rs = $schema->resultset('SequencingSystem')->find({ name => $sequencing_system });
-	die "'$sequencing_system' not found into database\n" unless defined $seq_sys_rs;
-	log_msg ":: Found '$sequencing_system'";
+	log_msg ":: Checking if there is a quality-profile '$quality_profile' ...";
+	my $rs = $schema->resultset('QualityProfile')->find({ name => $quality_profile });
+	die "'$quality_profile' not found into database\n" unless defined $rs;
 
-	log_msg ":: Searching for a quality entry '$sequencing_system:$size' ...";
-	my $quality_rs = $seq_sys_rs->search_related('qualities' => { size => $size })->single;
-	die "'$sequencing_system:$size' not found into database\n" unless defined $quality_rs;
-	die "'$sequencing_system:$size' is not a user provided entry. Cannot be deleted\n" unless $quality_rs->is_user_provided;
+	log_msg ":: Found '$quality_profile'";
+	die "'$quality_profile' is not a user provided entry. Cannot be deleted\n"
+		unless $rs->is_user_provided;
 
-	log_msg ":: Found. Removing '$sequencing_system:$size' entry ...";
+	log_msg ":: Removing '$quality_profile' entry ...";
 
 	# Begin transation
 	my $guard = $schema->txn_scope_guard;
 
-	$quality_rs->delete;
-	$seq_sys_rs->search_related('qualities' => undef)->single
-		or $seq_sys_rs->delete;
+	$rs->delete;
 
 	# End transation
 	$guard->commit;
@@ -230,16 +214,15 @@ sub restoredb {
 	my $schema = App::SimulateReads::DB->schema;
 
 	log_msg ":: Searching for user-provided entries ...";
-	my $user_provided = $schema->resultset('Quality')->search(
+	my $user_provided = $schema->resultset('QualityProfile')->search(
 		{ is_user_provided => 1 },
-		{ prefetch => ['sequencing_system'] }
 	);
 
 	my $entry = $user_provided->next;
 	if ($entry) {
 		log_msg ":: Found:";
 		do {
-			log_msg '   ==> ' . $entry->sequencing_system->name . ':' . $entry->size;
+			log_msg '   ==> ' . $entry->name;
 		} while ($entry = $user_provided->next);
 	} else {
 		die "Not found user-provided entries. There is no need to restoring\n";
@@ -250,28 +233,7 @@ sub restoredb {
 	# Begin transation
 	my $guard = $schema->txn_scope_guard;
 
-	# Select all vendor qualities
-	my $inside_rs = $schema->resultset('Quality')->search(
-		{ is_user_provided => 0 }
-	);
-
-	# Select all sequencing_system that is not vendor-provided
-	my $seq_sys_rs = $schema->resultset('SequencingSystem')->search(
-		{ 'me.id' => { -not_in => $inside_rs->get_column('sequencing_system_id')->as_query } }
-	);
-
-	# Remove all sequencing_system that is not vendor-provided
-	# It will trigger delete casacade
-	$seq_sys_rs->delete_all;
-
-	# Select all qualities that is user-provided
-	my $quality_rs = $schema->resultset('Quality')->search(
-		{ is_user_provided => 1 }
-	);
-
-	# Remove all user-provided qualities that is inside a vendor-provided
-	# sequencing_system but with a custom user-provided size
-	$quality_rs->delete;
+	$user_provided->delete;
 
 	# End transation
 	$guard->commit;
@@ -282,18 +244,16 @@ sub make_report {
 	my $schema = App::SimulateReads::DB->schema;
 	my %report;
 
-	my $quality_rs = $schema->resultset('Quality')->search(
-		undef,
-		{ prefetch => ['sequencing_system'] }
-	);
+	my $rs = $schema->resultset('QualityProfile')->search(undef);
 
-	while (my $quality = $quality_rs->next) {
+	while (my $quality = $rs->next) {
 		my %hash = (
 			size     => $quality->size,
 			source   => $quality->source,
-			provider => $quality->is_user_provided ? "user" : "vendor"
+			provider => $quality->is_user_provided ? "user" : "vendor",
+			date     => $quality->date
 		);
-		push @{ $report{$quality->sequencing_system->name} } => \%hash;
+		$report{$quality->name} = \%hash;
 	}
 
 	return \%report;

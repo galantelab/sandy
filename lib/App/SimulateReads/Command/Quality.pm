@@ -45,15 +45,13 @@ sub _print_report {
 	my $report_ref = $self->make_report;
 	return if not defined $report_ref;
 
-	my $format = "\t%*s\t%*s\t%*s\t%*s\n";
-	my ($s1, $s2, $s3, $s4) = map {length} qw/sequencing_system/x4;
-	printf $format => $s1, "sequencing system", $s2, "size", $s3, "source", $s4, "provider";
+	my $format = "\t%*s\t%*s\t%*s\t%*s\t%*s\n";
+	my ($s1, $s2, $s3, $s4, $s5) = map {length} qw/sequencing_system/x5;
+	printf $format => $s1, "quality profile", $s2, "size", $s3, "source", $s4, "provider", $s5, "date";
 
-	for my $sequencing_system (sort keys %$report_ref) {
-		my $attr = $report_ref->{$sequencing_system};
-		for my $entry (sort { $a->{size} <=> $b->{size} } @$attr) {
-			printf $format => $s1, $sequencing_system, $s2, $entry->{size}, $s3, $entry->{source}, $s4, $entry->{provider};
-		}
+	for my $quality_profile (sort keys %$report_ref) {
+		my $attr = $report_ref->{$quality_profile};
+		printf $format => $s1, $quality_profile, $s2, $attr->{size}, $s3, $attr->{source}, $s4, $attr->{provider}, $s5, $attr->{date};
 	}
 }
 

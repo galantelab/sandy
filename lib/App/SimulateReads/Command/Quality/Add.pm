@@ -76,7 +76,7 @@ sub execute {
 	}
 
 	# Go go go
-	log_msg ":: Inserting $opts->{'quality-profile'}:$opts->{'read-size'} from $file ...";
+	log_msg ":: Inserting $opts->{'quality-profile'} from $file ...";
 	$self->insertdb(
 		$file,
 		$opts->{'quality-profile'},

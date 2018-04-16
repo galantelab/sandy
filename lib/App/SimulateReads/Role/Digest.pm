@@ -65,13 +65,13 @@ sub _log_msg_opt {
 }
 
 sub _quality_profile_report {
-	my $quality = App::SimulateReads::DB::Handle::Quality->new;
-	return $quality->make_report;
+	state $report = App::SimulateReads::DB::Handle::Quality->new->make_report;
+	return $report;
 }
 
 sub _expression_matrix_report {
-	my $expression = App::SimulateReads::DB::Handle::Expression->new;
-	return $expression->make_report;
+	state $report = App::SimulateReads::DB::Handle::Expression->new->make_report;
+	return $report;
 }
 
 sub validate_args {
@@ -98,6 +98,7 @@ sub validate_args {
 
 sub validate_opts {
 	my ($self, $opts) = @_;
+	my $progname = $self->progname;
 	my %default_opt = $self->default_opt;
 	$self->fill_opts($opts, \%default_opt);
 
@@ -125,23 +126,24 @@ sub validate_opts {
 	}
 
 	# quality_profile
-	if ((not exists $QUALITY_PROFILE{$opts->{'quality-profile'}}) && ($opts->{'quality-profile'} ne 'poisson')) {
-		my $opt = join ', ' => keys %QUALITY_PROFILE;
-		die "Option 'quality-profile' requires one of these arguments: $opt and poisson. Not $opts->{'quality-profile'}\n";
-	}
-
-	# 0 < read-size <= 101
-	if (0 > $opts->{'read-size'}) {
-		die "Option 'read-size' requires an integer greater than zero, not $opts->{'read-size'}\n";
-	}
-
-	# read-size if quality-profile is not poisson, test for available sizes
-	# TODO: I will be change
-	my $quality_entry = $QUALITY_PROFILE{$opts->{'quality-profile'}};
-	my %sizes = map { $_->{size} => 1 } @$quality_entry;
-	if ((not $sizes{$opts->{'read-size'}}) && ($opts->{'quality-profile'} ne 'poisson')) {
-		my $opt = join ', ' => keys %sizes;
-		die "Option 'read-size' requires one of these arguments for $opts->{'quality-profile'}: $opt. Not $opts->{'read-size'}\n";
+	# If the quality_profile is 'poisson', then check the read-size.
+	# Else look for the quality-profile into the database 
+	if ($opts->{'quality-profile'} eq 'poisson') {
+		# 0 < read-size <= 101
+		if (0 > $opts->{'read-size'}) {
+			die "Option 'read-size' requires an integer greater than zero, not $opts->{'read-size'}\n";
+		}
+	} else {
+		if (exists $QUALITY_PROFILE{$opts->{'quality-profile'}}) {
+			my $entry = $QUALITY_PROFILE{$opts->{'quality-profile'}};
+			# It is necessary for the next validations, so
+			# I set the opts read-size for the value that will be used
+			# afterwards
+			$opts->{'read-size'} = $entry->{'size'};
+		} else {
+			die "Option quality-profile='$opts->{'quality-profile'}' does not exist into the database.\n",
+				"Please check '$progname quality' to see the available profiles or use '--quality-profile=poisson'\n";
+		}
 	}
 
 	# strand_bias (STRAND_BIAS_OPT)
@@ -225,8 +227,8 @@ sub validate_opts {
 
 		# It is defined, but the entry exists?
 		if (not exists $EXPRESSION_MATRIX{$opts->{'expression-matrix'}}) {
-			my $opt = join ', ' => keys %EXPRESSION_MATRIX;
-			die "Option 'expression-matrix' requires one of these arguments: $opt. Not $opts->{'expression-matrix'}\n";
+			die "Option expression-matrix='$opts->{'expression-matrix'}' does not exist into the database.\n",
+				"Please check '$progname expression' to see the available matrices\n";
 		}
 	}
 }
@@ -249,6 +251,14 @@ sub execute {
 		$opts->{'count-loops-by'} = 'coverage' if exists $opts->{'coverage'};
 	} else {
 		die "'count-lopps-by' must be defined"
+	}
+
+	# Override read-size if quality-profile comes from database
+	if ($opts->{'quality-profile'} ne 'poisson') {
+		my $report = $self->_quality_profile_report;
+		my $entry = $report->{$opts->{'quality-profile'}};
+		# Override default or user-defined value
+		$opts->{'read-size'} = $entry->{'size'};
 	}
 
 	# Sequence identifier

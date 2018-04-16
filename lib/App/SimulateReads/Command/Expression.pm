@@ -51,9 +51,7 @@ sub _print_report {
 	printf $format => $s1, "expression-matrix", $s2, "source", $s3, "provider", $s4, "date";
 	for my $expression_matrix (sort keys %$report_ref) {
 		my $attr = $report_ref->{$expression_matrix};
-		for my $entry (@$attr) {
-			printf $format => $s1, $expression_matrix, $s2, $entry->{source}, $s3, $entry->{provider}, $s4, $entry->{date};
-		}
+		printf $format => $s1, $expression_matrix, $s2, $attr->{source}, $s3, $attr->{provider}, $s4, $attr->{date};
 	}
 }
 
