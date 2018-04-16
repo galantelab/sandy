@@ -34,8 +34,7 @@ lib/App/SimulateReads/DB/Handle/Expression.pm
 lib/App/SimulateReads/DB/Handle/Quality.pm
 lib/App/SimulateReads/DB/Schema.pm
 lib/App/SimulateReads/DB/Schema/Result/ExpressionMatrix.pm
-lib/App/SimulateReads/DB/Schema/Result/Quality.pm
-lib/App/SimulateReads/DB/Schema/Result/SequencingSystem.pm
+lib/App/SimulateReads/DB/Schema/Result/QualityProfile.pm
 lib/App/SimulateReads/Fastq.pm
 lib/App/SimulateReads/Fastq/PairedEnd.pm
 lib/App/SimulateReads/Fastq/SingleEnd.pm

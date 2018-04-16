@@ -10,7 +10,7 @@ use Scalar::Util 'looks_like_number';
 
 with 'App::SimulateReads::Role::IO';
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 sub insertdb {
 	my ($self, $file, $name, $source, $is_user_provided) = @_;
@@ -107,7 +107,7 @@ sub deletedb {
 	my ($self, $expression_matrix) = @_;
 	my $schema = App::SimulateReads::DB->schema;
 
-	log_msg ":: Checking if there is an expression-matrix '$expression_matrix' ...";
+	log_msg ":: Checking if there is already an expression-matrix '$expression_matrix' ...";
 	my $rs = $schema->resultset('ExpressionMatrix')->find({ name => $expression_matrix });
 	die "'$expression_matrix' not found into database\n" unless defined $rs;
 
@@ -119,7 +119,7 @@ sub deletedb {
 
 	# Begin transation
 	my $guard = $schema->txn_scope_guard;
-	
+
 	$rs->delete;
 
 	# End transation
@@ -169,7 +169,7 @@ sub make_report {
 			provider => $expression_matrix->is_user_provided ? "user" : "vendor",
 			date     => $expression_matrix->date
 		);
-		push @{ $report{$expression_matrix->name} } => \%hash;
+		$report{$expression_matrix->name} = \%hash;
 	}
 
 	return \%report;
@@ -187,7 +187,7 @@ App::SimulateReads::DB::Handle::Expression - Class to handle expression-matrix d
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 AUTHOR
 

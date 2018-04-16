@@ -7,7 +7,7 @@ extends 'App::SimulateReads::CLI::Command';
 
 with 'App::SimulateReads::Role::Digest';
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 sub default_opt {
 	'paired-end-id'    => '%i.%U_%c_%s_%S_%E',
@@ -26,8 +26,8 @@ sub default_opt {
 	'fragment-mean'    => 300,
 	'fragment-stdd'    => 50,
 	'sequencing-error' => 0.005,
-	'read-size'        => 101,
-	'quality-profile'  => 'hiseq'
+	'read-size'        => 100,
+	'quality-profile'  => 'poisson'
 }
 
 sub rm_opt {
@@ -49,7 +49,7 @@ App::SimulateReads::Command::Genome - simulate command class. Simulate genome se
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 
@@ -74,10 +74,12 @@ version 0.15
   -t, --sequencing-type          single-end or paired-end reads
                                  [default:"paired-end"]
   -q, --quality-profile          illumina sequencing system profiles
-                                 [default:"hiseq"]
+                                 [default:"poisson"]
   -e, --sequencing-error         sequencing error rate
                                  [default:"0.005"; Number]
-  -r, --read-size                the read size [default:"101"; Integer]
+  -r, --read-size                the read size [default:"100"; Integer]
+                                 the quality_profile from database overrides
+                                 this value
   -m, --fragment-mean            the fragment mean size for paired-end reads
                                  [default:"300"; Integer]
   -d, --fragment-stdd            the fragment standard deviation size for
@@ -179,7 +181,8 @@ same seed set before needs the same number of jobs set before as well.
 
 =item B<--read-size>
 
-Sets the read size. For now the unique valid value is 101
+Sets the read size, if quality-profile is equal to 'poisson'. The
+quality-profile from database overrides the read-size
 
 =item B<--coverage>
 

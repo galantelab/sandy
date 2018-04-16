@@ -10,7 +10,7 @@ extends 'App::SimulateReads::CLI';
 
 with 'App::SimulateReads::Role::ParseArgv';
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 has 'command_stack' => (
 	traits  => ['Array'],
@@ -252,7 +252,7 @@ App::SimulateReads::CLI::App - App::SimulateReads::CLI subclass for command line
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 

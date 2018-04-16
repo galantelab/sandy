@@ -60,5 +60,5 @@ requires:
 resources:
   bugtracker: https://github.com/galantelab/simulate_reads/issues
   repository: git://github.com/galantelab/simulate_reads.git
-version: '0.15'
+version: '0.16'
 x_serialization_backend: 'YAML::Tiny version 1.70'

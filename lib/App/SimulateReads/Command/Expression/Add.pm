@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Command::Expression';
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 override 'opt_spec' => sub {
 	super,
@@ -80,7 +80,7 @@ App::SimulateReads::Command::Expression::Add - expression subcommand class. Add 
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 

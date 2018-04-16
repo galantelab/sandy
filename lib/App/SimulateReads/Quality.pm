@@ -4,7 +4,7 @@ package App::SimulateReads::Quality;
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::DB::Handle::Quality;
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 has 'quality_profile' => (
 	is         => 'ro',
@@ -98,7 +98,14 @@ sub _build_phred_score {
 sub _build_quality_by_system {
 	my $self = shift;
 	my $db = App::SimulateReads::DB::Handle::Quality->new;
-	my ($matrix, $deepth) = $db->retrievedb($self->quality_profile, $self->read_size);
+
+	my ($matrix, $deepth, $size) = $db->retrievedb($self->quality_profile);
+
+	if ($self->read_size != $size) {
+		die sprintf "quality-profile '%s' requires read-size '%d', not '%d'\n" =>
+			$self->quality_profile, $size, $self->read_size;
+	}
+
 	return { matrix => $matrix, deepth => $deepth };
 }
 
@@ -154,7 +161,7 @@ App::SimulateReads::Quality - Class to simulate quality entries
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 AUTHOR
 

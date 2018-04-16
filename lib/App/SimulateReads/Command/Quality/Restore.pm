@@ -5,7 +5,7 @@ use App::SimulateReads::Base 'class';
 
 extends 'App::SimulateReads::Command::Quality';
 
-our $VERSION = '0.15'; # VERSION
+our $VERSION = '0.16'; # VERSION
 
 override 'opt_spec' => sub {
 	super,
@@ -37,7 +37,7 @@ App::SimulateReads::Command::Quality::Restore - quality subcommand class. Restor
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 
