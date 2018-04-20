@@ -3,6 +3,7 @@ package App::SimulateReads::Command::Quality;
 
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::DB::Handle::Quality;
+use Text::SimpleTable::AutoWidth;
 
 extends 'App::SimulateReads::CLI::Command';
 
@@ -37,22 +38,18 @@ sub validate_args {
 
 sub execute {
 	my ($self, $opts, $args) = @_;
-	return $self->_print_report;
-}
 
-sub _print_report {
-	my $self = shift;
 	my $report_ref = $self->make_report;
-	return if not defined $report_ref;
+	my $t1 = Text::SimpleTable::AutoWidth->new;
 
-	my $format = "\t%*s\t%*s\t%*s\t%*s\t%*s\n";
-	my ($s1, $s2, $s3, $s4, $s5) = map {length} qw/sequencing_system/x5;
-	printf $format => $s1, "quality profile", $s2, "size", $s3, "source", $s4, "provider", $s5, "date";
+	$t1->captions(['quality profile', 'size', 'source', 'provider', 'date']);
 
 	for my $quality_profile (sort keys %$report_ref) {
 		my $attr = $report_ref->{$quality_profile};
-		printf $format => $s1, $quality_profile, $s2, $attr->{size}, $s3, $attr->{source}, $s4, $attr->{provider}, $s5, $attr->{date};
+		$t1->row($quality_profile, $attr->{size}, $attr->{source}, $attr->{provider}, $attr->{date});
 	}
+
+	print $t1->draw;
 }
 
 __END__

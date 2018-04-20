@@ -3,6 +3,7 @@ package App::SimulateReads::Command::Expression;
 
 use App::SimulateReads::Base 'class';
 use App::SimulateReads::DB::Handle::Expression;
+use Text::SimpleTable::AutoWidth;
 
 extends 'App::SimulateReads::CLI::Command';
 
@@ -37,22 +38,18 @@ sub validate_args {
 
 sub execute {
 	my ($self, $opts, $args) = @_;
-	return $self->_print_report;
-}
 
-sub _print_report {
-	my $self = shift;
 	my $report_ref = $self->make_report;
-	return if not defined $report_ref;
+	my $t1 = Text::SimpleTable::AutoWidth->new;
 
-	my $format = "\t%*s\t%*s\t%*s\t%*s\n";	
-	my ($s1, $s2, $s3, $s4) = map {length} qw/expression-matrix/x4;
+	$t1->captions([qw/expression-matrix source provider date/]);
 
-	printf $format => $s1, "expression-matrix", $s2, "source", $s3, "provider", $s4, "date";
 	for my $expression_matrix (sort keys %$report_ref) {
 		my $attr = $report_ref->{$expression_matrix};
-		printf $format => $s1, $expression_matrix, $s2, $attr->{source}, $s3, $attr->{provider}, $s4, $attr->{date};
+		$t1->row($expression_matrix, $attr->{source}, $attr->{provider}, $attr->{date});
 	}
+
+	print $t1->draw;
 }
 
 __END__
