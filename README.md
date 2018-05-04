@@ -1,6 +1,6 @@
 ## Welcome to Sandy simulator! ##
 
-![logo.png](sandy_logo.png)
+![logo.png](img/sandy_logo.png)
 
 **Let's make a simulation today???**
 
@@ -31,7 +31,20 @@ then *Sandy* is your choice!
 
 ### Introduction {#intro} ###
 
-Project *Sandy* is in it's 0.15 version and has earned enough maturity to
+Many next-generation sequencing (NGS) analyses rely on hypothetical
+models and principles that are not precisely satisfied in practice. Simulated
+data, which provides positive controls would be a perfect way to overcome
+these difficulties. Nevertheless, most of NGS simulators are extremely
+complex to use, they do not cover all kinds of the desired features needed by
+the users, and (some) are very slow to run in a standard computer. Here, we
+present SANDY, a straightforward, easy to use, fast, complete set of tools to
+generate synthetic next-generation sequencing reads. SANDY simulates
+whole genome sequencing, whole exome sequencing, RNAseq reads and it
+presents several features to the users manipulate the data. Sandy can be
+used therefore for benchmarking results of a variety of pipelines in the
+genomics or trancriptomics.
+
+Now, project *Sandy* is in it's 0.15 version and has earned enough maturity to
 simulate some realistic features, among these:
 * Simulate reads from genomic FASTA-files.
 * Simulate reads from transcriptomic data, based on expression matrix files.
@@ -487,7 +500,7 @@ builtin documentations with `man sandy` or `info sandy` commands.
 
 
 ### A case study example ###
-
+![plot](img/Rplots.pdf)
 
 ### Aknowledgements ###
 
