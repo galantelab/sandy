@@ -12,10 +12,10 @@ then *Sandy* is your choice!
 
 ### Contents at a Glance ###
 
-1. [Introduction](#intro)
-2. [Installation](#install)
-3. [Usage and Option summary](#summ)
-	1. [General](#general)
+1. [Introduction](#introduction)
+2. [Installation](#installation)
+3. [Usage and Option summary](#usage-and-option-summary)
+	1. [General](#general-syntax)
     2. [Command `genome`, its options and examples](#genome)
     3. [Command `transcriptome`, its options and examples](#transcriptome)
     4. [Command `custom`, its options and examples](#custom)
@@ -29,7 +29,7 @@ then *Sandy* is your choice!
 
 
 
-### Introduction {#intro} ###
+### Introduction ###
 
 Many next-generation sequencing (NGS) analyses rely on hypothetical
 models and principles that are not precisely satisfied in practice. Simulated
@@ -54,18 +54,18 @@ simulate future data.
 
 
 
-### Installation {#install} ###
+### Installation ###
 
 You can install it by two different approaches.
 
 1. If you already use `perl` and perl modules `cpanm`, the solution comes
 in one line:
 	```bash
-		$ cpanm App::SimulateReads
+		$ cpanm App::Sandy
 	```
 
 2. If you only have `perl`, as a last resort, you can manually install *Sandy*
-through the command line by downloading the [tarball](https://github.com/galantelab/simulate_reads/archive/master.zip)
+through the command line by downloading the [tarball](https://github.com/galantelab/sandy/archive/sandy-master.tar.gz)
 from GitHub, decompressing it and then building it, like this:
 	```bash
 		$ wget https://github.com/galantelab/sandy/archive/sandy-master.tar.gz
@@ -83,9 +83,9 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 
 
 
-### Usage and Option summary {#summ} ###
+### Usage and Option summary ###
 
-1. General syntax {#general}
+1. General syntax
 
 	**Usage:**
 	```bash
@@ -504,7 +504,8 @@ builtin documentations with `man sandy` or `info sandy` commands.
 
 ### Aknowledgements ###
 
-
+[teste](ppp.md)
+[teste2](ppp.html)
 
 ### Author ###
 
