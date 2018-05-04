@@ -504,7 +504,7 @@ builtin documentations with `man sandy` or `info sandy` commands.
 
 ### Aknowledgements ###
 
-[teste](ppp.md)
+[teste](pppmd.md)
 [teste2](ppp.html)
 
 ### Author ###
