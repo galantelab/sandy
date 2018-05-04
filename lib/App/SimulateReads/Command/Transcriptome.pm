@@ -63,8 +63,8 @@ __END__
                                  [default:"1000000", Integer]
   -t, --sequencing-type          single-end or paired-end reads
                                  [default:"paired-end"]
-  -q, --quality-profile          illumina sequencing system profiles
-                                 [default:"hiseq"]
+  -q, --quality-profile          sequencing system profiles from quality
+                                 database [default:"poisson"]
   -e, --sequencing-error         sequencing error rate
                                  [default:"0.005"; Number]
   -r, --read-size                the read size [default:"100"; Integer]

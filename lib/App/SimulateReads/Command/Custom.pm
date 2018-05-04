@@ -58,8 +58,8 @@ __END__
   -n, --number-of-reads          directly set the number of reads [Integer]
   -t, --sequencing-type          single-end or paired-end reads
                                  [default:"paired-end"]
-  -q, --quality-profile          illumina sequencing system profiles
-                                 [default:"hiseq"]
+  -q, --quality-profile          sequencing system profiles from quality
+                                 database [default:"poisson"]
   -e, --sequencing-error         sequencing error rate
                                  [default:"0.005"; Number]
   -r, --read-size                the read size [default:"100"; Integer]
@@ -71,7 +71,7 @@ __END__
                                  [default:"50"; Integer]
   -b, --strand-bias              which strand to be used: plus, minus and random
                                  [default:"random"]
-  -w, --seqid-weight             seqid raffle type: length, same, file
+  -w, --seqid-weight             seqid raffle type: length, same, count
                                  [default: "length"]
   -f, --expression-matrix        an expression-matrix entry from database,
                                  when seqid-weight=count
@@ -155,7 +155,7 @@ Sets the number of child jobs to be created
 =item B<--gzip>
 
 Compress the output-file with gzip algorithm. It is
-possible to pass --no-output-gzip if one wants
+possible to pass --no-gzip if one wants
 uncompressed output-file
 
 =item B<--seed>

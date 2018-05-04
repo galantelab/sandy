@@ -73,14 +73,22 @@ sub subseq_rand {
 
 sub insert_sequencing_error {
 	my ($self, $seq_ref) = @_;
+
 	my $err = int($self->_count_base * $self->sequencing_error);
+	my @errors;
 
 	for (my $i = 0; $i < $err; $i++) {
 		$self->update_count_base(-$self->_base);
 		my $pos = $self->read_size - $self->_count_base - 1;
+
 		my $b = substr($$seq_ref, $pos, 1);
-		substr($$seq_ref, $pos, 1) = $self->_randb($b);
+		my $not_b = $self->_randb($b);
+
+		substr($$seq_ref, $pos, 1) = $not_b;
+		push @errors => { b => $b, not_b => $not_b, pos => $pos };
 	}
+
+	return \@errors;
 }
 
 sub update_count_base {

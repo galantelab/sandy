@@ -76,7 +76,8 @@ sub _build_gen_header {
 		'%I' => '$info->{id}',
 		'%R' => '$info->{read}',
 		'%U' => '$info->{num}',
-		'%s' => '$info->{strand}'
+		'%s' => '$info->{strand}',
+		'%x' => '$info->{error}'
 	);
 
 	return  $self->compile_template($self->template_id, 'info', \%sym_table);
@@ -99,12 +100,22 @@ sub _build_info {
 sub sprint_fastq {
 	my ($self, $id, $num, $seq_id, $seq_ref, $seq_size, $is_leader) = @_;
 
-	my ($read_ref, $pos) = $self->gen_read($seq_ref, $seq_size, $is_leader);
+	my ($read_ref, $pos, $errors_a) = $self->gen_read($seq_ref, $seq_size, $is_leader);
 
 	my ($start, $end) = ($pos + 1, $pos + $self->read_size);
 
 	unless ($is_leader) {
 		($start, $end) = ($end, $start);
+	}
+
+	# Set defaut sequencing errors
+	my $errors = 'none';
+
+	# Set errors if there are sequencing errors
+	if (@$errors_a) {
+		$errors = join ","
+			=> map { sprintf "%d:%s/%s" => $_->{pos} + 1, $_->{b}, $_->{not_b} }
+			@$errors_a;
 	}
 
 	$self->_set_info(
@@ -114,7 +125,8 @@ sub sprint_fastq {
 		'start'  => $start,
 		'end'    => $end,
 		'read'   => 1,
-		'strand' => $is_leader ? 'P' : 'M'
+		'strand' => $is_leader ? 'P' : 'M',
+		'error'  => $errors
 	);
 
 	my $gen_header = $self->_gen_header;

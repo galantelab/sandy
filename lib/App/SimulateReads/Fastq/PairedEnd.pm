@@ -110,7 +110,8 @@ sub _build_gen_header {
 		'%I' => '$info->{id}',
 		'%R' => '$info->{read}',
 		'%U' => '$info->{num}',
-		'%s' => '$info->{strand}'
+		'%s' => '$info->{strand}',
+		'%x' => '$info->{error}'
 	);
 
 #	return  $self->compile_template('%i.%U %U simulation_read length=%r position=%c:%t-%n distance=%D', 'info', \%sym_table);
@@ -136,7 +137,7 @@ sub _build_info {
 sub sprint_fastq {
 	my ($self, $id, $num, $seq_id, $seq_ref, $seq_size, $is_leader) = @_;
 
-	my ($read1_ref, $read2_ref, $fragment_pos, $fragment_size) = $self->gen_read($seq_ref, $seq_size, $is_leader);
+	my ($read1_ref, $errors1_a, $read2_ref, $errors2_a, $fragment_pos, $fragment_size) = $self->gen_read($seq_ref, $seq_size, $is_leader);
 
 	my ($fragment_start, $fragment_end) = ($fragment_pos + 1, $fragment_pos + $fragment_size);
 
@@ -145,6 +146,26 @@ sub sprint_fastq {
 
 	unless ($is_leader) {
 		($start1, $end1, $start2, $end2) = ($start2, $end2, $start1, $end1);
+	}
+
+	# Set defaut sequencing errors for R1
+	my $errors1 = 'none';
+
+	# Set errors if there are sequencing errors for R1
+	if (@$errors1_a) {
+		$errors1 = join ","
+			=> map { sprintf "%d:%s/%s" => $_->{pos} + 1, $_->{b}, $_->{not_b} }
+			@$errors1_a;
+	}
+
+	# Set defaut sequencing errors for R2
+	my $errors2 = 'none';
+
+	# Set errors if there are sequencing errors for R2
+	if (@$errors2_a) {
+		$errors2 = join ","
+			=> map { sprintf "%d:%s/%s" => $_->{pos} + 1, $_->{b}, $_->{not_b} }
+			@$errors2_a;
 	}
 
 	$self->_set_info1(
@@ -160,7 +181,8 @@ sub sprint_fastq {
 		'mate_end'         => $end2,
 		'tlen'             => $end2 - $end1,
 		'read'             => 1,
-		'strand'           => $is_leader ? 'P' : 'M'
+		'strand'           => $is_leader ? 'P' : 'M',
+		'error'            => $errors1
 	);
 
 	$self->_set_info2(
@@ -176,7 +198,8 @@ sub sprint_fastq {
 		'mate_end'         => $end1,
 		'tlen'             => $end1 - $end2,
 		'read'             => 2,
-		'strand'           => $is_leader ? 'P' : 'M'
+		'strand'           => $is_leader ? 'P' : 'M',
+		'error'            => $errors2
 	);
 
 	my $gen_header = $self->_gen_header;

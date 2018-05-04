@@ -61,8 +61,8 @@ __END__
   -c, --coverage                 fastq-file coverage [default:"8", Number]
   -t, --sequencing-type          single-end or paired-end reads
                                  [default:"paired-end"]
-  -q, --quality-profile          illumina sequencing system profiles
-                                 [default:"poisson"]
+  -q, --quality-profile          sequencing system profiles from quality
+                                 database [default:"poisson"]
   -e, --sequencing-error         sequencing error rate
                                  [default:"0.005"; Number]
   -r, --read-size                the read size [default:"100"; Integer]

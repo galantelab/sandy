@@ -61,16 +61,16 @@ sub gen_read {
 
 	my $read1_ref = $self->subseq($fragment_ref, $fragment_size, $self->read_size, 0);
 	$self->update_count_base($self->read_size);
-	$self->insert_sequencing_error($read1_ref);
+	my $errors1_a = $self->insert_sequencing_error($read1_ref);
 
 	my $read2_ref = $self->subseq($fragment_ref, $fragment_size, $self->read_size, $fragment_size - $self->read_size);
 	$self->reverse_complement($read2_ref);
 	$self->update_count_base($self->read_size);
-	$self->insert_sequencing_error($read2_ref);
+	my $errors2_a = $self->insert_sequencing_error($read2_ref);
 
-	return $is_leader ?
-		($read1_ref, $read2_ref, $fragment_pos, $fragment_size) :
-		($read2_ref, $read1_ref, $fragment_pos, $fragment_size);
+	return $is_leader
+		? ($read1_ref, $errors1_a, $read2_ref, $errors2_a, $fragment_pos, $fragment_size)
+		: ($read2_ref, $errors2_a, $read1_ref, $errors1_a, $fragment_pos, $fragment_size);
 }
 
 sub _random_half_normal {
