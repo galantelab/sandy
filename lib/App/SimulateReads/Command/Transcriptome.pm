@@ -126,6 +126,7 @@ Common escape characters
 	%I           job slot number
 	%q           quality profile
 	%e           sequencing error
+	%x           sequencing error position
 	%R           read 1, or 2 if it is the paired-end mate
 	%U           read number
 	%r           read size
@@ -195,8 +196,10 @@ Sets the sequencing error rate. Valid values are between zero and one
 
 =item B<--quality-profile>
 
-Sets the illumina sequencing system profile for quality. For now, the unique
-valid values are hiseq and poisson
+Sets the sequencing system profile for quality. The default value is a poisson
+distribution, but the user can choose among several profiles stored into the
+database or import his own data.
+See B<quality> command for more details
 
 =item B<--expression-matrix>
 
