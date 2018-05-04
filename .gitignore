@@ -3,3 +3,5 @@
 *.html
 Gem*
 vendor*
+sandy_features*
+*.swp

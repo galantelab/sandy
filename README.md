@@ -5,43 +5,43 @@
 **Let's make a simulation today???**
 
 If you're looking for a bioinformatics tool that provides a simple engine to generate
-single-end/paired-end reads from a given fasta file or expression matrix file,
+single-end/paired-end reads from a given FASTA file or expression matrix file,
 then *Sandy* is your choice!
 
 
 
 ### Contents at a Glance ###
 
-1. [Introduction](#markdown-header-introduction)
-2. Installation
-3. Usage and Option summary
-	1. General
-    2. Command `genome`, its options and examples
-    3. Command `transcriptome`, its options and examples
-    4. Command `custom`, its options and examples
-    5. Command `quality`, its options and examples
-    6. Command `expression`, its options and examples
-    7. Command `help`, its options and examples
-4. A case study example
-5. Aknowledgements
-6. Author
-7. Copyright and License
+1. [Introduction](#intro)
+2. [Installation](#install)
+3. [Usage and Option summary](#summ)
+	1. [General](#general)
+    2. [Command `genome`, its options and examples](#genome)
+    3. [Command `transcriptome`, its options and examples](#transcriptome)
+    4. [Command `custom`, its options and examples](#custom)
+    5. [Command `quality`, its options and examples](#quality)
+    6. [Command `expression`, its options and examples](#expression)
+    7. [Command `help`, its options and examples](#help)
+4. [A case study example](#expl)
+5. [Aknowledgements](#aknw)
+6. [Author](#author)
+7. [Copyright and License](#copy)
 
 
 
-### <a name="intro"></a> Introduction ###
+### Introduction {#intro} ###
 
 Project *Sandy* is in it's 0.15 version and has earned enough maturity to
 simulate some realistic features, among these:
 * Simulate reads from genomic FASTA-files.
-* Simulate reads from transcriptomic FASTAq-files.
 * Simulate reads from transcriptomic data, based on expression matrix files.
-* Import and record your own expression matrixes profiles to simulate future data.
-* And Simulate all that for several technical replicates!
+* Ready included databases for *quality profiles* and *expression matrixes*.
+* Import and record your own *expression matrixes* and *quality profiles* to
+simulate future data.
 
 
 
-### Installation ###
+### Installation {#install} ###
 
 You can install it by two different approaches.
 
@@ -70,9 +70,9 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 
 
 
-### Usage and Option summary ###
+### Usage and Option summary {#summ} ###
 
-1. The general syntax.
+1. General syntax {#general}
 
 	**Usage:**
 	```bash
@@ -104,9 +104,14 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	  quality						| manage quality profile database
 	  expression					| manage expression-matrix database
 
-2. The `genome` command.
+2. The `genome` command {#genome}
 
 	Use it to generate simulated FASTAq-files from a given FASTA-file.
+	The `genome` command sets these default options for a genome sequencing simulation:
+	1. The strand is **randomly** chosen;
+	2. The number of reads is calculated by the coverage;
+	3. The chromossomes are raffled following a weighted raffle with the
+	sequence length as the bias;
 	
 	**USAGE:**
 	```bash
@@ -143,26 +148,55 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	
 	The command:
 	```bash
-		$ sandy genome -t paired-end -c 20 my_fasta_file.fa
+		$ sandy genome --verbose --sequencing-type=paired-end --coverage=20 hg38.fa 2> sim.log
+	```
+	ou, with an equal effect:
+	```bash
+		$ sandy genome -v -t paired-end -c 20 hg38.fa 2> sim.log
 	```
 	will produce two FASTAq-files (sequencing-type default is "paired-end"),
 	both with a coverage of 20x (coverage default is 8), and a simple
-	reads-count file in a tab separated fashion.
+	text reads-count file in a tab separated fashion.
+
+	**Note:** If you use the option `-v`, by default, the log messages will be
+	directed to the standard error so, in the example above, it was redirected
+	to a file. Whithout the `-v` option, only errors messages will be printed.
 	
 	For reproducibility, you can set an integer seed for the random raffles
 	with the `-s` option (seed default is environment `time()` value),
 	for example:
 	```bash
-		$ sandy genome -s 1220 my_fasta_file.fa
+		$ sandy genome -s 1220 my_fasta.fa
 	```
 	
-	By default, the resulting FASTAq-files will have *Gencode*'s ID format
-	style, this behavior can be overwritten with the `-i` or `-I` options with
-	a formating string, like this:
+	To simulate reads with a ready database registered specific quality
+	profile other than default's one, type, for example:
 	```bash
-		$ sandy genome -i "%d\t%s" my_fasta_file.fa
+		$ sandy genome --quality-profile=hiseq_101 hg19.fa
 	```
-	This will produce FASTAq-files with the specified ID format style.
+	See the [quality profile](#howto) section to know how you can register a
+	new profile.
+	
+	The sequence identifier is the first and third line of a FASTq entry
+	beggining with a **@** token, for a read identifier, and a **+**,
+	for a quality identifier.
+	*Sandy* has the capacity to customize it, with a format string passed by
+	the user. This format is a combination of literal and escaped characters,
+	in a similar fashion used in **C** programming language's `printf`
+	function.
+	For example, let's simulate a paired-end sequencing and put into it's
+	identifier the read length, read position and mate position:
+	```bash
+		$ sandy genome -s 123 --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" hg38.fa
+	```
+	In this case, results would	be:
+	> ==> Into R1
+	> @SR.1 read=chr6:979-880 mate=chr6:736-835 length=100
+	> ...
+	> 
+	> ==> Into R2
+	> @SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
+	> ...
 	
 	To change the sequencing quality profile, use the `-q` option and a
 	string value (quality-profile default is "hiseq"):
@@ -192,10 +226,15 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	The options above are the most frequently used ones for the `genome`
 	command, but many more can be found in the *Sandy's* documentation.
 
-3. The `transcriptome` command.
+3. The `transcriptome` command {#transcriptome}
 
 	Use it to generate simulated FASTAq files from a given FASTA file,
-	according to an expression profile based on an expression matrix file.
+	according to an expression profile matrix file.
+	The `transcriptome` command sets these default options for a transcriptome
+	sequencing simulation as well:
+	1. **Minus** strand;
+	2. The number of reads is directly passed;
+	3. The genes/transcripts are raffled following the expression matrix;
 	
 	**USAGE:**
 	```bash
@@ -210,6 +249,7 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
       -M, --man						| full documentation
       -v, --verbose					| print log messages
       -p, --prefix					| prefix output [default:"out"]  
+	  -f, --expression-matrix		| set the expression matrix [default: none]
       -o, --output-dir				| output directory [default:"."]
       -i, --append-id				| append to the defined template id [Format]
       -I, --id						| overlap the default template id [Format]
@@ -226,15 +266,16 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	
 	**Some examples:**
 	
-	But if you set a number of replicas with the `-R` option, the
-	aforementioned number of resultant files will be multiplied by that number
-	of replicas, like this:
+	The command:
 	```bash
-		$ sandy genome -t paired-end -R 5 my_fasta_file.fa
+		$ sandy transcriptome --verbose --number-of-reads=1000000 --expression-matrix=brain_cortex gencode_pc_v26.fa.gz
 	```
-	will produce a total of 15 files (replicas default is 1).
+	or, equivalently
+	```bash
+		$ sandy transcriptome -v -n 1000000 -f brain_cortex gencode_pc_v26.fa.gz
+	```
 
-4. The `custom` command.
+4. The `custom` command {#custom}
 
 	This is the most versatile command to procuce FASTAq-files,
 	but the user must deal whit a greater number os options.
@@ -272,13 +313,16 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	
 	**Some examples**
 	
-	Write...
 
-5. The `quality` command.
+5. The `quality` command {#quality}
 
 	Use it to manage your quality profile database.
-	You can add or remove your own expression profiles in the builtin database.
-	Or even clean it up to restore the vendor's original entries state.
+	You can add or remove your own expression profiles in the builtin database
+	to make your simulations more realistic based on real experimental data.
+	Or you can even clean it up to restore the vendor's original entries state.
+	By default, *Sandy* uses a poisson distribution when compiling the
+	quality entries, but like many other features, this behavior can be
+	overrided by the user.
 	
 	**Usage:**
 	```bash
@@ -304,17 +348,18 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 		$ sandy quality
 	```
 	and all entries will be shown.
-	Sandy already comes with one quality profile based on the Poisson
-	probabilistic curve, as recommended by the literature
-	([Shostner, 2015](asdcadca)).
 	
-	So, to register a new [ponga](See here) formated quality profile, called
+	So, to register a new probabilistic quality profile, called, for example,
 	'my_profile.txt', to be used in the simulation of your FASTA-file.
 	You can type:
 	```bash
 		$ sandy quality add my_profile.txt
 	```
-	Note that before the new entry can appear in the database's list, the new
+	This quality profile can be either a FASTAq file or a plain text file in
+	a tab separated fashion (quality profile defaut density function is
+	"Poisson").
+	
+	**Note:** Before the new entry can appear in the database's list, the new
 	profile needs to be validated, and if it can't, an error message will
 	be show. Sandy prevent's you before overwrite an existing entry.
 	
@@ -333,8 +378,12 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	```
 	Note that this is a dangerous command and Sandy will warn you about it
 	before make the restoration in fact.
+	
+	**Note:** Sandy already comes with one quality profile based on the Poisson
+	probabilistic curve, as described by the literature
+	([illumina, 2018](https://www.illumina.com/content/dam/illumina-marketing/documents/products/technotes/technote_understanding_quality_scores.pdf)).
 
-6. The `expression` command.
+6. The `expression` command {#expression}
 
 	Use it to manage your matrix-expression database.
 	You can add or remove your own expression profiles in the builtin database.
@@ -394,7 +443,7 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	Note that this is a dangerous command and Sandy will warn you about it
 	before make the restoration in fact.
 
-7. The `help` command.
+7. The `help` command {#help}
 
 	**Usage:**
 	
