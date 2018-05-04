@@ -108,9 +108,9 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 
 	Use it to generate simulated FASTAq-files from a given FASTA-file.
 	The `genome` command sets these default options for a genome sequencing simulation:
-	1. The strand is **randomly** chosen;
-	2. The number of reads is calculated by the coverage;
-	3. The chromossomes are raffled following a weighted raffle with the
+	* The strand is **randomly** chosen;
+	* The number of reads is calculated by the coverage;
+	* The chromossomes are raffled following a weighted raffle with the
 	sequence length as the bias;
 	
 	**USAGE:**
@@ -190,6 +190,8 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 		$ sandy genome -s 123 --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" hg38.fa
 	```
 	In this case, results would	be:
+	```bash
+	>$ sandy genome -s 123 --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" hg38.fa
 	> ==> Into R1
 	> @SR.1 read=chr6:979-880 mate=chr6:736-835 length=100
 	> ...
@@ -197,6 +199,7 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	> ==> Into R2
 	> @SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
 	> ...
+	```
 	
 	To change the sequencing quality profile, use the `-q` option and a
 	string value (quality-profile default is "hiseq"):
@@ -232,9 +235,9 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	according to an expression profile matrix file.
 	The `transcriptome` command sets these default options for a transcriptome
 	sequencing simulation as well:
-	1. **Minus** strand;
-	2. The number of reads is directly passed;
-	3. The genes/transcripts are raffled following the expression matrix;
+	* Choose the **Minus** strand;
+	* The number of reads is directly passed;
+	* The genes/transcripts are raffled following the expression matrix;
 	
 	**USAGE:**
 	```bash
@@ -275,7 +278,7 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 		$ sandy transcriptome -v -n 1000000 -f brain_cortex gencode_pc_v26.fa.gz
 	```
 
-4. The `custom` command {#custom}
+4. The `custom` command{#custom}
 
 	This is the most versatile command to procuce FASTAq-files,
 	but the user must deal whit a greater number os options.
