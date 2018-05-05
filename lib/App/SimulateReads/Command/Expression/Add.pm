@@ -99,7 +99,6 @@ and the second column is for the count. The counts will be treated as weights
 
 =head1 DESCRIPTION
 
-B<simulate_reads> will read the given input file and do something
-useful with the contents thereof.
+Add an expression-matrix to the database.
 
 =cut

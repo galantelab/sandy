@@ -60,8 +60,6 @@ __END__
  simulate_reads quality [options]
  simulate_reads quality <command>
 
- Manage quality profile database
-
  Options:
   -h, --help               brief help message
   -M, --man                full documentation
@@ -73,7 +71,6 @@ __END__
 
 =head1 DESCRIPTION
 
-B<simulate_reads> will read the given input file and do something
-useful with the contents thereof.
+Manage quality profile database.
 
 =cut

@@ -60,8 +60,6 @@ __END__
  simulate_reads expression [options]
  simulate_reads expression <command>
 
- Manage expression-matrix database
-
  Options:
   -h, --help               brief help message
   -M, --man                full documentation
@@ -73,7 +71,6 @@ __END__
 
 =head1 DESCRIPTION
 
-B<simulate_reads> will read the given input file and do something
-useful with the contents thereof.
+Manage expression-matrix database.
 
 =cut

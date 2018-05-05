@@ -51,7 +51,6 @@ __END__
 
 =head1 DESCRIPTION
 
-B<simulate_reads> will read the given input file and do something
-useful with the contents thereof.
+Remove an expression-matrix from database.
 
 =cut

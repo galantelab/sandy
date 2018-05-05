@@ -6,8 +6,8 @@ use utf8;
 
 use App::SimulateReads;
 
-# PODNAME: simulate_reads
-# ABSTRACT: Creates single-end and paired-end fastq reads for transcriptome and genome simulation.
+# PODNAME: SANDY
+# ABSTRACT: A straightforward and complete next-generation sequencing read simulator
 
 # VERSION
 
@@ -18,31 +18,60 @@ __END__
 
 =head1 SYNOPSIS
 
- simulate_reads [options]
- simulate_reads help <command>
- simulate_reads <command> ...
+ $ sandy <command> ...
 
 =head1 DESCRIPTION
 
-B<simulate_reads> is a bioinformatic tool that provides a simple engine
-to generate single-end/paired-end reads from a given fasta file.
+B<SANDY> is a bioinformatic tool that provides a simple engine to generate
+single-end/paired-end reads from a given fasta file. Many next-generation sequencing
+(NGS) analyses rely on hypothetical models and principles that are not precisely
+satisfied in practice. Simulated data, which provides positive controls would be a
+perfect way to overcome these difficulties. Nevertheless, most of NGS simulators are
+extremely complex to use, they do not cover all kinds of the desired features needed
+by the users, and (some) are very slow to run in a standard computer. Here, we present
+SANDY, a straightforward, easy to use, fast, complete set of tools to generate synthetic
+next-generation sequencing reads. SANDY simulates whole genome sequencing, whole exome
+sequencing, RNAseq reads and it presents several features to the users manipulate the data.
+SANDY can be used therefore for benchmarking results of a variety of pipelines in the
+genomics or trancriptomics.
 
 =head1 INSTALLATION
 
-If you have cpanm, you only need one line:
+=head2 PREREQUISITES
+
+B<SANDY> uses the B<Comprehensive Perl Archive Network>, L<CPAN|https://www.cpan.org/>, as its
+package manager, which allows a good control over all dependencies needed.
+If you have Perl installed, then you may have the B<cpan> command utility. At the first run, cpan
+will interactively configure your environment and mirror. In doubt, just confirm the default options
+presented. After this, install cpanminus:
+
+ % cpan -i App::cpanminus
+
+App::cpanminus will provide the B<cpanm> utility, which has the capability of install not only
+SANDY, but also all its dependencies recursively.
+
+=head2 INSTALLING
+
+Finally install B<SANDY>:
 
  % cpanm App::SimulateReads
 	 
-As a last resort, you can manually install it. Download the tarball, untar it,
-then build it:
+For more details, see L<INSTALL|https://github.com/galantelab/simulate_reads/blob/master/INSTALL> file
 
- % perl Makefile.PL
- % make && make test
+=head1 ACKNOWLEDGMENTS
 
-Then install it:
+I, Thiago L. A. Miller, would like to thank:
 
- % make install
+=over
 
-For more details, see INSTALL file
+=item Pedro A. F. Galante - for his guidance during my doctorate
+
+=item Gabriela Guardia, Helena Conceição and Fernanda Orpinelli - for the advices and testing
+
+=item J. Leonel Buzzo - for the documentation
+
+=item L<Group of Bioinformatics of Teaching and Research Institute from Sírio-Libanês Hospital|https://www.bioinfo.mochsl.org.br/>
+
+=back
 
 =cut
