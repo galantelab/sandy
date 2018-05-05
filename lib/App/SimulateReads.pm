@@ -12,7 +12,8 @@ sub command_map {
 	genome        => 'App::SimulateReads::Command::Genome',
 	transcriptome => 'App::SimulateReads::Command::Transcriptome',
 	quality       => 'App::SimulateReads::Command::Quality',
-	expression    => 'App::SimulateReads::Command::Expression'
+	expression    => 'App::SimulateReads::Command::Expression',
+	version       => 'App::SimulateReads::Command::Version'
 }
 
 __END__
@@ -30,6 +31,9 @@ __END__
  Help commands:
   help                     show application or command-specific help
   man                      show application or command-specific documentation
+
+ Misc commands:
+  version                  print the current version
 
  Main commands:
   genome                   simulate genome sequencing
