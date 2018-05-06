@@ -7,5 +7,4 @@ LABEL \
 
 RUN cpanm App::Sandy
 
-USER nobody
 ENTRYPOINT ["sandy"]
