@@ -2,6 +2,10 @@ Revision history for App-Sandy
 
 {{$NEXT}}
 
+0.18      2018-05-06 02:36:33-03:00 America/Sao_Paulo
+
+	- Add citation command
+
 0.17      2018-05-05 22:44:51-03:00 America/Sao_Paulo
 
 	- Fix bug in fasta_tree and fasta_rtree
