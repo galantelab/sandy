@@ -10,25 +10,6 @@ then *Sandy* is your choice!
 
 
 
-### Contents at a Glance ###
-
-1. [Introduction](#introduction)
-2. [Installation](#installation)
-3. [Usage and Option summary](#usage-and-option-summary)
-	1. [General](#general-syntax)
-    2. [Command `genome`, its options and examples](#genome)
-    3. [Command `transcriptome`, its options and examples](#transcriptome)
-    4. [Command `custom`, its options and examples](#custom)
-    5. [Command `quality`, its options and examples](#quality)
-    6. [Command `expression`, its options and examples](#expression)
-    7. [Command `help`, its options and examples](#help)
-4. [A case study example](#expl)
-5. [Aknowledgements](#aknw)
-6. [Author](#author)
-7. [Copyright and License](#copy)
-
-
-
 ### Introduction ###
 
 Many next-generation sequencing (NGS) analyses rely on hypothetical
@@ -51,6 +32,25 @@ simulate some realistic features, among these:
 * Ready included databases for *quality profiles* and *expression matrixes*.
 * Import and record your own *expression matrixes* and *quality profiles* to
 simulate future data.
+
+
+
+### Contents at a Glance ###
+
+1. [Introduction](#introduction)
+2. [Installation](#installation)
+3. [Usage and Option summary](#usage-and-option-summary)
+	1. [General](#general-syntax)
+    2. [Command `genome`, its options and examples](#command-genome)
+    3. [Command `transcriptome`, its options and examples](#command-transcriptome)
+    4. [Command `custom`, its options and examples](#command-custom)
+    5. [Command `quality`, its options and examples](#command-quality)
+    6. [Command `expression`, its options and examples](#command-expression)
+    7. [Command `help`, its options and examples](#command-help)
+4. [A case study example](#a-case-study-example)
+5. [Aknowledgements](#aknowledgements)
+6. [Author](#author)
+7. [Copyright and License](#copyright-and-license)
 
 
 
@@ -79,7 +79,7 @@ from GitHub, decompressing it and then building it, like this:
 		$ make install
 	```
 
-For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://github.com/galantelab/simulate_reads).
+For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://github.com/galantelab/sandy).
 
 
 
@@ -117,7 +117,7 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	  quality						| manage quality profile database
 	  expression					| manage expression-matrix database
 
-2. The `genome` command {#genome}
+2. The `genome` command
 
 	Use it to generate simulated FASTAq-files from a given FASTA-file.
 	The `genome` command sets these default options for a genome sequencing simulation:
@@ -290,6 +290,7 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	```bash
 		$ sandy transcriptome -v -n 1000000 -f brain_cortex gencode_pc_v26.fa.gz
 	```
+	will generate...
 
 4. The `custom` command{#custom}
 
