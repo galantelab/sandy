@@ -15,6 +15,7 @@ lib/App/Sandy/Base.pm
 lib/App/Sandy/CLI.pm
 lib/App/Sandy/CLI/App.pm
 lib/App/Sandy/CLI/Command.pm
+lib/App/Sandy/Command/Citation.pm
 lib/App/Sandy/Command/Custom.pm
 lib/App/Sandy/Command/Expression.pm
 lib/App/Sandy/Command/Expression/Add.pm

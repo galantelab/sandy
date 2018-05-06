@@ -4,7 +4,7 @@ package App::Sandy::Role::IO;
 use App::Sandy::Base 'role';
 use PerlIO::gzip;
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 sub my_open_r {
 	my ($self, $file) = @_;
@@ -48,7 +48,7 @@ App::Sandy::Role::IO - Input and output custom wrappers.
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

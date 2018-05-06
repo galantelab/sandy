@@ -4,7 +4,7 @@ package App::Sandy::Quality;
 use App::Sandy::Base 'class';
 use App::Sandy::DB::Handle::Quality;
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 has 'quality_profile' => (
 	is         => 'ro',
@@ -161,7 +161,7 @@ App::Sandy::Quality - Class to simulate quality entries
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

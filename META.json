@@ -99,7 +99,7 @@
          "web" : "https://github.com/galantelab/sandy"
       }
    },
-   "version" : "0.17",
+   "version" : "0.18",
    "x_generated_by_perl" : "v5.18.4",
    "x_serialization_backend" : "Cpanel::JSON::XS version 3.0239"
 }

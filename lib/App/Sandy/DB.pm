@@ -6,7 +6,7 @@ use App::Sandy::DB::Schema;
 use MooseX::Singleton;
 use Path::Class 'file';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 has 'schema' => (
 	is         => 'ro',
@@ -63,7 +63,7 @@ App::Sandy::DB - Singleton class to manage database
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

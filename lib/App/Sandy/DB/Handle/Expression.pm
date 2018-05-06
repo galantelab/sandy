@@ -10,7 +10,7 @@ use Scalar::Util 'looks_like_number';
 
 with 'App::Sandy::Role::IO';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 sub insertdb {
 	my ($self, $file, $name, $source, $is_user_provided) = @_;
@@ -187,7 +187,7 @@ App::Sandy::DB::Handle::Expression - Class to handle expression-matrix database 
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

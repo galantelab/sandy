@@ -16,7 +16,7 @@ use Data::OptList;
 use Module::Runtime 'use_module';
 use namespace::autoclean;
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 BEGIN {
 	$SIG{'__DIE__'} = sub {
@@ -143,7 +143,7 @@ App::Sandy::Base - Policy and base module to App::Sandy project.
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

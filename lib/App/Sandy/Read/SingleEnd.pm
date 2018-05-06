@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Read';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 sub gen_read {
 	my ($self, $seq_ref, $seq_size, $is_leader) = @_;
@@ -39,7 +39,7 @@ App::Sandy::Read::SingleEnd - App::Sandy::Read subclass for simulate single-end 
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

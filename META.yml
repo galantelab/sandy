@@ -66,6 +66,6 @@ resources:
   bugtracker: https://github.com/galantelab/sandy/issues
   homepage: https://galantelab.github.io/sandy/
   repository: git://github.com/galantelab/sandy.git
-version: '0.17'
+version: '0.18'
 x_generated_by_perl: v5.18.4
 x_serialization_backend: 'YAML::Tiny version 1.70'
