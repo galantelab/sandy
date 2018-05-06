@@ -178,7 +178,7 @@ sub _index_fasta {
 	my $self = shift;
 	my $fasta = $self->fasta_file;
 
-	my $fh = $self->my_open_r($fasta);
+	my $fh = $self->with_open_r($fasta);
 
 	# indexed_genome = ID => (seq, len)
 	my %indexed_fasta;
@@ -513,7 +513,7 @@ sub run_simulation {
 
 		# Create temporary files
 		log_msg "  => Job $tid: Creating temporary file: @files_t";
-		my @fhs = map { $self->my_open_w($_, $self->output_gzip) } @files_t;
+		my @fhs = map { $self->with_open_w($_, $self->output_gzip) } @files_t;
 
 		# Count the cumulative number of reads for each seqid
 		my %counter;
@@ -563,7 +563,7 @@ sub run_simulation {
 
 	# Concatenate all temporary files
 	log_msg ":: Concatenating all temporary files ...";
-	my @fh = map { $self->my_open_w($self->output_gzip ? "$_.gz" : $_, 0) } @{ $files{$fastq_class} };
+	my @fh = map { $self->with_open_w($self->output_gzip ? "$_.gz" : $_, 0) } @{ $files{$fastq_class} };
 	for my $i (0..$#tmp_files) {
 		my $fh_idx = $i % scalar @fh;
 		cat $tmp_files[$i] => $fh[$fh_idx]
@@ -579,7 +579,7 @@ sub run_simulation {
 
 	# Save counts
 	log_msg ":: Saving count file ...";
-	my $count_fh = $self->my_open_w($count_file, 0);
+	my $count_fh = $self->with_open_w($count_file, 0);
 
 	log_msg ":; Wrinting counts to $count_file ...";
 	while (my ($id, $count) = each %counters) {

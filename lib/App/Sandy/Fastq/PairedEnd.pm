@@ -114,8 +114,8 @@ sub _build_gen_header {
 		'%x' => '$info->{error}'
 	);
 
-#	return  $self->compile_template('%i.%U %U simulation_read length=%r position=%c:%t-%n distance=%D', 'info', \%sym_table);
-	return  $self->compile_template($self->template_id, 'info', \%sym_table);
+#	return  $self->with_compile_template('%i.%U %U simulation_read length=%r position=%c:%t-%n distance=%D', 'info', \%sym_table);
+	return  $self->with_compile_template($self->template_id, 'info', \%sym_table);
 }
 
 sub _build_info {

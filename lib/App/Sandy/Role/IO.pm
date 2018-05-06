@@ -6,7 +6,7 @@ use PerlIO::gzip;
 
 # VERSION
 
-sub my_open_r {
+sub with_open_r {
 	my ($self, $file) = @_;
 
 	my $fh;
@@ -18,7 +18,7 @@ sub my_open_r {
 	return $fh;
 }
 
-sub my_open_w {
+sub with_open_w {
 	my ($self, $file, $is_gzipped) = @_;
 
 	my $fh;

@@ -6,7 +6,7 @@ use Getopt::Long 'GetOptionsFromArray';
 
 # VERSION
 
-sub parser {
+sub with_parser {
 	my ($self, $argv, @opt_spec) = @_;
 	my @argv = @{ $argv };
 	my %opts;

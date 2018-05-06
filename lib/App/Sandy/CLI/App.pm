@@ -110,7 +110,7 @@ sub run_no_command {
 	my ($opts, $args);
 
 	try {
-		($opts, $args) = $self->parser($argv, $self->opt_spec);
+		($opts, $args) = $self->with_parser($argv, $self->opt_spec);
 	} catch {
 		$self->error("$_" . $self->_try_msg);
 	};
@@ -132,9 +132,9 @@ sub run_command {
 
 	if ($o->can('opt_spec')) {
 		try	{
-			($opts, $args) = $self->parser($argv, $o->opt_spec);	
+			($opts, $args) = $self->with_parser($argv, $o->opt_spec);
 		} catch  {
-			$self->error("$_" . $self->_try_msg);	
+			$self->error("$_" . $self->_try_msg);
 		};
 	}
 
@@ -150,7 +150,7 @@ sub run_command {
 		try {
 			$o->validate_args(\@args_copy);
 		} catch {
-			$self->error("$_" . $self->_try_msg);	
+			$self->error("$_" . $self->_try_msg);
 		};
 	}
 
@@ -158,7 +158,7 @@ sub run_command {
 		try {
 			$o->validate_opts(\%opts_copy);
 		} catch {
-			$self->error("$_" . $self->_try_msg);	
+			$self->error("$_" . $self->_try_msg);
 		};
 	}
 
@@ -217,7 +217,7 @@ sub run {
 
 	given ($argv[0]) {
 		when (%command_map_bultin) {
-			my $command_name = shift @argv;	
+			my $command_name = shift @argv;
 			my $command_method = $command_map_bultin{$command_name};
 			$self->$command_method(\@argv);
 		}

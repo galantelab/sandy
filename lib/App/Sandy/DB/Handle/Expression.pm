@@ -50,7 +50,7 @@ sub insertdb {
 sub _index_expression_matrix {
 	my ($self, $file) = @_;
 
-	my $fh = $self->my_open_r($file);
+	my $fh = $self->with_open_r($file);
 	my %indexed_file;
 
 	my $line = 0;

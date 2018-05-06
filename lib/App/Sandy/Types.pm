@@ -1,28 +1,28 @@
 package App::Sandy::Types;
 # ABSTRACT: Moose type constraints for App::Sandy project
- 
+
 use Moose::Util::TypeConstraints;
 
 # VERSION
 
 subtype 'My:IntGt0'
 	=> as      'Int'
-	=> where   { $_ > 0 } 
+	=> where   { $_ > 0 }
 	=> message { "Value must be an integer greater than zero, not '$_'" };
 
 subtype 'My:IntGe0'
 	=> as      'Int'
-	=> where   { $_ >= 0 } 
+	=> where   { $_ >= 0 }
 	=> message { "Value must be an integer greater or equal to zero, not '$_'" };
 
 subtype 'My:NumGt0'
 	=> as      'Num'
-	=> where   { $_ > 0 } 
+	=> where   { $_ > 0 }
 	=> message { "Value must be a number greater than zero, not '$_'" };
 
 subtype 'My:NumGe0'
 	=> as      'Num'
-	=> where   { $_ >= 0 } 
+	=> where   { $_ >= 0 }
 	=> message { "Value must be a number greater or equal to zero, not '$_'" };
 
 subtype 'My:NumHS'
@@ -89,10 +89,5 @@ subtype 'My:CountLoopBy'
 	=> as      'Str'
 	=> where   { $_ eq 'coverage' || $_ eq 'number-of-reads' }
 	=> message { "'$_' is not a valid count_loops_by: 'coverage' or 'number-of-reads'" };
-
-#subtype 'My:HeaderP'
-#	=> as 'Str'
-#	=> where { $_ eq 'illumina' || $_ eq 'transcriptime' || $_ eq 'genome' }
-#	=> message { "'$_' is not a valid header profile" };
 
 1; ## --- end class App::Sandy::Types

@@ -73,7 +73,7 @@ sub _index_quality_type {
 	# "The Art of Computer Programming"
 
 	my ($self, $file, $size, $type) = @_;
-	my $fh = $self->my_open_r($file);
+	my $fh = $self->with_open_r($file);
 
 	log_msg ":: Counting number of lines in '$file' ...";
 	my $num_lines = $self->_wcl($file);
@@ -160,7 +160,7 @@ sub _index_quality_type {
 
 sub _wcl {
 	my ($self, $file) = @_;
-	my $fh = $self->my_open_r($file);
+	my $fh = $self->with_open_r($file);
 	my $num_lines = 0;
 	$num_lines++ while <$fh>;
 	$fh->close;
