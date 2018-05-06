@@ -1,12 +1,11 @@
 FROM perl:latest
 
 LABEL \
-	maintainer="Thiago Miller" \
+	maintainer="Thiago L. A. Miller" \
 	email="<tmiller@mochsl.org.br>" \
-	description="Docker image for the simulate_reads project"
+	description="Docker image for the sandy project"
 
-RUN cpanm App::SimulateReads
+RUN cpanm App::Sandy
 
-WORKDIR /tmp
 USER nobody
-ENTRYPOINT ["simulate_reads"]
+ENTRYPOINT ["sandy"]
