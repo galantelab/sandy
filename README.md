@@ -115,7 +115,7 @@ Thiago L. A. Miller
 If *Sandy* was somehow useful in your research, please cite it:
 
 **DOI**
-![](https://doi.org/10.5281/zenodo.1241600)
+[at Zenodo](https://doi.org/10.5281/zenodo.1241600)
 
 **BibTeX entry**
 ```bash

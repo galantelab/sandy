@@ -205,7 +205,23 @@
 	```bash
 		$ sandy transcriptome -v -n 1000000 -f brain_cortex gencode_pc_v26.fa.gz
 	```
-	will generate...
+	will generate a FASTq file with 1000000 reads on the *gencode_pc_v26.fa.gz*
+	file and a plain text file with the raw counts of the reads per gene,
+	according to the expression matrix provided by the *brain_cortex* entry.
+	
+	To demonstrate some other features, think about the sequencing error rate
+	that can be set between 0 and 1. By default, *Sandy* set this value to
+	0.005, which means 1 error every 200 bases.	To set it to another value,
+	try:
+	```bash
+		sandy transcriptome -f liver --sequencing-error=0.001 genome_pc_v26.fa.gz
+	```
+	
+	For reproducibility, the user can set the `seed` option and guarantee
+	the reliability of all the raffles in a later simulation.
+	```bash
+		sandy transcriptome -q hiseq_101 --seed=123 hg19.fa
+	```
 
 4. The `custom` command
 
@@ -317,9 +333,12 @@
 
 6. The `expression` command
 
-	Use it to manage your matrix-expression database.
-	You can add or remove your own expression profiles in the builtin database.
-	Or even clean it up to restore the vendor's original entries state.
+	The `expression` command is used to verify and update the expression matrix
+	database. In a transcriptome sequencing simulation, the user
+	must provide an expression matrix indexed into this database. *Sandy*
+	already comes with 52 different tissues from the GTEx project, but the
+	user has the freedom to include his own data as well, or even clean it up
+	to restore the vendor's original entries state.
 	
 	**Usage:**
 	```bash
@@ -339,18 +358,16 @@
 	
 	**Some examples:**
 	
-	To list the expression files already registered in the builtin database,
+	To list the expression matrixes already registered in the builtin database,
 	you can simply type:
 	```bash
 		$ sandy expression
 	```
-	and all entries will be shown.
-	Sandy already comes with expression-matrixes for 18 kinds of tissues
-	obtained from the [GTEx](https://www.gtexportal.org/home/) project.
+	and all registered entries will be shown.
 	
-	But, supose you want to register a new [ponga](See here) formated
-	expression-matrix file called 'my_mtx.txt', to simulate your FASTA-file
-	according to a experimentally annnotated genes expression profile.
+	But, supose you want to register a new expression matrix file called
+	'my_mtx.txt', to simulate your FASTA-file according to its experimentally
+	annnotated data.
 	In this case, the command bellow would solve your problem:
 	```bash
 		$ sandy expression add my_mtx.txt
