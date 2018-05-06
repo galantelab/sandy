@@ -16,5 +16,3 @@ sub validate_args {
 sub execute {
 	pod2usage(-verbose => 99, -sections => ['NAME', 'VERSION', 'AUTHOR', 'COPYRIGHT AND LICENSE'], -exitval => 0);
 }
-
-__END__

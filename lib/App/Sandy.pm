@@ -13,7 +13,8 @@ sub command_map {
 	transcriptome => 'App::Sandy::Command::Transcriptome',
 	quality       => 'App::Sandy::Command::Quality',
 	expression    => 'App::Sandy::Command::Expression',
-	version       => 'App::Sandy::Command::Version'
+	version       => 'App::Sandy::Command::Version',
+	citation      => 'App::Sandy::Command::Citation'
 }
 
 __END__
@@ -34,6 +35,7 @@ __END__
 
  Misc commands:
   version                  print the current version
+  citation                 export citation in BibTeX format
 
  Main commands:
   genome                   simulate genome sequencing
