@@ -1,6 +1,6 @@
 ### Usage and Option summary ###
 
-1. General syntax
+## 1. General syntax ##
 
 	**Usage:**
 	```bash
@@ -32,7 +32,7 @@
 	  quality						| manage quality profile database
 	  expression					| manage expression-matrix database
 
-2. The `genome` command
+## 2. The `genome` command ##
 
 	Use it to generate simulated FASTAq-files from a given FASTA-file.
 	The `genome` command sets these default options for a genome sequencing simulation:
