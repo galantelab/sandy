@@ -18,14 +18,14 @@ data, which provides positive controls would be a perfect way to overcome
 these difficulties. Nevertheless, most of NGS simulators are extremely
 complex to use, they do not cover all kinds of the desired features needed by
 the users, and (some) are very slow to run in a standard computer. Here, we
-present SANDY, a straightforward, easy to use, fast, complete set of tools to
-generate synthetic next-generation sequencing reads. SANDY simulates
+present *Sandy*, a straightforward, easy to use, fast, complete set of tools to
+generate synthetic next-generation sequencing reads. *Sandy* simulates
 whole genome sequencing, whole exome sequencing, RNAseq reads and it
 presents several features to the users manipulate the data. Sandy can be
 used therefore for benchmarking results of a variety of pipelines in the
 genomics or trancriptomics.
 
-Now, project *Sandy* is in it's 0.15 version and has earned enough maturity to
+Now, project *Sandy* is in it's 0.18 version and has earned enough maturity to
 simulate some realistic features, among these:
 * Simulate reads from genomic FASTA-files.
 * Simulate reads from transcriptomic data, based on expression matrix files.
@@ -40,8 +40,8 @@ simulate future data.
 1. [Introduction](#introduction)
 2. [Installation](#installation)
 3. [Usage and Option summary](usage.md#usage-and-option-summary)
-	1. [General](usage.md#general-syntax)
-    2. [Command `genome`, its options and examples](usage.md#the-genome-command)
+	1. [General](usage.md#1.-general-syntax)
+    2. [Command `genome`, its options and examples](usage.md#2.-the-genome-command)
     3. [Command `transcriptome`, its options and examples](usage.md#the-transcriptome-command)
     4. [Command `custom`, its options and examples](usage.md#the-custom-command)
     5. [Command `quality`, its options and examples](usage.md#the-quality-command)
@@ -63,14 +63,21 @@ in one line:
 	```bash
 		$ cpanm App::Sandy
 	```
+If you only have `perl` but don't have it's modules from the *Comprehensive
+Perl Archive Network*, install it easy with the command:
+	```bash
+		$ cpan -i App::cpanminus
+	```
+	App::cpanminus will provide the `cpanm` utility, which has the capability of
+	install not only Sandy, but also all its dependencies recursively.
 
 2. If you only have `perl`, as a last resort, you can manually install *Sandy*
-through the command line by downloading the [tarball](https://github.com/galantelab/sandy/archive/sandy-master.tar.gz)
+through the command line by downloading the [tarball](https://github.com/galantelab/sandy/archive/master.tar.gz)
 from GitHub, decompressing it and then building it, like this:
 	```bash
-		$ wget https://github.com/galantelab/sandy/archive/sandy-master.tar.gz
-		$ tar xzvf sandy-master.tar.gz
-		$ cd sandy
+		$ wget https://github.com/galantelab/sandy/archive/master.tar.gz
+		$ tar xzvf master.tar.gz
+		$ cd sandy-master
 		$ perl Makefile.PL
 		$ make && make test
 	```
