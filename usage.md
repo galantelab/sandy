@@ -157,7 +157,7 @@
 	The options above are the most frequently used ones for the `genome`
 	command, but many more can be found in the *Sandy's* documentation.
 
-3. The `transcriptome` command {#transcriptome}
+3. The `transcriptome` command
 
 	Use it to generate simulated FASTAq files from a given FASTA file,
 	according to an expression profile matrix file.
@@ -207,7 +207,7 @@
 	```
 	will generate...
 
-4. The `custom` command{#custom}
+4. The `custom` command
 
 	This is the most versatile command to procuce FASTAq-files,
 	but the user must deal whit a greater number os options.
@@ -246,7 +246,7 @@
 	**Some examples**
 	
 
-5. The `quality` command {#quality}
+5. The `quality` command
 
 	Use it to manage your quality profile database.
 	You can add or remove your own expression profiles in the builtin database
@@ -315,7 +315,7 @@
 	probabilistic curve, as described by the literature
 	([illumina, 2018](https://www.illumina.com/content/dam/illumina-marketing/documents/products/technotes/technote_understanding_quality_scores.pdf)).
 
-6. The `expression` command {#expression}
+6. The `expression` command
 
 	Use it to manage your matrix-expression database.
 	You can add or remove your own expression profiles in the builtin database.
@@ -346,7 +346,7 @@
 	```
 	and all entries will be shown.
 	Sandy already comes with expression-matrixes for 18 kinds of tissues
-	obtained from the [GETx](https://www.gtexportal.org/home/) project.
+	obtained from the [Gtex](https://www.gtexportal.org/home/) project.
 	
 	But, supose you want to register a new [ponga](See here) formated
 	expression-matrix file called 'my_mtx.txt', to simulate your FASTA-file
@@ -375,7 +375,7 @@
 	Note that this is a dangerous command and Sandy will warn you about it
 	before make the restoration in fact.
 
-7. The `help` command {#help}
+7. The `help` command
 
 	**Usage:**
 	
@@ -414,3 +414,4 @@
 And you can aways get help by consulting *Sandy's* manuals in your system's
 builtin documentations with `man sandy` or `info sandy` commands.
 
+[Back to Contents](README.md#contents-at-a-glance)
