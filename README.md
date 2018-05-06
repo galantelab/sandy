@@ -47,7 +47,7 @@ simulate future data.
     5. [Command `quality`, its options and examples](#command-quality)
     6. [Command `expression`, its options and examples](#command-expression)
     7. [Command `help`, its options and examples](#command-help)
-4. [A case study example](#a-case-study-example)
+4. [A case study example](case.md#a-case-study-example)
 5. [Aknowledgements](#aknowledgements)
 6. [Author](#author)
 7. [Copyright and License](#copyright-and-license)
@@ -501,12 +501,10 @@ builtin documentations with `man sandy` or `info sandy` commands.
 
 
 ### A case study example ###
-![plot](img/Rplots.pdf)
+
 
 ### Aknowledgements ###
 
-[teste](pppmd.md)
-[teste2](ppp.html)
 
 ### Author ###
 
