@@ -6,7 +6,7 @@ use Pod::Usage;
 
 extends 'App::Sandy::CLI::Command';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 sub validate_args {
 	my ($self, $args) = @_;
@@ -29,7 +29,7 @@ App::Sandy::Command::Version - version command class. Print version
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

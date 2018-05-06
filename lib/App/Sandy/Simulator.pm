@@ -13,7 +13,7 @@ use Parallel::ForkManager;
 
 with qw/App::Sandy::Role::IO/;
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 has 'seed' => (
 	is        => 'ro',
@@ -620,7 +620,7 @@ App::Sandy::Simulator - Class responsible to make the simulation
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

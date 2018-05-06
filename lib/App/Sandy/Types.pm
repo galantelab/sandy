@@ -3,7 +3,7 @@ package App::Sandy::Types;
  
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 subtype 'My:IntGt0'
 	=> as      'Int'
@@ -109,7 +109,7 @@ App::Sandy::Types - Moose type constraints for App::Sandy project
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

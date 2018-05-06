@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Command::Expression';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 override 'opt_spec' => sub {
 	super,
@@ -47,7 +47,7 @@ App::Sandy::Command::Expression::Remove - expression subcommand class. Remove an
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 SYNOPSIS
 

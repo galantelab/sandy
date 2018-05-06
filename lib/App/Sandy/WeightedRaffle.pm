@@ -3,7 +3,7 @@ package App::Sandy::WeightedRaffle;
 
 use App::Sandy::Base 'class';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 has 'weights' => (
 	is         => 'ro',
@@ -104,7 +104,7 @@ App::Sandy::WeightedRaffle - Weighted raffle interface.
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

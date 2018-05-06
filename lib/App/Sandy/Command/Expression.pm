@@ -7,7 +7,7 @@ use Text::SimpleTable::AutoWidth;
 
 extends 'App::Sandy::CLI::Command';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 has 'db' => (
 	is         => 'ro',
@@ -64,7 +64,7 @@ App::Sandy::Command::Expression - expression command class. Manage expression-ma
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 SYNOPSIS
 

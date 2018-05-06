@@ -3,7 +3,7 @@ package App::Sandy::Read;
 
 use App::Sandy::Base 'class';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 has 'sequencing_error' => (
 	is         => 'ro',
@@ -119,7 +119,7 @@ App::Sandy::Read - Base class to simulate reads
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

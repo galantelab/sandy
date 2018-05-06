@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Command::Quality';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 override 'opt_spec' => sub {
 	super,
@@ -37,7 +37,7 @@ App::Sandy::Command::Quality::Restore - quality subcommand class. Restore databa
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 SYNOPSIS
 

@@ -4,7 +4,7 @@ package App::Sandy::Fastq;
 use App::Sandy::Base 'class';
 use App::Sandy::Quality;
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 has 'quality_profile' => (
 	is         => 'ro',
@@ -65,7 +65,7 @@ App::Sandy::Fastq - Base class to simulate fastq entries
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

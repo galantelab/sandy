@@ -8,7 +8,7 @@ extends 'App::Sandy::Fastq';
 
 with 'App::Sandy::Role::RunTimeTemplate';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 has 'template_id' => (
 	is         => 'ro',
@@ -224,7 +224,7 @@ App::Sandy::Fastq::PairedEnd - App::Sandy::Fastq subclass for simulate paired-en
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

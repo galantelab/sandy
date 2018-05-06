@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::CLI::App';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 sub command_map {
 	custom        => 'App::Sandy::Command::Custom',
@@ -13,7 +13,8 @@ sub command_map {
 	transcriptome => 'App::Sandy::Command::Transcriptome',
 	quality       => 'App::Sandy::Command::Quality',
 	expression    => 'App::Sandy::Command::Expression',
-	version       => 'App::Sandy::Command::Version'
+	version       => 'App::Sandy::Command::Version',
+	citation      => 'App::Sandy::Command::Citation'
 }
 
 __END__
@@ -28,7 +29,7 @@ App::Sandy - App builder that simulates single-end and paired-end reads.
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 SYNOPSIS
 
@@ -46,6 +47,7 @@ version 0.17
 
  Misc commands:
   version                  print the current version
+  citation                 export citation in BibTeX format
 
  Main commands:
   genome                   simulate genome sequencing

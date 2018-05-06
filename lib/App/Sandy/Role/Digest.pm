@@ -12,7 +12,7 @@ use File::Path 'make_path';
 
 requires qw/default_opt opt_spec rm_opt/;
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
@@ -369,7 +369,7 @@ App::Sandy::Role::Digest - Wrapper on Simulator class for genome/transcriptome s
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

@@ -6,7 +6,7 @@ use Math::Random 'random_normal';
 
 extends 'App::Sandy::Read';
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 use constant {
 	NUM_TRIES => 1000
@@ -90,7 +90,7 @@ App::Sandy::Read::PairedEnd - App::Sandy::Read subclass for simulate paired-end 
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 AUTHORS
 

@@ -9,7 +9,7 @@ use App::Sandy;
 # PODNAME: Sandy
 # ABSTRACT: A straightforward and complete next-generation sequencing read simulator
 
-our $VERSION = '0.17'; # VERSION
+our $VERSION = '0.18'; # VERSION
 
 my $app = App::Sandy->new;
 $app->run;
@@ -26,7 +26,7 @@ Sandy - A straightforward and complete next-generation sequencing read simulator
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 SYNOPSIS
 
@@ -66,7 +66,7 @@ Sandy, but also all its dependencies recursively.
 
 Finally install B<Sandy>:
 
- % cpanm App::SimulateReads
+ % cpanm App::Sandy
 
 For more details, see L<INSTALL|https://github.com/galantelab/sandy/blob/master/INSTALL> file
 
