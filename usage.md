@@ -346,7 +346,7 @@
 	```
 	and all entries will be shown.
 	Sandy already comes with expression-matrixes for 18 kinds of tissues
-	obtained from the [Gtex](https://www.gtexportal.org/home/) project.
+	obtained from the [GTEx](https://www.gtexportal.org/home/) project.
 	
 	But, supose you want to register a new [ponga](See here) formated
 	expression-matrix file called 'my_mtx.txt', to simulate your FASTA-file

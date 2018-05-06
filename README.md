@@ -31,7 +31,7 @@ simulate some realistic features, among these:
 * Simulate reads from transcriptomic data, based on expression matrix files.
 * Ready included databases for *quality profiles* and *expression matrixes*.
 * Import and record your own *expression matrixes* and *quality profiles* to
-simulate future data.
+simulate real experimental data.
 
 
 
@@ -50,7 +50,8 @@ simulate future data.
 4. [A case study example](case.md#a-case-study-example)
 5. [Aknowledgements](#aknowledgements)
 6. [Author](#author)
-7. [Copyright and License](#copyright-and-license)
+7. [Citation](#citation)
+8. [Copyright and License](#copyright-and-license)
 
 
 
@@ -92,11 +93,40 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 
 ### Aknowledgements ###
 
+I, Thiago L. A. Miller, would like to thank:
+
+* Pedro A. F. Galante - for his guidance during my doctorate.
+* Gabriela Guardia, Helena Conceição and Fernanda Orpinelli - for the advices
+and testing.
+* J. Leonel Buzzo - for the documentation.
+* [Group of Bioinformatics of the Teaching and Research Institute from Sírio-Libanês Hospital](https://www.bioinfo.mochsl.org.br/)
+
+
 
 ### Author ###
 
 Thiago L. A. Miller
 [<tmiller@mochsl.org.br>](tmiller@mochsl.org.br)
+
+
+
+### Citation ###
+
+If *Sandy* was somehow useful in your research, please cite it:
+
+**DOI**
+![](https://doi.org/10.5281/zenodo.1241600)
+
+**BibTeX entry**
+```bash
+@misc{sandy,
+	title = {Sandy Simulator},
+	author = {Miller, T. L. A.},
+	year = {2018},
+	organization = {Teaching and Research Institute of Sírio-Libanês Hospital}
+	doi = {https://doi.org/10.5281/zenodo.1241600}
+}
+```
 
 
 
