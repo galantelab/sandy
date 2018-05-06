@@ -1,6 +1,6 @@
 ### Usage and Option summary ###
 
-## 1. General syntax ##
+#### General syntax ####
 
 	**Usage:**
 	```bash
@@ -32,7 +32,7 @@
 	  quality						| manage quality profile database
 	  expression					| manage expression-matrix database
 
-## 2. The `genome` command ##
+#### The `genome` command ####
 
 	Use it to generate simulated FASTAq-files from a given FASTA-file.
 	The `genome` command sets these default options for a genome sequencing simulation:
@@ -157,7 +157,7 @@
 	The options above are the most frequently used ones for the `genome`
 	command, but many more can be found in the *Sandy's* documentation.
 
-3. The `transcriptome` command
+#### The `transcriptome` command ####
 
 	Use it to generate simulated FASTAq files from a given FASTA file,
 	according to an expression profile matrix file.
