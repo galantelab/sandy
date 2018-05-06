@@ -1,7 +1,7 @@
 package TestsFor;
 # ABSTRACT: Uses the TestsFor:: namespace to ensure that tests do not try to use a namespace in use by another package.
 
-use App::SimulateReads::Base test => [qw(class_base)];
+use App::Sandy::Base test => [qw(class_base)];
 
 INIT {
 	__PACKAGE__->mk_classdata('class_to_test');
