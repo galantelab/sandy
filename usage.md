@@ -1,6 +1,6 @@
-### Usage and Option summary ###
+### Usage and option summary ###
 
-#### General syntax ####
+1. General Syntax
 
 	**Usage:**
 	```bash
@@ -32,7 +32,7 @@
 	  quality						| manage quality profile database
 	  expression					| manage expression-matrix database
 
-#### The `genome` command ####
+2. The `genome` command
 
 	Use it to generate simulated FASTAq-files from a given FASTA-file.
 	The `genome` command sets these default options for a genome sequencing simulation:
@@ -41,7 +41,7 @@
 	* The chromossomes are raffled following a weighted raffle with the
 	sequence length as the bias;
 	
-	**USAGE:**
+	**Usage:**
 	```bash
 		$ sandy genome [options] <FILEs>
 	```
@@ -157,7 +157,7 @@
 	The options above are the most frequently used ones for the `genome`
 	command, but many more can be found in the *Sandy's* documentation.
 
-#### The `transcriptome` command ####
+3. The `transcriptome` command
 
 	Use it to generate simulated FASTAq files from a given FASTA file,
 	according to an expression profile matrix file.
@@ -167,7 +167,7 @@
 	* The number of reads is directly passed;
 	* The genes/transcripts are raffled following the expression matrix;
 	
-	**USAGE:**
+	**Usage:**
 	```bash
 		$ sandy transcriptome [options] <FILEs>
 	```
@@ -250,9 +250,9 @@
 
 	Use it to manage your quality profile database.
 	You can add or remove your own expression profiles in the builtin database
-	to make your simulations more realistic based on real experimental data.
+	and turn your simulations more realistic based on real experimental data.
 	Or you can even clean it up to restore the vendor's original entries state.
-	By default, *Sandy* uses a poisson distribution when compiling the
+	By default, *Sandy* uses a Poisson distribution when compiling the
 	quality entries, but like many other features, this behavior can be
 	overrided by the user.
 	
