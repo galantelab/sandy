@@ -39,7 +39,7 @@ simulate future data.
 
 1. [Introduction](#introduction)
 2. [Installation](#installation)
-3. [Usage and Option summary](#usage-and-option-summary)
+3. [Usage and Option summary](usage.md#usage-and-option-summary)
 	1. [General](#general-syntax)
     2. [Command `genome`, its options and examples](#command-genome)
     3. [Command `transcriptome`, its options and examples](#command-transcriptome)
@@ -204,14 +204,14 @@ For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://
 	```
 	In this case, results would	be:
 	```bash
-	>$ sandy genome -s 123 --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" hg38.fa
-	> ==> Into R1
-	> @SR.1 read=chr6:979-880 mate=chr6:736-835 length=100
-	> ...
-	> 
-	> ==> Into R2
-	> @SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
-	> ...
+	$ sandy genome -s 123 --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" hg38.fa
+	 ==> Into R1
+	 @SR.1 read=chr6:979-880 mate=chr6:736-835 length=100
+	 ...
+	 
+	 ==> Into R2
+	 @SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
+	 ...
 	```
 	
 	To change the sequencing quality profile, use the `-q` option and a
