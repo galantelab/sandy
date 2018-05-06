@@ -2,6 +2,8 @@
 
 Sandy - A straightforward and complete next-generation sequencing read simulator
 
+[![DOI](https://zenodo.org/badge/90221400.svg)](https://zenodo.org/badge/latestdoi/90221400)
+
 # VERSION
 
 version 0.17
