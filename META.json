@@ -1,10 +1,14 @@
 {
-   "abstract" : "Creates single-end and paired-end fastq reads for transcriptome and genome sequencing simulation",
+   "abstract" : "A straightforward and complete next-generation sequencing read simulator",
    "author" : [
-      "Thiago L. A. Miller <tmiller@mochsl.org.br>"
+      "Thiago L. A. Miller <tmiller@mochsl.org.br>",
+      "Gabriela Guardia <gguardia@mochsl.org.br>",
+      "J. Leonel Buzzo <lbuzzo@mochsl.org.br>",
+      "Fernanda Orpinelli <forpinelli@mochsl.org.br>",
+      "Pedro A. F. Galante <pgalante@mochsl.org.br>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 6.011, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Dist::Zilla version 6.012, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "gpl_3"
    ],
@@ -12,7 +16,7 @@
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
       "version" : 2
    },
-   "name" : "App-SimulateReads",
+   "name" : "App-Sandy",
    "prereqs" : {
       "configure" : {
          "requires" : {
@@ -54,6 +58,7 @@
             "Pod::Usage" : "0",
             "Scalar::Util" : "0",
             "Storable" : "2.51",
+            "Text::SimpleTable::AutoWidth" : "0",
             "Try::Tiny" : "0",
             "base" : "0",
             "constant" : "0",
@@ -85,15 +90,17 @@
    "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
-         "web" : "https://github.com/galantelab/simulate_reads/issues"
+         "web" : "https://github.com/galantelab/sandy/issues"
       },
+      "homepage" : "https://galantelab.github.io/sandy/",
       "repository" : {
          "type" : "git",
-         "url" : "git://github.com/galantelab/simulate_reads.git",
-         "web" : "https://github.com/galantelab/simulate_reads"
+         "url" : "git://github.com/galantelab/sandy.git",
+         "web" : "https://github.com/galantelab/sandy"
       }
    },
-   "version" : "0.16",
+   "version" : "0.17",
+   "x_generated_by_perl" : "v5.18.4",
    "x_serialization_backend" : "Cpanel::JSON::XS version 3.0239"
 }
 
