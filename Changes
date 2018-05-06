@@ -2,6 +2,13 @@ Revision history for App-Sandy
 
 {{$NEXT}}
 
+0.17      2018-05-05 22:44:51-03:00 America/Sao_Paulo
+
+	- Fix bug in fasta_tree and fasta_rtree
+	- Populate quality and expression databases
+	- Improve documentation
+	- Rename project from App-SimulateReads to App-Sandy
+
 0.16      2018-04-16 00:59:15-03:00 America/Sao_Paulo
 
 	- Update quality profile database in order to keep it simple
