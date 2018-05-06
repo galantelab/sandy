@@ -44,7 +44,7 @@ Sandy, but also all its dependencies recursively.
 
 Finally install **Sandy**:
 
-    % cpanm App::SimulateReads
+    % cpanm App::Sandy
 
 For more details, see [INSTALL](https://github.com/galantelab/sandy/blob/master/INSTALL) file
 
