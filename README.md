@@ -115,22 +115,25 @@ Thiago L. A. Miller
 If *Sandy* was somehow useful in your research, please cite it:
 
 **DOI**
-[at Zenodo](https://doi.org/10.5281/zenodo.1241600)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1241600.svg)](https://doi.org/10.5281/zenodo.1241600)
+
 
 **BibTeX entry**
 ```bash
-@misc{sandy,
-	title = {Sandy Simulator},
-	author = {Miller, T. L. A.},
-	year = {2018},
-	organization = {Teaching and Research Institute of Sírio-Libanês Hospital}
-	doi = {https://doi.org/10.5281/zenodo.1241600}
+@misc{thiago_miller_2018_1241600,
+	author       = {Thiago Miller},
+    title        = {galantelab/sandy v0.18 A straightforward and complete next-generation sequencing read simulator},
+	month        = {may},
+	year         = {2018},
+	doi          = {10.5281/zenodo.1241600},
+	url          = {https://doi.org/10.5281/zenodo.1241600}
 }
 ```
 
 
 
-### Copyrirht and License ###
+### Copyright and License ###
 
 This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
 This is free software, licensed under:
