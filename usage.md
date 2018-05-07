@@ -34,7 +34,7 @@
 
 2. The `genome` command
 
-	Use it to generate simulated FASTAq-files from a given FASTA-file.
+	Use it to generate simulated FASTq-files from a given FASTA-file.
 	The `genome` command sets these default options for a genome sequencing simulation:
 	* The strand is **randomly** chosen;
 	* The number of reads is calculated by the coverage;
@@ -82,7 +82,7 @@
 	```bash
 		$ sandy genome -v -t paired-end -c 20 hg38.fa 2> sim.log
 	```
-	will produce two FASTAq-files (sequencing-type default is "paired-end"),
+	will produce two FASTq-files (sequencing-type default is "paired-end"),
 	both with a coverage of 20x (coverage default is 8), and a simple
 	text reads-count file in a tab separated fashion.
 
@@ -119,14 +119,14 @@
 	```
 	In this case, results would	be:
 	```bash
-	$ sandy genome -s 123 --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" hg38.fa
-	 ==> Into R1
-	 @SR.1 read=chr6:979-880 mate=chr6:736-835 length=100
-	 ...
-	 
-	 ==> Into R2
-	 @SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
-	 ...
+		$ sandy genome -s 123 --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" hg38.fa
+	 	==> Into R1
+	 	@SR.1 read=chr6:979-880 mate=chr6:736-835 length=100
+	 	...
+	 	
+	 	==> Into R2
+	 	@SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
+	 	...
 	```
 	
 	To change the sequencing quality profile, use the `-q` option and a
@@ -159,7 +159,7 @@
 
 3. The `transcriptome` command
 
-	Use it to generate simulated FASTAq files from a given FASTA file,
+	Use it to generate simulated FASTq files from a given FASTA file,
 	according to an expression profile matrix file.
 	The `transcriptome` command sets these default options for a transcriptome
 	sequencing simulation as well:
@@ -214,18 +214,18 @@
 	0.005, which means 1 error every 200 bases.	To set it to another value,
 	try:
 	```bash
-		sandy transcriptome -f liver --sequencing-error=0.001 genome_pc_v26.fa.gz
+		$ sandy transcriptome -f liver --sequencing-error=0.001 genome_pc_v26.fa.gz
 	```
 	
 	For reproducibility, the user can set the `seed` option and guarantee
 	the reliability of all the raffles in a later simulation.
 	```bash
-		sandy transcriptome -q hiseq_101 --seed=123 hg19.fa
+		$ sandy transcriptome -q hiseq_101 --seed=123 hg19.fa
 	```
 
 4. The `custom` command
 
-	This is the most versatile command to procuce FASTAq-files,
+	This is the most versatile command to procuce FASTq-files,
 	but the user must deal whit a greater number os options.
 	
 	**Usage:**
@@ -261,6 +261,34 @@
 	
 	**Some examples**
 	
+	The `custom` command is the most versatile one, it's design was thought
+	to bring user's with the most of the options between `genome` and
+	`transcriptome` commands in a unique command. To have an idea of it's
+	plurality, look to how overwhelming the number of choices could be:
+	```bash
+		$ sandy transcriptome \
+			--expression-matrix=pancreas \
+			--quality-profile=hiseq_101 \
+			--sequencing-type=paired-end \
+			--fragment-mean=350 \
+			--fragment-stdd=100 \
+			--prefix=pancreas_sim \
+			--output-dir=sim_dir \
+			--id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
+			--verbose \
+			--seed=123 \
+			--jobs=30 \
+			--no-gzip \
+			gencode_pc_v26.fa.gz
+	```
+	
+	**A note on paralelism:** To increase the processing speed, the simulation
+	can run in parallel, splitting the task among jobs. For example, type:
+	```bash
+		$ sandy custom -f testis -q hiseq_101 -v -i "length=%r" --jobs 15 gencode_lnc.fa.gz
+	```
+	and *Sandy* will allocate 15 jobs. This feature works for the `genome` and
+	the `transcriptome` commands as well.
 
 5. The `quality` command
 
@@ -303,7 +331,7 @@
 	```bash
 		$ sandy quality add my_profile.txt
 	```
-	This quality profile can be either a FASTAq file or a plain text file in
+	This quality profile can be either a FASTq file or a plain text file in
 	a tab separated fashion (quality profile defaut density function is
 	"Poisson").
 	
