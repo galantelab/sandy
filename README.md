@@ -116,19 +116,19 @@ If *Sandy* was somehow useful in your research, please cite it:
 
 **DOI**
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1241600.svg)](https://doi.org/10.5281/zenodo.1241600)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1241587.svg)](https://doi.org/10.5281/zenodo.1241587)
 
 
 **BibTeX entry**
 ```bash
-	@misc{thiago_miller_2018_1241600,
-		author = {Thiago Miller},
-		title  = {galantelab/sandy v0.18 A straightforward and complete next-generation sequencing read simulator},
-		month  = {may},
-		year   = {2018},
-		doi    = {10.5281/zenodo.1241600},
-		url	   = {https://doi.org/10.5281/zenodo.1241600}
-	}
+@misc{thiago_miller_2018_1241600,
+	author = {Thiago Miller},
+	title  = {galantelab/sandy v0.18 A straightforward and complete next-generation sequencing read simulator},
+	month  = {may},
+	year   = {2018},
+	doi    = {10.5281/zenodo.1241600},
+	url    = {https://doi.org/10.5281/zenodo.1241600}
+}
 ```
 
 
