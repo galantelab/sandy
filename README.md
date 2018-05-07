@@ -47,7 +47,7 @@ simulate real experimental data.
     5. [Command `quality`, its options and examples](usage.md#the-quality-command)
     6. [Command `expression`, its options and examples](usage.md#the-expression-command)
     7. [Command `help`, its options and examples](usage.md#the-help-command)
-4. [A case study example](case.md#a-case-study-example)
+4. [Case study examples](case.md#case-study-examples)
 5. [Aknowledgements](#aknowledgements)
 6. [Author](#author)
 7. [Citation](#citation)
