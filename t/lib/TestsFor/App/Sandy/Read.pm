@@ -1,20 +1,3 @@
-#
-#===============================================================================
-#
-#         FILE: Read.pm
-#
-#  DESCRIPTION: Tests for 'Read' class
-#
-#        FILES: ---
-#         BUGS: ---
-#        NOTES: ---
-#       AUTHOR: Thiago Miller (tmiller), tmiller@mochsl.org.br
-# ORGANIZATION: Group of Bioinformatics
-#      VERSION: 1.0
-#      CREATED: 05/07/2017 01:49:49 AM
-#     REVISION: ---
-#===============================================================================
-
 package TestsFor::App::Sandy::Read;
 # ABSTRACT: Tests for 'App::Sandy::Read' class
 

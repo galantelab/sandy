@@ -63,9 +63,9 @@ sub _piece_new {
 sub insert {
 	my ($self, $ref, $pos) = @_;
 
+	# Test if the position is inside the original sequence boundary
 	if ($pos > $self->len) {
-		croak sprintf "position (%d) greater than orig length (%d)"
-			=> $pos, $self->len;
+		croak "Trying to insert outside the original sequence";
 	}
 
 	# My length
@@ -83,18 +83,41 @@ sub insert {
 	$self->_splice_piece($index, 0, $new_piece);
 }
 
+sub delete {
+	my ($self, $pos, $len) = @_;
+
+	# Test if the removed region is inside the original sequence boundary
+	if (($pos + $len) > $self->len) {
+		croak "Trying to delete a region outside the original sequence";
+	}
+
+	# Split piece at $pos. It will correctly fix the original
+	# piece before the split and insert a new piece afterward.
+	# So I need to catch tha last and fix the start and len fields
+	my $index = $self->_split_piece($pos);
+	my $piece = $self->_get_piece($index);
+
+	# Fix position and len
+	my $new_start = $pos + $len;
+	my $new_len = $piece->{len} - $len;
+
+	# Update!
+	$piece->{start} = $piece->{pos} = $new_start;
+	$piece->{len} = $new_len;
+}
+
 sub _split_piece {
 	my ($self, $pos) = @_;
 
-	# Insert at start position
+	# Split at start position
 	if ($pos == 0) {
 		return 0;
 
-	# Insert at end position
+	# Split at end position
 	} elsif ($pos == $self->len) {
 		return $self->_count_pieces;
 
-	# Insert at some middle
+	# Split at some middle
 	} else {
 		# Catch orig index where pos is inside
 		my $index = $self->_piece_at($pos);
@@ -126,17 +149,15 @@ sub _split_piece {
 sub _is_pos_inside_piece {
 	my ($self, $pos, $piece) = @_;
 	my $end = $piece->{pos} + $piece->{len} - 1;
-	return $pos >= $piece->{pos} && $pos <= $end
-		? 1
-		: 0;
+	return $pos >= $piece->{pos} && $pos <= $end;
 }
 
 sub _piece_at {
 	my ($self, $pos) = @_;
 
-	stat $func = sub {
+	state $func = sub {
 		my ($pos, $piece) = @_;
-		if ($self->_is_pos_inside_piece($pos, $piece) {
+		if ($self->_is_pos_inside_piece($pos, $piece)) {
 			return 0;
 		} elsif ($pos > $piece->{pos}) {
 			return 1;
