@@ -48,7 +48,7 @@ sub delete : Test(4) {
 
 	# Try to remove "large "
 	$table->delete(2, 6);
-	diag Dumper($table->piece_table);
+#	diag Dumper($table->piece_table);
 
 	my @pieces = (
 		{ pos => 0, len => 2  },
@@ -74,7 +74,7 @@ sub insert : Test(6) {
 	# Try to insert 'English'
 	my $add = "English ";
 	$table->insert(\$add, 16);
-	diag Dumper($table->piece_table);
+#	diag Dumper($table->piece_table);
 
 	my @pieces = (
 		{ pos => 0,  len => 16 },
@@ -105,7 +105,7 @@ sub delete_and_insert : Test(8) {
 	my $add = "English ";
 	$table->insert(\$add, 16);
 
-	diag Dumper($table->piece_table);
+#	diag Dumper($table->piece_table);
 
 	my @pieces = (
 		{ pos => 0,  len => 2  },
@@ -122,8 +122,42 @@ sub delete_and_insert : Test(8) {
 		is $pieces[$i]{len}, $piece_table->[$i]{len},
 			"table[$i]: len should be equal to $pieces[$i]{len}";
 	}
-#	$table->calculate_logical_offset;
-#	my $t = $table->logical_offset;
-#	my $f = sub { my $n = shift; diag sprintf "[%d %d]\n", $n->low, $n->high};
-#	$t->inorder($f);
+}
+
+sub lookup : Test(5) {
+	my $test = shift;
+
+	my $table = $test->default_table;
+	my $seq = $test->default_seq;
+
+	# Try to remove "large "
+	$table->delete(2, 6);
+
+	# Try to insert 'English'
+	my $add = "English ";
+	$table->insert(\$add, 16);
+
+	# I cannot forget to initialize the
+	# logical offsets for the lookup method
+	# to work
+	$table->calculate_logical_offset;
+
+	# Look for the pieces between 16 - 28:
+	# "English text"
+	my $pieces = $table->lookup(16, 12);
+
+	is scalar(@$pieces), 2,
+		"lookup returned the right number of pieces";
+
+	my @pieces = (
+		{ pos => 16, len => 8  },
+		{ pos => 16, len => 4  }
+	);
+
+	for (my $i = 0; $i < @pieces; $i++) {
+		is $pieces[$i]{pos}, $pieces->[$i]{pos},
+			"table[$i]: pos should be equal to $pieces[$i]{pos}";
+		is $pieces[$i]{len}, $pieces->[$i]{len},
+			"table[$i]: len should be equal to $pieces[$i]{len}";
+	}
 }

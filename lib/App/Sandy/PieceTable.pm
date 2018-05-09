@@ -25,7 +25,7 @@ has 'len' => (
 has 'piece_table' => (
 	traits     => ['Array'],
 	is         => 'ro',
-	isa        => 'ArrayRef',
+	isa        => 'ArrayRef[My:Piece]',
 	lazy_build => 1,
 	builder    => '_build_piece_table',
 	handles    => {
@@ -39,6 +39,7 @@ has 'piece_table' => (
 has 'logical_offset' => (
 	is         => 'rw',
 	isa        => 'App::Sandy::BTree::Interval',
+	default    => sub { App::Sandy::BTree::Interval->new },
 	handles    => {
 		_add_offset    => 'insert',
 		_rm_offset     => 'delete',
@@ -124,7 +125,7 @@ sub calculate_logical_offset {
 	# feed a binary tree
 	my $self = shift;
 
-	# Remove all old entries, if any
+	# Remove all old entries, if any, and create a new tree
 	$self->logical_offset(App::Sandy::BTree::Interval->new);
 
 	my $offset_acm = 0;
@@ -145,11 +146,13 @@ sub calculate_logical_offset {
 
 sub lookup {
 	# Run 'calculate_logical_offset' before
-	my ($self, $pos, $len) = @_;
+	my ($self, $start, $len) = @_;
 
-	state $func = sub {
-		my ($pos, $offset) = @_;
-	};
+	# Calculate high boundary
+	my $end = $start + $len - 1;
+
+	# Return all pieces overlapping the boundaries
+	return $self->_search_offset($start, $end);
 }
 
 sub _split_piece {
@@ -213,7 +216,17 @@ sub _piece_at {
 		}
 	};
 
+	# Search the piece index where $pos is inside the boundaries
 	my $index = $self->with_bsearch($pos, $self->piece_table, $func);
+
+	# Maybe it is undef. I need to take care to not
+	# search to a position that was removed before.
+	# I can avoid it when parsing the snv file
+	if (not defined $index) {
+		croak "Not found pos = $pos into piece_table. Maybe the region was removed?";
+	}
+
+	# Catch the piece at index
 	my $piece = $self->_get_piece($index);
 
 	# If I catched a non original sequence, then it must
@@ -221,7 +234,7 @@ sub _piece_at {
 	if (refaddr($piece->{ref}) != refaddr($self->orig)) {
 		$piece = $self->_get_piece(++$index);
 		unless ($self->_is_pos_inside_piece($piece, $pos)) {
-			croak "Bug: position is not inside the sequence after non original sequence";
+			croak "Position is not inside the piece after non original sequence";
 		}
 	}
 

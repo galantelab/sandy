@@ -90,4 +90,9 @@ subtype 'My:CountLoopBy'
 	=> where   { $_ eq 'coverage' || $_ eq 'number-of-reads' }
 	=> message { "'$_' is not a valid count_loops_by: 'coverage' or 'number-of-reads'" };
 
+subtype 'My:Piece'
+	=> as      'HashRef'
+	=> where   { exists $_->{ref} && exists $_->{start} && exists $_->{len} && exists $_->{pos} }
+	=> message { "Invalid piece inserted to piece_table" };
+
 1; ## --- end class App::Sandy::Types
