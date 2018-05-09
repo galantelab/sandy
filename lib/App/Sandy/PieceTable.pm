@@ -118,6 +118,43 @@ sub delete {
 	$piece->{len} = $new_len;
 }
 
+sub change {
+	# A delete and insert operations.
+	# delete from pos until len and insert ref at pos
+	my ($self, $ref, $pos, $len) = @_;
+
+	# Test if the changing region is inside the original sequence boundary
+	if (($pos + $len) > $self->len) {
+		croak "Trying to change a region outside the original sequence";
+	}
+
+	# My length
+	my $ref_len = length $$ref;
+
+	# Create piece data
+	my $new_piece = $self->_piece_new($ref, 0, $ref_len, $pos);
+
+	# Split piece found at position 'pos'.
+	# Update old piece, insert piece and return
+	# index where I can find the piece to remove
+	# from and insert the change
+	my $index = $self->_split_piece($pos);
+
+	# Catch the piece from where I will remove
+	my $piece = $self->_get_piece($index);
+
+	# Fix position and len
+	my $new_start = $pos + $len;
+	my $new_len = $piece->{len} - $len;
+
+	# Update!
+	$piece->{start} = $piece->{pos} = $new_start;
+	$piece->{len} = $new_len;
+
+	# Then insert new_piece
+	$self->_splice_piece($index, 0, $new_piece);
+}
+
 sub calculate_logical_offset {
 	# Before lookup() it is necessary to calculate
 	# the positions according to the shift caused by

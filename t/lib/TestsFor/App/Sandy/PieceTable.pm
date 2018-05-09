@@ -161,3 +161,31 @@ sub lookup : Test(5) {
 			"table[$i]: len should be equal to $pieces[$i]{len}";
 	}
 }
+
+sub change : Test(6) {
+	my $test = shift;
+
+	my $table = $test->default_table;
+	my $seq = $test->default_seq;
+
+	# Try to change "large " to "ponga "
+	my $to_remove = "large ";
+	my $change = "ponga ";
+	$table->change(\$change, 2, length $to_remove);
+#	diag Dumper($table->piece_table);
+
+	my @pieces = (
+		{ pos => 0, len => 2  },
+		{ pos => 2, len => 6  },
+		{ pos => 8, len => 12 }
+	);
+
+	my $piece_table = $table->piece_table;
+
+	for (my $i = 0; $i < @pieces; $i++) {
+		is $pieces[$i]{pos}, $piece_table->[$i]{pos},
+			"table[$i]: pos should be equal to $pieces[$i]{pos}";
+		is $pieces[$i]{len}, $piece_table->[$i]{len},
+			"table[$i]: len should be equal to $pieces[$i]{len}";
+	}
+}
