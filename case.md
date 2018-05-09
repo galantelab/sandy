@@ -1,7 +1,5 @@
 ### Case study examples ###
 
-**Let's see *Sandy* in action!!**
-
 
 
 #### 1. Simulate genome sequencing. ####

@@ -1,8 +1,5 @@
 ## Welcome to Sandy simulator! ##
 
-![logo.png](img/sandy_logo.png)
-
-**Let's make a simulation today???**
 
 If you're looking for a bioinformatics tool that provides a simple engine to generate
 single-end/paired-end reads from a given FASTA file or expression matrix file,
@@ -103,10 +100,13 @@ and testing.
 
 
 
-### Author ###
+### Authors ###
 
-Thiago L. A. Miller
-[<tmiller@mochsl.org.br>](tmiller@mochsl.org.br)
+- Thiago L. A. Miller <tmiller@mochsl.org.br>
+- Gabriela Guardia <gguardia@mochsl.org.br>
+- J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+- Fernanda Orpinelli <forpinelli@mochsl.org.br>
+- Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 
 
@@ -121,13 +121,13 @@ If *Sandy* was somehow useful in your research, please cite it:
 
 **BibTeX entry**
 ```bash
-@misc{thiago_miller_2018_1241600,
+@misc{thiago_miller_sandy,
 	author = {Thiago Miller},
-	title  = {galantelab/sandy v0.18 A straightforward and complete next-generation sequencing read simulator},
+	title  = {galantelab/sandy A straightforward and complete next-generation sequencing read simulator},
 	month  = {may},
 	year   = {2018},
-	doi    = {10.5281/zenodo.1241600},
-	url    = {https://doi.org/10.5281/zenodo.1241600}
+	doi    = {10.5281/zenodo.1241587},
+	url    = {https://doi.org/10.5281/zenodo.1241587}
 }
 ```
 
