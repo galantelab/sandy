@@ -31,7 +31,18 @@ has 'piece_table' => (
 	handles    => {
 		_get_piece     => 'get',
 		_splice_piece  => 'splice',
-		_count_pieces  => 'count'
+		_count_pieces  => 'count',
+		_all_píeces    => 'elements'
+	}
+);
+
+has 'logical_offset' => (
+	is         => 'rw',
+	isa        => 'App::Sandy::BTree::Interval',
+	handles    => {
+		_add_offset    => 'insert',
+		_rm_offset     => 'delete',
+		_search_offset => 'search'
 	}
 );
 
@@ -106,6 +117,41 @@ sub delete {
 	$piece->{len} = $new_len;
 }
 
+sub calculate_logical_offset {
+	# Before lookup() it is necessary to calculate
+	# the positions according to the shift caused by
+	# the structural variations. It will be used to
+	# feed a binary tree
+	my $self = shift;
+
+	# Remove all old entries, if any
+	$self->logical_offset(App::Sandy::BTree::Interval->new);
+
+	my $offset_acm = 0;
+
+	# Insert each piece reference into a tree
+	for my $piece ($self->_all_píeces) {
+		# Calculate corrected piece boundaries
+		my $low = $offset_acm;
+		my $high = $offset_acm + $piece->{len} - 1;
+
+		# Update offset acumulator
+		$offset_acm += $piece->{len};
+
+		# Insert piece into tree
+		$self->_add_offset($low, $high, $piece);
+	}
+}
+
+sub lookup {
+	# Run 'calculate_logical_offset' before
+	my ($self, $pos, $len) = @_;
+
+	state $func = sub {
+		my ($pos, $offset) = @_;
+	};
+}
+
 sub _split_piece {
 	my ($self, $pos) = @_;
 
@@ -155,6 +201,7 @@ sub _is_pos_inside_piece {
 sub _piece_at {
 	my ($self, $pos) = @_;
 
+	# State the function to compare at bsearch
 	state $func = sub {
 		my ($pos, $piece) = @_;
 		if ($self->_is_pos_inside_piece($pos, $piece)) {

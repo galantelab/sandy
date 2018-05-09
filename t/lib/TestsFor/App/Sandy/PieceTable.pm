@@ -122,4 +122,8 @@ sub delete_and_insert : Test(8) {
 		is $pieces[$i]{len}, $piece_table->[$i]{len},
 			"table[$i]: len should be equal to $pieces[$i]{len}";
 	}
+#	$table->calculate_logical_offset;
+#	my $t = $table->logical_offset;
+#	my $f = sub { my $n = shift; diag sprintf "[%d %d]\n", $n->low, $n->high};
+#	$t->inorder($f);
 }
