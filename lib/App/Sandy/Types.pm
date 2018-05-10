@@ -95,4 +95,9 @@ subtype 'My:Piece'
 	=> where   { exists $_->{ref} && exists $_->{start} && exists $_->{len} && exists $_->{pos} }
 	=> message { "Invalid piece inserted to piece_table" };
 
+subtype 'My:PieceTable'
+	=> as      'HashRef'
+	=> where   {exists $_->{size} && exists $_->{table} && ref $_->{table} eq 'App::Sandy::PieceTable'}
+	=> message { "Invalid piece table entry" };
+
 1; ## --- end class App::Sandy::Types

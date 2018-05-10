@@ -47,10 +47,22 @@ has 'logical_offset' => (
 	}
 );
 
+has 'logical_len' => (
+	is         => 'rw',
+	isa        => 'My:IntGt0',
+	lazy_build => 1,
+	builder    => '_build_logical_len'
+);
+
 sub _build_len {
 	my $self = shift;
 	my $orig = $self->orig;
 	return length $$orig;
+}
+
+sub _build_logical_len {
+	my $self = shift;
+	return $self->len;
 }
 
 sub _build_piece_table {
@@ -179,6 +191,9 @@ sub calculate_logical_offset {
 		# Insert piece into tree
 		$self->_add_offset($low, $high, $piece);
 	}
+
+	# Update logical offset with the corrected length
+	$self->logical_len($offset_acm);
 }
 
 sub lookup {

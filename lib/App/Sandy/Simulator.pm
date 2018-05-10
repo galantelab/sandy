@@ -6,6 +6,8 @@ use App::Sandy::Fastq::SingleEnd;
 use App::Sandy::Fastq::PairedEnd;
 use App::Sandy::InterlaceProcesses;
 use App::Sandy::WeightedRaffle;
+use App::Sandy::BTree::Interval;
+use App::Sandy::PieceTable;
 use App::Sandy::DB::Handle::Expression;
 use Scalar::Util 'looks_like_number';
 use File::Cat 'cat';
@@ -43,6 +45,12 @@ has 'fasta_file' => (
 	is         => 'ro',
 	isa        => 'My:Fasta',
 	required   => 1
+);
+
+has 'snv_file' => (
+	is         => 'ro',
+	isa        => 'My:File',
+	required   => 0
 );
 
 has 'coverage' => (
@@ -124,6 +132,13 @@ has '_fasta_rtree' => (
 	}
 );
 
+has '_piece_table' => (
+	is         => 'ro',
+	isa        => 'HashRef[My:PieceTable]',
+	builder    => '_build_piece_table',
+	lazy_build => 1
+);
+
 has '_strand' => (
 	is         => 'ro',
 	isa        => 'CodeRef',
@@ -155,6 +170,7 @@ sub BUILD {
 	}
 
 	## Just to ensure that the lazy attributes are built before &new returns
+	$self->_piece_table;
 	$self->_seqid_raffle;
 	$self->_fasta;
 	$self->_strand;
@@ -358,6 +374,276 @@ sub _build_seqid_raffle {
 		}
 	}
 	return $seqid_sub;
+}
+
+sub _build_piece_table {
+	my $self = shift;
+
+	my $snv_file = $self->snv_file;
+	my $indexed_snv;
+
+	if (defined $snv_file) {
+		log_msg ":: Indexing snv file '$snv_file' ...";
+		$indexed_snv = $self->_index_snv;
+
+		log_msg ":: Validating snv file '$snv_file' ...";
+		$self->_validate_indexed_snv($indexed_snv);
+	}
+
+	# Catch index fasta
+	my $fasta_index = $self->_fasta;
+
+	# Build piece table
+	my %piece_table;
+
+	# Let's construct the piece_table
+	for my $seq_id (keys %$fasta_index) {
+		my $seq = \$fasta_index->{$seq_id}{seq};
+
+		# Initialize piece tables for $seq_id ref
+		$piece_table{$seq_id}{ref}{table} = App::Sandy::PieceTable->new(orig => $seq);
+
+		# If there is indexed_snv for seq_id, then construct the piece table with it
+		if (defined $indexed_snv && defined $indexed_snv->{$seq_id}) {
+			my $snv_tree = $indexed_snv->{$seq_id};
+
+			# Catch all snv data
+			my @snvs;
+			my $catcher = sub { push @snvs => shift->data };
+			$snv_tree->inorder($catcher);
+
+			# Filter only the homozygotic snvs to feed reference seq_id
+			my @snvs_homo = grep { $_->{plo} eq 'HO' } @snvs;
+
+			if (@snvs_homo) {
+				# Populate reference seq_id
+				$self->_populate_piece_table($piece_table{$seq_id}{ref}{table}, \@snvs_homo);
+			}
+
+			# Initialize piece tables for $seq_id alt
+			$piece_table{$seq_id}{alt}{table} = App::Sandy::PieceTable->new(orig => $seq);
+
+			# Populate alternative seq_id
+			$self->_populate_piece_table($piece_table{$seq_id}{alt}{table}, \@snvs);
+		}
+	}
+
+	# Initialize the logical offsets and valodate the
+	# new size due to the structural variation
+	while (my ($seq_id, $table_h) = each %piece_table) {
+		my $table = $table_h->{table};
+
+		# Initialize the logical offset
+		$table->calculate_logical_offset;
+
+		# Get the new size
+		$new_size = $table->logical_len;
+
+		given (ref $self->fastq) {
+			when ('App::SimulateReads::Fastq::SingleEnd') {
+				if ($new_size < $self->fastq->read_size) {
+					die "So many deletions on '$seq_id' resulted in a sequence lesser than the required read-size\n";
+				}
+			}
+			when ('App::SimulateReads::Fastq::PairedEnd') {
+				if ($new_size < $self->fastq->fragment_mean) {
+					die "So many deletions on '$seq_id' resulted in a sequence lesser than the required fragment mean\n";
+				}
+			}
+			default {
+				die "No valid options for 'fastq'";
+			}
+		}
+
+		# If all's right
+		$table_h->{size} = $new_size;
+	}
+
+	return \%piece_table;
+}
+
+sub _populate_piece_table {
+	my ($self, $table, $snvs) = @_;
+
+	for my $snv (@$snvs) {
+
+		# Insertion
+		if ($snv->{ref} eq '-') {
+			$table->insert(\$snv->{alt}, $snv->{pos});
+
+		# Deletion
+		} elsif ($snv->{alt} eq '-') {
+			$table->delete($snv->{pos}, length $snv->{alt});
+
+		# Change
+		} else {
+			$table->change(\$snv->{alt}, $snv->{pos}, length $snv->{ref});
+		}
+	}
+}
+
+sub _validate_indexed_snv {
+	my ($self, $indexed_snv) = @_;
+
+	# Validate indexed snv against indexed fasta
+	my $indexed_fasta = $self->_fasta;
+	my $snv_file = $self->snv_file;
+
+	for my $seq_id (keys %$indexed_snv) {
+		my $tree = delete $indexed_snv->{$seq_id};
+
+		my $seq = \$indexed_fasta->{$seq_id}{seq}
+			or next;
+		my $size = $indexed_fasta->{$seq_id}{size};
+
+		my @snvs;
+		my $catcher = sub { push @snvs => shift->data };
+
+		$tree->inorder($catcher);
+		my @to_remove;
+
+		for my $snv (@snvs) {
+			if ($snv->{ref} ne '-' || $snv->{pos} >= $size) {
+				my $loc = index $$seq, $snv->{ref}, $snv->{pos};
+
+				if ($loc == -1 || $loc != $snv->{pos}) {
+					log_msg sprintf ":: In validating '%s': Not found reference '%s' at fasta position %s:%d\n",
+						$snv_file, $snv->{ref}, $seq_id, $snv->{pos} + 1;
+
+					push @to_remove => $snv;
+					next;
+				}
+			}
+		}
+
+		if (scalar @to_remove < scalar @snvs) {
+			$indexed_snv->{$seq_id} = $tree;
+		}
+
+		$tree->delete($_->{low}, $_->{high}) for @to_remove;
+	}
+}
+
+sub _index_snv {
+	my $self = shift;
+
+	my $snv_file = $self->snv_file;
+	my $fh = $self->with_open_r($snv_file);
+
+	my %indexed_snv;
+	my $line = 0;
+
+	# chr pos ref @obs he
+	while (<$fh>) {
+		$line++;
+
+		# Skip coments and blank lines
+		next if /^#/;
+		next if /^\s*$/;
+
+		chomp;
+		my @fields = split;
+
+		die "Not found all fields (SEQID, POSITION, REFERENCE, OBSERVED, PLOIDY) into file '$snv_file' at line $line\n"
+			unless scalar @fields >= 5;
+
+		die "Second column, position, does not seem to be a number into file '$snv_file' at line $line\n"
+			unless looks_like_number($fields[1]);
+
+		die "Second column, position, has a value lesser or equal to zero into file '$snv_file' at line $line\n"
+			if $fields[1] <= 0;
+
+		$fields[1] = int($fields[1]);
+
+		die "Third column, reference, does not seem to be a valid entry: '$fields[2]' into file '$snv_file' at line $line\n"
+			unless $fields[2] =~ /^(\w+|-)$/;
+
+		die "Fourth column, alteration, does not seem to be a valid entry: '$fields[3]' into file '$snv_file' at line $line\n"
+			unless $fields[3] =~ /^(\w+|-)$/;
+
+		die "Fifth column, ploidy, has an invalid entry: '$fields[4]' into file '$snv_file' at line $line. Valid ones are 'HE' or 'HO'\n"
+			unless $fields[4] =~ /^(HE|HO)$/;
+
+		if ($fields[2] eq $fields[3]) {
+			warn "There is an alteration equal to the reference at '$snv_file' line $line. I will ignore it\n";
+			next;
+		}
+
+		if (not defined $indexed_snv{$fields[0]}) {
+			$indexed_snv{$fields[0]} = App::Sandy::BTree::Interval->new;
+		}
+
+		my $tree = $indexed_snv{$fields[0]};
+
+		# Sequence inside perl begins at 0
+		my $position = $fields[1] - 1;
+
+		# Compare the alterations and reference to guess the max variation on sequence
+		my $size_of_variation = ( sort { $b <=> $a } map { length } $fields[3], $fields[2] )[0];
+
+		my $low = $position;
+		my $high = $position + $size_of_variation - 1;
+
+		my $snvs = $tree->search($low, $high);
+
+		# My rules:
+		# The biggest structural variation gains precedence.
+		# If occurs an overlapping, I search to the biggest variation among
+		# the saved alterations and compare it with the actual entry:
+		#    *** Remove all overlapping variations if actual entry is bigger;
+		#    *** Skip actual entry if it is lower than the biggest variation
+		#    *** Insertionw can be before any alterations
+		my @to_remove;
+
+		NODE:
+		for my $snv (@$snvs) {
+			# Insertion after insertion
+			if ($snv->{ref} eq '-' && $fields[2] eq '-' && $fields[1] != $snv->{pos}) {
+				next NODE;
+
+			# Alteration after insertion
+			} elsif ($snv->{ref} eq '-' && $fields[2] ne '-' && $fields[1] > $snv->{pos}) {
+				next NODE;
+
+			# In this case, it gains the biggest one
+			} else {
+				my $size_of_variation_saved = $snv->{high} - $snv->{low} + 1;
+
+				if ($size_of_variation_saved >= $size_of_variation) {
+					log_msg sprintf ":: Early alteration [%s %d %s %s %s] masks [%s %d %s %s %s] at '%s' line %d\n"
+						=> $fields[0], $snv->{pos}+1, $snv->{ref}, $snv->{alt}, $snv->{plo}, $fields[0], $position+1,
+						$fields[2], $fields[3], $fields[4], $snv_file, $line;
+
+					next LINE;
+				} else {
+					log_msg sprintf ":: Alteration [%s %d %s %s %s] masks early declaration [%s %d %s %s %s] at '%s' line %d\n"
+						=> $fields[0], $position+1, $fields[2], $fields[3], $fields[4], $fields[0], $snv->{pos}+1, $snv->{ref},
+						$snv->{alt}, $snv->{plo}, $snv_file, $line;
+
+					push @to_remove => $snv;
+				}
+			}
+		}
+
+		# Remove the overlapping node
+		$tree->delete($_->{low}, $_->{high}) for @to_remove;
+
+		my %variation = (
+			ref  => $fields[2],
+			alt  => $fields[3],
+			plo  => $fields[4],
+			pos  => $position,
+			low  => $position,
+			high => $high
+		);
+
+		$tree->insert($low, $high, \%variation);
+	}
+
+	close $fh
+		or die "Cannot close snv file '$snv_file': $!\n";
+
+	return \%indexed_snv;
 }
 
 sub _calculate_number_of_reads {
