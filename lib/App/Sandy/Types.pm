@@ -42,7 +42,7 @@ subtype 'My:Fasta'
 
 subtype 'My:Weight'
 	=> as      'HashRef'
-	=> where   { exists $_->{down} && exists $_->{up} && exists $_->{feature} }
+	=> where   { exists $_->{down} && exists $_->{up} }
 	=> message { "'$_' is not a Weight object" };
 
 subtype 'My:Weights'

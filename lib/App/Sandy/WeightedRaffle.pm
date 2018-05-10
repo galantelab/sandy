@@ -3,11 +3,21 @@ package App::Sandy::WeightedRaffle;
 
 use App::Sandy::Base 'class';
 
+with 'App::Sandy::Role::BSearch';
+
 # VERSION
+
+has 'keys' => (
+	traits     => ['Array'],
+	is         => 'ro',
+	isa        => 'ArrayRef',
+	required   => 1,
+	handles    => { _get_key => 'get' }
+);
 
 has 'weights' => (
 	is         => 'ro',
-	isa        => 'HashRef[Int]',
+	isa        => 'ArrayRef[Int]',
 	required   => 1
 );
 
@@ -32,6 +42,17 @@ has '_max_weight' => (
 	lazy_build => 1
 );
 
+sub BUILD {
+	my $self = shift;
+
+	my $weights = $self->weights;
+	my $keys = $self->keys;
+
+	if (scalar(@$weights) != scalar(@$keys)) {
+		croak "Number of weights must be equal to the number of keys";
+	}
+}
+
 sub _build_num_weights {
 	my $self = shift;
 	my $weights = $self->_weights;
@@ -46,48 +67,52 @@ sub _build_max_weight {
 
 sub _build_weights {
 	my $self = shift;
-	my $line = $self->weights;
+	my $weights = $self->weights;
 
-	my @weights;
+	my @weights_offset;
 	my $left = 0;
 
-	for my $feature (sort keys %$line) {
+	for (my $i = 0; $i < @$weights; $i++) {
 		my %weight = (
-			down    => $left,
-			up      => $left + $line->{$feature} - 1,
-			feature => $feature
+			down => $left,
+			up   => $left + $weights->[$i] - 1
 		);
-		$left += $line->{$feature};
-		push @weights => \%weight;
+
+		$left += $weights->[$i];
+		push @weights_offset => \%weight;
 	}
 
-	return \@weights;
+	return \@weights_offset;
 }
 
 sub weighted_raffle {
 	my $self = shift;
+
+	# Raffle between 0 and max weight
 	my $range = int(rand($self->_max_weight + 1));
-	return $self->_search(0, $self->_num_weights - 1, $range);
+
+	# Look for the index where the range is
+	my $index = $self->with_bsearch($range, $self->_weights,
+		$self->_num_weights, \&_cmp);
+
+	if (not defined $index) {
+		croak "Random index not found at range = $range";
+	}
+
+	# Do it!
+	return $self->_get_key($index);
 }
 
-sub _search {
-	my ($self, $min_index, $max_index, $range) = @_;
-
-	if ($min_index > $max_index) {
-		die "Random feature not found";
-	}
-
-	my $selected_index = int(($min_index + $max_index) / 2);
-	my $weight = $self->_weights->[$selected_index];
+sub _cmp {
+	# State the function to compare at bsearch
+	my ($range, $weight) = @_;
 
 	if ($range >= $weight->{down} && $range <= $weight->{up}) {
-		return $weight->{feature};
+		return 0;
 	}
 	elsif ($range > $weight->{down}) {
-		return $self->_search($selected_index + 1,
-			$max_index, $range);
+		return 1;
 	} else {
-		return $self->_search($min_index,
-			$selected_index - 1, $range);
+		return -1;
 	}
 }

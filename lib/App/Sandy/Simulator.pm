@@ -134,7 +134,7 @@ has '_fasta_rtree' => (
 
 has '_piece_table' => (
 	is         => 'ro',
-	isa        => 'HashRef[My:PieceTable]',
+	isa        => 'HashRef[HashRef[My:PieceTable]]',
 	builder    => '_build_piece_table',
 	lazy_build => 1
 );
@@ -361,10 +361,25 @@ sub _build_seqid_raffle {
 			};
 		}
 		when ('length') {
-			my %chr_size = map { $_, $self->_fasta->{$_}{size} } keys %{ $self->_fasta };
+			my $piece_table = $self->_piece_table;
+			my (@keys, @weights);
+
+			while (my ($seq_id, $type_h) = each %$piece_table) {
+				while (my ($type, $table_h) = each %$type_h) {
+
+					my %key = (
+						'seq_id' => $seq_id,
+						'type'   => $type
+					);
+
+					push @keys => \%key;
+					push @weights => $table_h->{size};
+				}
+			}
 
 			my $raffler = App::Sandy::WeightedRaffle->new(
-				weights => \%chr_size
+				weights => \@weights,
+				keys    => \@keys
 			);
 
 			$seqid_sub = sub { $raffler->weighted_raffle };
@@ -391,14 +406,14 @@ sub _build_piece_table {
 	}
 
 	# Catch index fasta
-	my $fasta_index = $self->_fasta;
+	my $indexed_fasta = $self->_fasta;
 
 	# Build piece table
 	my %piece_table;
 
 	# Let's construct the piece_table
-	for my $seq_id (keys %$fasta_index) {
-		my $seq = \$fasta_index->{$seq_id}{seq};
+	while (my ($seq_id, $fasta_h) = each %$indexed_fasta) {
+		my $seq = \$fasta_h->{seq};
 
 		# Initialize piece tables for $seq_id ref
 		$piece_table{$seq_id}{ref}{table} = App::Sandy::PieceTable->new(orig => $seq);
@@ -430,35 +445,38 @@ sub _build_piece_table {
 
 	# Initialize the logical offsets and valodate the
 	# new size due to the structural variation
-	while (my ($seq_id, $table_h) = each %piece_table) {
-		my $table = $table_h->{table};
+	while (my ($seq_id, $type_h) = each %piece_table) {
+		while (my ($type, $table_h) = each %$type_h) {
+			my $table = $table_h->{table};
 
-		# Initialize the logical offset
-		$table->calculate_logical_offset;
+			# Initialize the logical offset
+			$table->calculate_logical_offset;
 
-		# Get the new size
-		$new_size = $table->logical_len;
+			# Get the new size
+			my $new_size = $table->logical_len;
 
-		given (ref $self->fastq) {
-			when ('App::SimulateReads::Fastq::SingleEnd') {
-				if ($new_size < $self->fastq->read_size) {
-					die "So many deletions on '$seq_id' resulted in a sequence lesser than the required read-size\n";
+			given (ref $self->fastq) {
+				when ('App::Sandy::Fastq::SingleEnd') {
+					if ($new_size < $self->fastq->read_size) {
+						die "So many deletions on '$seq_id' resulted in a sequence lesser than the required read-size\n";
+					}
+				}
+				when ('App::Sandy::Fastq::PairedEnd') {
+					if ($new_size < $self->fastq->fragment_mean) {
+						die "So many deletions on '$seq_id' resulted in a sequence lesser than the required fragment mean\n";
+					}
+				}
+				default {
+					die "No valid options for 'fastq'";
 				}
 			}
-			when ('App::SimulateReads::Fastq::PairedEnd') {
-				if ($new_size < $self->fastq->fragment_mean) {
-					die "So many deletions on '$seq_id' resulted in a sequence lesser than the required fragment mean\n";
-				}
-			}
-			default {
-				die "No valid options for 'fastq'";
-			}
+
+			# If all's right
+			$table_h->{size} = $new_size;
 		}
-
-		# If all's right
-		$table_h->{size} = $new_size;
 	}
 
+	# HASH -> SEQ_ID -> @(REF @ALT) -> @(TABLE SIZE)
 	return \%piece_table;
 }
 
@@ -806,7 +824,7 @@ sub run_simulation {
 
 		# Run simualtion in child
 		for (my $i = $idx; $i <= $last_read_idx and not $sig->signal_catched; $i++) {
-			my $id = $seqid->();
+			my $id = $seqid->()->{'seq_id'};
 			my @fastq_entry;
 			try {
 				@fastq_entry = $self->sprint_fastq($tid, $i, $id,

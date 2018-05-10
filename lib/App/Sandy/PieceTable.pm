@@ -269,7 +269,8 @@ sub _piece_at {
 	};
 
 	# Search the piece index where $pos is inside the boundaries
-	my $index = $self->with_bsearch($pos, $self->piece_table, $func);
+	my $index = $self->with_bsearch($pos, $self->piece_table,
+		$self->_count_pieces, $func);
 
 	# Maybe it is undef. I need to take care to not
 	# search to a position that was removed before.
