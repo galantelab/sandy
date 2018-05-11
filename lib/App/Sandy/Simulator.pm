@@ -322,9 +322,25 @@ sub _build_seqid_raffle {
 	my $seqid_sub;
 	given ($self->seqid_weight) {
 		when ('same') {
-			my @seqids = keys %{ $self->_fasta };
-			my $seqids_size = scalar @seqids;
-			$seqid_sub = sub { $seqids[int(rand($seqids_size))] };
+			my $piece_table = $self->_piece_table;
+			my @keys;
+
+			while (my ($seq_id, $type_h) = each %$piece_table)  {
+				my @types = keys %$type_h;
+
+				for my $type (@types) {
+
+					my %key = (
+						'seq_id' => $seq_id,
+						'type'   => $type
+					);
+
+					push @keys => \%key;
+				}
+			}
+
+			my $keys_size = scalar @keys;
+			$seqid_sub = sub { $keys[int(rand($keys_size))] };
 		}
 		when ('count') {
 			# Catch expression-matrix entry from database
@@ -358,6 +374,10 @@ sub _build_seqid_raffle {
 					# This entry must be related to some cluster: 'gene'
 					my $ids = $self->_get_fasta_tree($seq_id);
 
+					unless (@$ids) {
+						croak "seq_id '$seq_id' not found into piece_table";
+					}
+
 					# total size among all ids of cluster
 					my $total = sum
 						map { $_->{size} }
@@ -374,6 +394,7 @@ sub _build_seqid_raffle {
 							: 1;
 
 						while (my ($type, $table_h) = each %$type_h) {
+
 							my %key = (
 								'seq_id' => $seq_id,
 								'type'   => $type
@@ -468,6 +489,7 @@ sub _build_seqid_raffle {
 			die "Unknown option '$_' for seqid-raffle\n";
 		}
 	}
+
 	return $seqid_sub;
 }
 
