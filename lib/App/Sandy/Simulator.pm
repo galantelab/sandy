@@ -10,6 +10,7 @@ use App::Sandy::BTree::Interval;
 use App::Sandy::PieceTable;
 use App::Sandy::DB::Handle::Expression;
 use Scalar::Util 'looks_like_number';
+use List::Util 'sum';
 use File::Cat 'cat';
 use Parallel::ForkManager;
 
@@ -346,25 +347,104 @@ sub _build_seqid_raffle {
 					=> $self->expression_matrix, $self->fasta_file;
 			}
 
+			my $piece_table = $self->_piece_table;
+			my (@keys, @weights);
+
+			while (my ($seq_id, $counts) = each %$indexed_file) {
+				# The fasta size to calculate the correct weight
+				my $fasta_size = $indexed_fasta->{$seq_id}{size};
+
+				if (not exists $piece_table->{$seq_id}) {
+					# This entry must be related to some cluster: 'gene'
+					my $ids = $self->_get_fasta_tree($seq_id);
+
+					# total size among all ids of cluster
+					my $total = sum
+						map { $_->{size} }
+						map { values %$_ }
+						@{ $piece_table->{@$ids} };
+
+					for my $id (@$ids) {
+						my $type_h = $piece_table->{$id};
+
+						# factor1: Correct weight according to
+						# presence absence of alternative seq_id
+						my $factor1 = scalar keys %$type_h == 1
+							? 2
+							: 1;
+
+						while (my ($type, $table_h) = each %$type_h) {
+							my %key = (
+								'seq_id' => $seq_id,
+								'type'   => $type
+							);
+
+							# Divide the counts among all ids
+							my $ratio = $table_h->{size} / $total;
+
+							# Correct the weight according to the size
+							my $factor2 = $table_h->{size} / $fasta_size;
+
+							# size/total * counts  * factor1 * factor2
+							my $counts = $indexed_file->{$seq_id};
+
+							push @keys => \%key;
+							push @weights => int($counts * $factor1 * $factor2 * $ratio);
+						}
+					}
+				} else {
+
+					# There is seq_id into piece_table
+					my $type_h = $piece_table->{$seq_id};
+
+					# factor1: Correct weight according to
+					# presence absence of alternative seq_id
+					my $factor1 = scalar keys %$type_h == 1
+						? 2
+						: 1;
+
+					while (my ($type, $table_h) = each %$type_h) {
+
+						my %key = (
+							'seq_id' => $seq_id,
+							'type'   => $type
+						);
+
+						my $counts = $indexed_file->{$seq_id};
+
+						# Correct the weight according to the
+						# structural variation change by the ratio
+						# between the table size and fasta size
+						my $factor2 = $table_h->{size} / $fasta_size;
+
+						push @keys => \%key;
+						push @weights => int($counts * $factor1 * $factor2);
+					}
+				}
+			}
+
 			my $raffler = App::Sandy::WeightedRaffle->new(
-				weights => $indexed_file
+				'weights' => \@weights,
+				'keys'    => \@keys
 			);
 
-			$seqid_sub = sub {
-				my $seqid = $raffler->weighted_raffle;
-				# The user could have passed the 'gene' instead of 'transcript'
-				if ($self->_exists_fasta_tree($seqid)) {
-					my $fasta_tree_entry = $self->_get_fasta_tree($seqid);
-					$seqid = $fasta_tree_entry->[int(rand(@$fasta_tree_entry))];
-				}
-				return $seqid;
-			};
+			$seqid_sub = sub { $raffler->weighted_raffle };
 		}
 		when ('length') {
 			my $piece_table = $self->_piece_table;
 			my (@keys, @weights);
 
 			while (my ($seq_id, $type_h) = each %$piece_table) {
+
+				# If there is no alternative seq_id, the
+				# set a factor to correct the size.
+				# It is necessary because the seq_ids with
+				# alternative and reference will double its
+				# own coverage
+				my $factor = scalar keys %$type_h == 1
+					? 2
+					: 1;
+
 				while (my ($type, $table_h) = each %$type_h) {
 
 					my %key = (
@@ -373,7 +453,7 @@ sub _build_seqid_raffle {
 					);
 
 					push @keys => \%key;
-					push @weights => $table_h->{size};
+					push @weights => ($table_h->{size} * $factor);
 				}
 			}
 
@@ -446,7 +526,8 @@ sub _build_piece_table {
 	# Initialize the logical offsets and valodate the
 	# new size due to the structural variation
 	while (my ($seq_id, $type_h) = each %piece_table) {
-		while (my ($type, $table_h) = each %$type_h) {
+		for my $type (keys %$type_h) {
+			my $table_h = delete $type_h->{$type};
 			my $table = $table_h->{table};
 
 			# Initialize the logical offset
@@ -458,12 +539,14 @@ sub _build_piece_table {
 			given (ref $self->fastq) {
 				when ('App::Sandy::Fastq::SingleEnd') {
 					if ($new_size < $self->fastq->read_size) {
-						die "So many deletions on '$seq_id' resulted in a sequence lesser than the required read-size\n";
+						log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required read-size\n";
+						next;
 					}
 				}
 				when ('App::Sandy::Fastq::PairedEnd') {
 					if ($new_size < $self->fastq->fragment_mean) {
-						die "So many deletions on '$seq_id' resulted in a sequence lesser than the required fragment mean\n";
+						log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required fragment mean\n";
+						next;
 					}
 				}
 				default {
@@ -473,6 +556,7 @@ sub _build_piece_table {
 
 			# If all's right
 			$table_h->{size} = $new_size;
+			$type_h->{$type} = $table_h;
 		}
 	}
 
