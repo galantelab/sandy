@@ -71,6 +71,40 @@ sub subseq_rand {
 	return (\$read, $pos);
 }
 
+sub subseq_rand_ptable {
+	my ($self, $ptable, $ptable_size, $slice_len) = @_;
+	my $usable_len = $ptable_size - $slice_len;
+	my $pos = int(rand($usable_len + 1));
+	my $pieces = $ptable->lookup($pos, $slice_len);
+	return $self->_build_subseq($pieces, $pos, $slice_len);
+}
+
+sub _build_subseq {
+	my ($self, $pieces, $pos, $len) = @_;
+
+	my $offset = $pos - $pieces->[0]{offset};
+	my $usable_len = $pieces->[0]{len} - $offset;
+
+	my $slice_len = $len < $usable_len
+		? $len
+		: $usable_len;
+
+	my $read = substr ${ $pieces->[0]{ref} }, $pieces->[0]{start} + $offset, $slice_len;
+	my $miss_len = $len - $slice_len;
+
+	for (my $i = 1; $i < @$pieces; $i++) {
+
+		$slice_len = $miss_len < $pieces->[$i]{len}
+			? $miss_len
+			: $pieces->[$i]{len};
+
+		$read .= substr ${ $pieces->[$i]{ref} }, $pieces->[$i]{start}, $slice_len;
+		$miss_len -= $slice_len;
+	}
+
+	return (\$read, $pos);
+}
+
 sub insert_sequencing_error {
 	my ($self, $seq_ref) = @_;
 

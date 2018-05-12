@@ -2,6 +2,8 @@ package TestsFor::App::Sandy::Read;
 # ABSTRACT: Tests for 'App::Sandy::Read' class
 
 use App::Sandy::Base 'test';
+use App::Sandy::PieceTable;
+#use Data::Dumper;
 use base 'TestsFor';
 
 sub startup : Tests(startup) {
@@ -12,6 +14,8 @@ sub startup : Tests(startup) {
 	$class->mk_classdata('default_attr');
 	$class->mk_classdata('seq');
 	$class->mk_classdata('seq_len');
+	$class->mk_classdata('table');
+	$class->mk_classdata('table_seq');
 }
 
 sub setup : Tests(setup) {
@@ -26,11 +30,13 @@ sub setup : Tests(setup) {
 	);
 
 	my $seq = 'TGACCCGCTAACCTCAGTTCTGCAGCAGTAACAACTGCCGTATCTGGACTTTCCTAATACCTCGCATAGTCCGTCCCCTCGCGCGGCAAGAGGTGCGGCG';
+	my $table_seq = "A large span of text";
 
 	$test->default_attr(\%default_attr);
 	$test->default_read($test->class_to_test->new(%default_attr));
 	$test->seq($seq);
 	$test->seq_len(length $seq);
+	$test->table(App::Sandy::PieceTable->new(orig => \$table_seq));
 }
 
 sub constructor : Tests(4) {
@@ -82,7 +88,7 @@ sub subseq_err : Test(60) {
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
 	my $slice_len = $read->read_size;
-	
+
 	for my $i (0..9) {
 		my ($seq_t_ref, $pos) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
 		$read->update_count_base($read->read_size);
@@ -146,4 +152,32 @@ sub reverse_complement :Test(1) {
 		"The reverse_complement must return the reverse complement";
 }
 
-## --- end class TestsFor::Read
+sub subseq_rand_ptable : Test(10) {
+	my $test = shift;
+
+	my $read = $test->default_read;
+	my $table = $test->table;
+	my $seq = $test->table_seq;
+	my $alt_seq = "A span of English text";
+
+	# Try to remove large
+	$table->delete(2, 6);
+
+	# Try to insert 'English'
+	my $add = "English ";
+	$table->insert(\$add, 16);
+
+#	diag Dumper($table->piece_table);
+
+	# Initialize
+	$table->calculate_logical_offset;
+	my $len = 10;
+
+	for my $i (1..10) {
+		my ($seq_ref, $pos) = $read->subseq_rand_ptable($table,
+			$table->logical_len, $len);
+		my $true_seq = substr $alt_seq, $pos, $len;
+		ok $$seq_ref eq $true_seq,
+			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";
+	}
+}
