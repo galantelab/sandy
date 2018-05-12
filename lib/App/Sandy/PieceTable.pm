@@ -3,7 +3,6 @@ package App::Sandy::PieceTable;
 
 use App::Sandy::Base 'class';
 use App::Sandy::BTree::Interval;
-use Scalar::Util 'refaddr';
 
 with 'App::Sandy::Role::BSearch';
 
@@ -67,26 +66,28 @@ sub _build_logical_len {
 
 sub _build_piece_table {
 	my $self = shift;
-	my $piece = $self->_piece_new($self->orig, 0, $self->len, 0);
+	my $piece = $self->_piece_new($self->orig, 1, 0, $self->len, 0);
 	return [$piece];
 }
 
 sub _piece_new {
-	my ($self, $ref, $start, $len, $pos) = @_;
+	my ($self, $ref, $is_orig, $start, $len, $pos, $annot) = @_;
 
 	my $piece = {
-		'ref'    => $ref,   # reference to sequence
-		'start'  => $start, # start position at reference
-		'len'    => $len,   # length
-		'pos'    => $pos,   # position at original sequence
-		'offset' => 0       # position at the changed sequence
+		'ref'     => $ref,     # reference to sequence
+		'is_orig' => $is_orig, # set 1 if it is the orig sequence
+		'start'   => $start,   # start position at reference
+		'len'     => $len,     # length
+		'pos'     => $pos,     # position at original sequence
+		'offset'  => 0,        # position at the changed sequence
+		'annot'   => $annot    # custom annotation
 	};
 
 	return $piece;
 }
 
 sub insert {
-	my ($self, $ref, $pos) = @_;
+	my ($self, $ref, $pos, $annot) = @_;
 
 	# Test if the position is inside the original sequence boundary
 	if ($pos > $self->len) {
@@ -97,7 +98,7 @@ sub insert {
 	my $len = length $$ref;
 
 	# Create piece data
-	my $new_piece = $self->_piece_new($ref, 0, $len, $pos);
+	my $new_piece = $self->_piece_new($ref, 0, 0, $len, $pos, $annot);
 
 	# Split piece found at position 'pos'.
 	# Update old piece, insert piece and return
@@ -109,7 +110,7 @@ sub insert {
 }
 
 sub delete {
-	my ($self, $pos, $len) = @_;
+	my ($self, $pos, $len, $annot) = @_;
 
 	# Test if the removed region is inside the original sequence boundary
 	if (($pos + $len) > $self->len) {
@@ -129,12 +130,13 @@ sub delete {
 	# Update!
 	$piece->{start} = $piece->{pos} = $new_start;
 	$piece->{len} = $new_len;
+	$piece->{annot} = $annot;
 }
 
 sub change {
 	# A delete and insert operations.
 	# delete from pos until len and insert ref at pos
-	my ($self, $ref, $pos, $len) = @_;
+	my ($self, $ref, $pos, $len, $annot) = @_;
 
 	# Test if the changing region is inside the original sequence boundary
 	if (($pos + $len) > $self->len) {
@@ -145,7 +147,7 @@ sub change {
 	my $ref_len = length $$ref;
 
 	# Create piece data
-	my $new_piece = $self->_piece_new($ref, 0, $ref_len, $pos);
+	my $new_piece = $self->_piece_new($ref, 0, 0, $ref_len, $pos, $annot);
 
 	# Split piece found at position 'pos'.
 	# Update old piece, insert piece and return
@@ -240,7 +242,8 @@ sub _split_piece {
 		$old_piece->{len} = $new_len;
 
 		# Create the second part of the split after the break position
-		my $piece = $self->_piece_new($old_piece->{ref}, $pos, $old_end - $pos + 1, $pos);
+		my $piece = $self->_piece_new($old_piece->{ref}, $old_piece->{is_orig},
+			$pos, $old_end - $pos + 1, $pos);
 
 		# Insert second part after updated piece
 		$self->_splice_piece(++$index, 0, $piece);
@@ -288,7 +291,7 @@ sub _piece_at {
 
 	# If I catched a non original sequence, then it must
 	# be afterward
-	if (refaddr($piece->{ref}) != refaddr($self->orig)) {
+	if (not $piece->{is_orig}) {
 		$piece = $self->_get_piece(++$index);
 		unless ($self->_is_pos_inside_piece($piece, $pos)) {
 			croak "Position is not inside the piece after non original sequence";

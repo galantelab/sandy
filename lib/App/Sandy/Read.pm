@@ -85,6 +85,20 @@ sub _build_subseq {
 	my $offset = $pos - $pieces->[0]{offset};
 	my $usable_len = $pieces->[0]{len} - $offset;
 
+	# TODO: 'pos_rel' -> if the strand is minus, then
+	# pos_rel = read_size - (pos_rel+1), else
+	# pos_rel = pos_rel + 1
+	my @annot;
+
+	if (not $pieces->[0]{is_orig}) {
+		push @annot => {
+			pos     => $pieces->[0]{pos},
+			offset  => $pieces->[0]{offset},
+			pos_rel => 0,
+			annot   => $pieces->[0]{annot}
+		};
+	}
+
 	my $slice_len = $len < $usable_len
 		? $len
 		: $usable_len;
@@ -94,6 +108,19 @@ sub _build_subseq {
 
 	for (my $i = 1; $i < @$pieces; $i++) {
 
+		if (defined $pieces->[$i]{annot}) {
+			my $pos = $pieces->[$i]{is_orig}
+				? $pieces->[$i - 1]{pos} + $pieces->[$i - 1]{len}
+				: $pieces->[$i]{pos};
+
+			push @annot => {
+				pos     => $pos,
+				offset  => $pieces->[$i]{offset},
+				pos_rel => length $read,
+				annot   => $pieces->[$i]{annot}
+			};
+		}
+
 		$slice_len = $miss_len < $pieces->[$i]{len}
 			? $miss_len
 			: $pieces->[$i]{len};
@@ -102,7 +129,7 @@ sub _build_subseq {
 		$miss_len -= $slice_len;
 	}
 
-	return (\$read, $pos);
+	return (\$read, $pos, \@annot);
 }
 
 sub insert_sequencing_error {

@@ -161,11 +161,11 @@ sub subseq_rand_ptable : Test(10) {
 	my $alt_seq = "A span of English text";
 
 	# Try to remove large
-	$table->delete(2, 6);
+	$table->delete(2, 6, "large/-");
 
 	# Try to insert 'English'
 	my $add = "English ";
-	$table->insert(\$add, 16);
+	$table->insert(\$add, 16, "-/English");
 
 #	diag Dumper($table->piece_table);
 
@@ -174,10 +174,12 @@ sub subseq_rand_ptable : Test(10) {
 	my $len = 10;
 
 	for my $i (1..10) {
-		my ($seq_ref, $pos) = $read->subseq_rand_ptable($table,
+		my ($seq_ref, $pos, $annot) = $read->subseq_rand_ptable($table,
 			$table->logical_len, $len);
 		my $true_seq = substr $alt_seq, $pos, $len;
 		ok $$seq_ref eq $true_seq,
 			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";
+		$" = ", ";
+#		diag sprintf "[%s] %s\n" => $$seq_ref, join "; ", map { "pos=$_->{pos},offset=$_->{offset},rel=$_->{pos_rel}:$_->{annot}" } @$annot;
 	}
 }
