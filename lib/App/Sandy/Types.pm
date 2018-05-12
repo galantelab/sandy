@@ -92,7 +92,7 @@ subtype 'My:CountLoopBy'
 
 subtype 'My:Piece'
 	=> as      'HashRef'
-	=> where   { exists $_->{ref} && exists $_->{start} && exists $_->{len} && exists $_->{pos} }
+	=> where   { exists $_->{ref} && exists $_->{start} && exists $_->{len} && exists $_->{pos} && exists $_->{offset} }
 	=> message { "Invalid piece inserted to piece_table" };
 
 subtype 'My:PieceTable'

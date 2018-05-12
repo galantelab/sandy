@@ -2,7 +2,7 @@ package TestsFor::App::Sandy::PieceTable;
 # ABSTRACT: Tests for 'App::Sandy::PieceTable' class
 
 use App::Sandy::Base 'test';
-use Data::Dumper;
+#use Data::Dumper;
 use base 'TestsFor';
 
 sub startup : Tests(startup) {

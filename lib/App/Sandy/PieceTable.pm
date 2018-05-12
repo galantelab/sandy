@@ -75,10 +75,11 @@ sub _piece_new {
 	my ($self, $ref, $start, $len, $pos) = @_;
 
 	my $piece = {
-		'ref'   => $ref,   # reference to sequence
-		'start' => $start, # start position at reference
-		'len'   => $len,   # length
-		'pos'   => $pos    # position at original sequence
+		'ref'    => $ref,   # reference to sequence
+		'start'  => $start, # start position at reference
+		'len'    => $len,   # length
+		'pos'    => $pos,   # position at original sequence
+		'offset' => 0       # position at the changed sequence
 	};
 
 	return $piece;
@@ -184,6 +185,9 @@ sub calculate_logical_offset {
 		# Calculate corrected piece boundaries
 		my $low = $offset_acm;
 		my $high = $offset_acm + $piece->{len} - 1;
+
+		# Update piece offset
+		$piece->{offset} = $offset_acm;
 
 		# Update offset acumulator
 		$offset_acm += $piece->{len};
