@@ -615,6 +615,8 @@ sub _validate_indexed_snv {
 	my $indexed_fasta = $self->_fasta;
 	my $snv_file = $self->snv_file;
 
+	log_msg ":: Validate snv file '$snv_file' against indexed fasta";
+
 	for my $seq_id (keys %$indexed_snv) {
 		my $tree = delete $indexed_snv->{$seq_id};
 
@@ -629,15 +631,23 @@ sub _validate_indexed_snv {
 		my @to_remove;
 
 		for my $snv (@snvs) {
-			if ($snv->{ref} ne '-' || $snv->{pos} >= $size) {
+			# Insertions may accur until one base after the
+			# end of the sequence, not more
+			if ($snv->{ref} eq '-' && $snv->{pos} > $size) {
+				log_msg sprintf ":: In validating '%s': Insertion position, %s at %s:%d, outside fasta sequence",
+					$snv_file, $snv->{alt}, $seq_id, $snv->{pos} + 1;
+
+				push @to_remove => $snv;
+
+			# Deletions and changes. Just verify if the reference exists
+			} elsif ($snv->{ref} ne '-') {
 				my $loc = index $$seq, $snv->{ref}, $snv->{pos};
 
 				if ($loc == -1 || $loc != $snv->{pos}) {
-					log_msg sprintf ":: In validating '%s': Not found reference '%s' at fasta position %s:%d\n",
+					log_msg sprintf ":: In validating '%s': Not found reference '%s' at fasta position %s:%d",
 						$snv_file, $snv->{ref}, $seq_id, $snv->{pos} + 1;
 
 					push @to_remove => $snv;
-					next;
 				}
 			}
 		}
