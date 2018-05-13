@@ -100,9 +100,16 @@ sub _build_gen_header {
 		'%f' => '$info->{fragment_size}',
 		'%S' => '$info->{fragment_start}',
 		'%E' => '$info->{fragment_end}',
+		'%X' => '$info->{fragment_start_ref}',
+		'%Z' => '$info->{fragment_end_ref}',
 		'%c' => '$info->{seq_id}',
+		'%C' => '$info->{seq_id_type}',
+		'%a' => '$info->{start_ref}',
+		'%b' => '$info->{end_ref}',
 		'%t' => '$info->{start}',
 		'%n' => '$info->{end}',
+		'%A' => '$info->{mate_start_ref}',
+		'%B' => '$info->{mate_end_ref}',
 		'%T' => '$info->{mate_start}',
 		'%N' => '$info->{mate_end}',
 		'%D' => '$info->{tlen}',
@@ -111,7 +118,10 @@ sub _build_gen_header {
 		'%R' => '$info->{read}',
 		'%U' => '$info->{num}',
 		'%s' => '$info->{strand}',
-		'%x' => '$info->{error}'
+		'%x' => '$info->{error}',
+		'%w' => '$info->{var_pos}',
+		'%y' => '$info->{var_offset}',
+		'%k' => '$info->{var_pos_rel}'
 	);
 
 #	return  $self->with_compile_template('%i.%U %U simulation_read length=%r position=%c:%t-%n distance=%D', 'info', \%sym_table);
@@ -122,7 +132,6 @@ sub _build_info {
 	my $self = shift;
 
 	my %info = (
-#		instrument       => sprintf("SR%d", getppid),
 		instrument       => 'SR',
 		quality_profile  => $self->quality_profile,
 		read_size        => $self->read_size,
@@ -135,17 +144,28 @@ sub _build_info {
 }
 
 sub sprint_fastq {
-	my ($self, $id, $num, $seq_id, $seq_ref, $seq_size, $is_leader) = @_;
+	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;
 
-	my ($read1_ref, $errors1_a, $read2_ref, $errors2_a, $fragment_pos, $fragment_size) = $self->gen_read($seq_ref, $seq_size, $is_leader);
+	my ($read1_ref,
+		$errors1_a,
+		$read2_ref,
+		$errors2_a,
+		$fragment_pos,
+		$pos,
+		$fragment_size,
+		$annot_a) = $self->gen_read($ptable, $ptable_size, $is_leader);
 
 	my ($fragment_start, $fragment_end) = ($fragment_pos + 1, $fragment_pos + $fragment_size);
+	my ($fragment_start_ref, $fragment_end_ref) = ($pos + 1, $pos + $fragment_size);
 
 	my ($start1, $end1) = ($fragment_start, $fragment_start + $self->read_size - 1);
+	my ($start1_ref, $end1_ref) = ($fragment_start_ref, $fragment_start_ref + $self->read_size - 1);
 	my ($start2, $end2) = ($fragment_end, $fragment_end - $self->read_size + 1);
+	my ($start2_ref, $end2_ref) = ($fragment_end_ref, $fragment_end_ref - $self->read_size + 1);
 
 	unless ($is_leader) {
 		($start1, $end1, $start2, $end2) = ($start2, $end2, $start1, $end1);
+		($start1_ref, $end1_ref, $start2_ref, $end2_ref) = ($start2_ref, $end2_ref, $start1_ref, $end1_ref);
 	}
 
 	# Set defaut sequencing errors for R1
@@ -168,38 +188,100 @@ sub sprint_fastq {
 			@$errors2_a;
 	}
 
+	# Set structural variation variables for R1
+	my ($var_pos1, $var_offset1, $var_pos_rel1);
+	my $range1 = abs($start1 - $end1) / 2;
+	my $mean1 = ($start1 + $end1) / 2;
+
+	# Set structural variation variation for R2
+	my ($var_pos2, $var_offset2, $var_pos_rel2);
+	my $range2 = abs($start2 - $end2) / 2;
+	my $mean2 = ($start2 + $end2) / 2;
+
+	if (@$annot_a) {
+		for my $annot (@$annot_a) {
+			if (($mean1 - $range1) <= $annot->{pos} && ($mean1 + $range1) >= $annot->{pos}) {
+				$var_pos1 .= sprintf "%d:%s," => $annot->{pos} + 1, $annot->{annot};
+				$var_offset1 .= sprintf "%d:%s," => $annot->{offset} + 1, $annot->{annot};
+				$var_pos_rel1 .= sprintf "%d:%s," => $is_leader
+					? $annot->{pos_rel} + 1
+					: $self->read_size - $annot->{pos_rel} - 1, $annot->{annot};
+			}
+
+			if (($mean2 - $range2) <= $annot->{pos} && ($mean2 + $range2) >= $annot->{pos}) {
+				$var_pos2 .= sprintf "%d:%s," => $annot->{pos} + 1, $annot->{annot};
+				$var_offset2 .= sprintf "%d:%s," => $annot->{offset} + 1, $annot->{annot};
+				$var_pos_rel2 .= sprintf "%d:%s," => $is_leader
+					? $annot->{pos_rel} + 1
+					: $self->read_size - $annot->{pos_rel} - 1, $annot->{annot};
+			}
+		}
+	}
+
+	if (not defined $var_pos1) {
+		($var_pos1, $var_offset1, $var_pos_rel1) = ('none') x 3;
+	} else {
+		chop($var_pos1, $var_offset1, $var_pos_rel1);
+	}
+
+	if (not defined $var_pos2) {
+		($var_pos2, $var_offset2, $var_pos_rel2) = ('none') x 3;
+	} else {
+		chop($var_pos2, $var_offset2, $var_pos_rel2);
+	}
+
 	$self->_set_info1(
-		'id'               => $id,
-		'num'              => $num,
-		'fragment_size'    => $fragment_size,
-		'fragment_start'   => $fragment_start,
-		'fragment_end'     => $fragment_end,
-		'seq_id'           => $seq_id,
-		'start'            => $start1,
-		'end'              => $end1,
-		'mate_start'       => $start2,
-		'mate_end'         => $end2,
-		'tlen'             => $end2 - $end1,
-		'read'             => 1,
-		'strand'           => $is_leader ? 'P' : 'M',
-		'error'            => $errors1
+		'id'                 => $id,
+		'num'                => $num,
+		'fragment_size'      => $fragment_size,
+		'fragment_start'     => $fragment_start,
+		'fragment_end'       => $fragment_end,
+		'fragment_start_ref' => $fragment_start_ref,
+		'fragment_end_ref'   => $fragment_end_ref,
+		'seq_id'             => $seq_id,
+		'start'              => $start1,
+		'end'                => $end1,
+		'start_ref'          => $start1_ref,
+		'end_ref'            => $end1_ref,
+		'mate_start'         => $start2,
+		'mate_end'           => $end2,
+		'mate_start_ref'     => $start2_ref,
+		'mate_end_ref'       => $end2_ref,
+		'tlen'               => $end2 - $end1,
+		'read'               => 1,
+		'strand'             => $is_leader ? 'P' : 'M',
+		'error'              => $errors1,
+		'var_pos'            => $var_pos1,
+		'var_offset'         => $var_offset1,
+		'var_pos_rel'        => $var_pos_rel1,
+		'seq_id_type'        => $seq_id_type
 	);
 
 	$self->_set_info2(
-		'id'               => $id,
-		'num'              => $num,
-		'fragment_size'    => $fragment_size,
-		'fragment_start'   => $fragment_start,
-		'fragment_end'     => $fragment_end,
-		'seq_id'           => $seq_id,
-		'start'            => $start2,
-		'end'              => $end2,
-		'mate_start'       => $start1,
-		'mate_end'         => $end1,
-		'tlen'             => $end1 - $end2,
-		'read'             => 2,
-		'strand'           => $is_leader ? 'P' : 'M',
-		'error'            => $errors2
+		'id'                 => $id,
+		'num'                => $num,
+		'fragment_size'      => $fragment_size,
+		'fragment_start'     => $fragment_start,
+		'fragment_end'       => $fragment_end,
+		'fragment_start_ref' => $fragment_start_ref,
+		'fragment_end_ref'   => $fragment_end_ref,
+		'seq_id'             => $seq_id,
+		'start'              => $start2,
+		'end'                => $end2,
+		'start_ref'          => $start2_ref,
+		'end_ref'            => $end2_ref,
+		'mate_start'         => $start1,
+		'mate_end'           => $end1,
+		'mate_start_ref'     => $start1_ref,
+		'mate_end_ref'       => $end1_ref,
+		'tlen'               => $end1 - $end2,
+		'read'               => 2,
+		'strand'             => $is_leader ? 'P' : 'M',
+		'error'              => $errors2,
+		'var_pos'            => $var_pos2,
+		'var_offset'         => $var_offset2,
+		'var_pos_rel'        => $var_pos_rel2,
+		'seq_id_type'        => $seq_id_type
 	);
 
 	my $gen_header = $self->_gen_header;

@@ -11,7 +11,7 @@ sub gen_read {
 	my ($self, $ptable, $ptable_size, $is_leader) = @_;
 
 	if ($ptable_size < $self->read_size) {
-		croak sprintf "seq_size (%d) must be greater or equal to read_size (%d)"
+		croak sprintf "ptable_size (%d) must be greater or equal to read_size (%d)"
 			=> $ptable_size, $self->read_size;
 	}
 

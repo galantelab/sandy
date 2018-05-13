@@ -126,7 +126,7 @@ sub sprint_fastq {
 			@$errors_a;
 	}
 
-	# Set defaut structural variation
+	# Set structural variation variables
 	my ($var_pos, $var_offset, $var_pos_rel);
 
 	if (@$annot_a) {
