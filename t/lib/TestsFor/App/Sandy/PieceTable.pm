@@ -145,6 +145,61 @@ sub insert : Test(6) {
 	}
 }
 
+sub insert_at_start : Test(5) {
+	my $test = shift;
+
+	my $table = $test->default_table;
+	my $seq = $test->default_seq;
+
+	# Try to change the start A to Ponga
+	my $add = "Ponga ";
+	$table->insert(\$add, 0);
+
+	my @pieces = (
+		{ pos => 0, len => 6 },
+		{ pos => 0, len => length($$seq) }
+	);
+
+	my $piece_table = $table->piece_table;
+	is @$piece_table, 2,
+		"Insert at the start should return a piece_table with 2 piece";
+
+	for (my $i = 0; $i < @pieces; $i++) {
+		is $piece_table->[$i]{pos}, $pieces[$i]{pos},
+			"table[$i]: pos should be equal to $pieces[$i]{pos}";
+		is $piece_table->[$i]{len}, $pieces[$i]{len},
+			"table[$i]: len should be equal to $pieces[$i]{len}";
+	}
+}
+
+sub insert_at_end : Test(5) {
+	my $test = shift;
+
+	my $table = $test->default_table;
+	my $seq = $test->default_seq;
+
+	# Try to change the last five characters
+	my $add = "Ponga";
+	my $pos = length($$seq);
+	$table->insert(\$add, length($$seq));
+
+	my @pieces = (
+		{ pos => 0,    len => $pos },
+		{ pos => $pos, len => 5    }
+	);
+
+	my $piece_table = $table->piece_table;
+	is @$piece_table, 2,
+		"Insert at the end should return a piece_table with 2 piece";
+
+	for (my $i = 0; $i < @pieces; $i++) {
+		is $piece_table->[$i]{pos}, $pieces[$i]{pos},
+			"table[$i]: pos should be equal to $pieces[$i]{pos}";
+		is $piece_table->[$i]{len}, $pieces[$i]{len},
+			"table[$i]: len should be equal to $pieces[$i]{len}";
+	}
+}
+
 sub delete_and_insert : Test(8) {
 	my $test = shift;
 
@@ -243,6 +298,33 @@ sub change : Test(6) {
 	}
 }
 
+sub change_at_start : Test(5) {
+	my $test = shift;
+
+	my $table = $test->default_table;
+	my $seq = $test->default_seq;
+
+	# Try to change the start A to Ponga
+	my $add = "Ponga ";
+	$table->change(\$add, 0, 1);
+
+	my @pieces = (
+		{ pos => 0, len => 6 },
+		{ pos => 1, len => length($$seq) - 1 }
+	);
+
+	my $piece_table = $table->piece_table;
+	is @$piece_table, 2,
+		"Change at the start should return a piece_table with 2 piece";
+
+	for (my $i = 0; $i < @pieces; $i++) {
+		is $piece_table->[$i]{pos}, $pieces[$i]{pos},
+			"table[$i]: pos should be equal to $pieces[$i]{pos}";
+		is $piece_table->[$i]{len}, $pieces[$i]{len},
+			"table[$i]: len should be equal to $pieces[$i]{len}";
+	}
+}
+
 sub change_at_end : Test(5) {
 	my $test = shift;
 
@@ -261,7 +343,7 @@ sub change_at_end : Test(5) {
 
 	my $piece_table = $table->piece_table;
 	is @$piece_table, 2,
-		"Remove at the end should return a piece_table with 2 piece";
+		"Change at the end should return a piece_table with 2 piece";
 
 	for (my $i = 0; $i < @pieces; $i++) {
 		is $piece_table->[$i]{pos}, $pieces[$i]{pos},
