@@ -591,17 +591,19 @@ sub _populate_piece_table {
 
 	for my $snv (@$snvs) {
 
+		my $annot = "$snv->{ref}/$snv->{alt}";
+
 		# Insertion
 		if ($snv->{ref} eq '-') {
-			$table->insert(\$snv->{alt}, $snv->{pos});
+			$table->insert(\$snv->{alt}, $snv->{pos}, $annot);
 
 		# Deletion
 		} elsif ($snv->{alt} eq '-') {
-			$table->delete($snv->{pos}, length $snv->{alt});
+			$table->delete($snv->{pos}, length $snv->{ref}, $annot);
 
 		# Change
 		} else {
-			$table->change(\$snv->{alt}, $snv->{pos}, length $snv->{ref});
+			$table->change(\$snv->{alt}, $snv->{pos}, length $snv->{ref}, $annot);
 		}
 	}
 }
@@ -677,8 +679,6 @@ sub _index_snv {
 		die "Second column, position, has a value lesser or equal to zero into file '$snv_file' at line $line\n"
 			if $fields[1] <= 0;
 
-		$fields[1] = int($fields[1]);
-
 		die "Third column, reference, does not seem to be a valid entry: '$fields[2]' into file '$snv_file' at line $line\n"
 			unless $fields[2] =~ /^(\w+|-)$/;
 
@@ -700,7 +700,7 @@ sub _index_snv {
 		my $tree = $indexed_snv{$fields[0]};
 
 		# Sequence inside perl begins at 0
-		my $position = $fields[1] - 1;
+		my $position = int($fields[1] - 1);
 
 		# Compare the alterations and reference to guess the max variation on sequence
 		my $size_of_variation = ( sort { $b <=> $a } map { length } $fields[3], $fields[2] )[0];
@@ -828,7 +828,7 @@ sub _calculate_parent_count {
 
 sub run_simulation {
 	my $self = shift;
-	my $fasta = $self->_fasta;
+	my $piece_table = $self->_piece_table;
 
 	# Calculate the number of reads to be generated
 	my $number_of_reads = $self->_calculate_number_of_reads;
@@ -930,11 +930,12 @@ sub run_simulation {
 
 		# Run simualtion in child
 		for (my $i = $idx; $i <= $last_read_idx and not $sig->signal_catched; $i++) {
-			my $id = $seqid->()->{'seq_id'};
+			my $id = $seqid->();
+			my $ptable = $piece_table->{$id->{seq_id}}{$id->{type}};
 			my @fastq_entry;
 			try {
-				@fastq_entry = $self->sprint_fastq($tid, $i, $id,
-					\$fasta->{$id}{seq}, $fasta->{$id}{size}, $strand->());
+				@fastq_entry = $self->sprint_fastq($tid, $i, $id->{seq_id}, $id->{type},
+					$ptable->{table}, $ptable->{size}, $strand->());
 			} catch {
 				die "Not defined entry for seqid '>$id' at job $tid: $_";
 			} finally {

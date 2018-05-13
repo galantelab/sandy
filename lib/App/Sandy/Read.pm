@@ -85,9 +85,6 @@ sub _build_subseq {
 	my $offset = $pos - $pieces->[0]{offset};
 	my $usable_len = $pieces->[0]{len} - $offset;
 
-	# TODO: 'pos_rel' -> if the strand is minus, then
-	# pos_rel = read_size - (pos_rel+1), else
-	# pos_rel = pos_rel + 1
 	my @annot;
 
 	if (not $pieces->[0]{is_orig}) {
@@ -129,7 +126,7 @@ sub _build_subseq {
 		$miss_len -= $slice_len;
 	}
 
-	return (\$read, $pos, \@annot);
+	return (\$read, $pos, $pieces->[0]{pos} + $offset, \@annot);
 }
 
 sub insert_sequencing_error {

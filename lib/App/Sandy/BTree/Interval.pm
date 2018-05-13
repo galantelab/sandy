@@ -96,7 +96,7 @@ sub insert {
 	my ($self, $low, $high, $data) = @_;
 
 	if ($low > $high) {
-		die "low value ($low) greater then high value ($high)";
+		croak "low value ($low) greater then high value ($high)";
 	}
 
 	my $node = App::Sandy::BTree::Interval::Node->new(
@@ -163,7 +163,7 @@ sub preorder {
 	my ($self, $code) = @_;
 
 	if (ref $code ne 'CODE') {
-		die "preorder needes a 'CODE' as parameter";
+		croak "preorder needes a 'CODE' as parameter";
 	}
 
 	$self->_preorder($self->root, $code);
@@ -190,7 +190,7 @@ sub search {
 	my ($self, $low, $high) = @_;
 
 	if ($low > $high) {
-		die "low value ($low) greater then high value ($high)";
+		croak "low value ($low) greater then high value ($high)";
 	}
 
 	my @datas;
@@ -229,7 +229,7 @@ sub inorder {
 	my ($self, $code) = @_;
 
 	if (ref $code ne 'CODE') {
-		die "inorder needes a 'CODE' as parameter";
+		croak "inorder needes a 'CODE' as parameter";
 	}
 
 	$self->_inorder($self->root, $code);
@@ -289,7 +289,7 @@ sub delete {
 	my ($self, $low, $high) = @_;
 
 	if ($low > $high) {
-		die "low value ($low) greater then high value ($high)";
+		croak "low value ($low) greater then high value ($high)";
 	}
 
 	my $data;
@@ -385,7 +385,7 @@ sub postorder {
 	my ($self, $code) = @_;
 
 	if (ref $code ne 'CODE') {
-		die "postorder needes a 'CODE' as parameter";
+		croak "postorder needes a 'CODE' as parameter";
 	}
 
 	$self->_postorder($self->root, $code);

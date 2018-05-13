@@ -65,6 +65,59 @@ sub delete : Test(4) {
 	}
 }
 
+sub delete_at_end : Test(3) {
+	my $test = shift;
+
+	my $table = $test->default_table;
+	my $seq = $test->default_seq;
+
+	# Try to delete the five last characters
+	my $pos_last = length($$seq) - 5;
+	$table->delete($pos_last, 5);
+
+	my @pieces = (
+		{ pos => 0, len => $pos_last },
+	);
+
+	my $piece_table = $table->piece_table;
+	is @$piece_table, 1,
+		"Remove at the end should return a piece_table with 1 piece";
+
+	for (my $i = 0; $i < @pieces; $i++) {
+		is $piece_table->[$i]{pos}, $pieces[$i]{pos},
+			"table[$i]: pos should be equal to $pieces[$i]{pos}";
+		is $piece_table->[$i]{len}, $pieces[$i]{len},
+			"table[$i]: len should be equal to $pieces[$i]{len}";
+	}
+}
+
+sub delete_at_start : Test(3) {
+	my $test = shift;
+
+	my $table = $test->default_table;
+	my $seq = $test->default_seq;
+
+	# Try to delete the first five characters
+	my $len = 5;
+	my $pos_start = 0;
+	$table->delete($pos_start, $len);
+
+	my @pieces = (
+		{ pos => $len, len => length($$seq) - $len },
+	);
+
+	my $piece_table = $table->piece_table;
+	is @$piece_table, 1,
+		"Remove at the start should return a piece_table with 1 piece";
+
+	for (my $i = 0; $i < @pieces; $i++) {
+		is $piece_table->[$i]{pos}, $pieces[$i]{pos},
+			"table[$i]: pos should be equal to $pieces[$i]{pos}";
+		is $piece_table->[$i]{len}, $pieces[$i]{len},
+			"table[$i]: len should be equal to $pieces[$i]{len}";
+	}
+}
+
 sub insert : Test(6) {
 	my $test = shift;
 
@@ -186,6 +239,34 @@ sub change : Test(6) {
 		is $pieces[$i]{pos}, $piece_table->[$i]{pos},
 			"table[$i]: pos should be equal to $pieces[$i]{pos}";
 		is $pieces[$i]{len}, $piece_table->[$i]{len},
+			"table[$i]: len should be equal to $pieces[$i]{len}";
+	}
+}
+
+sub change_at_end : Test(5) {
+	my $test = shift;
+
+	my $table = $test->default_table;
+	my $seq = $test->default_seq;
+
+	# Try to change the last five characters
+	my $pos_last = length($$seq) - 5;
+	my $add = "Ponga";
+	$table->change(\$add, $pos_last, 5);
+
+	my @pieces = (
+		{ pos => 0,         len => $pos_last    },
+		{ pos => $pos_last, len => length($add) }
+	);
+
+	my $piece_table = $table->piece_table;
+	is @$piece_table, 2,
+		"Remove at the end should return a piece_table with 2 piece";
+
+	for (my $i = 0; $i < @pieces; $i++) {
+		is $piece_table->[$i]{pos}, $pieces[$i]{pos},
+			"table[$i]: pos should be equal to $pieces[$i]{pos}";
+		is $piece_table->[$i]{len}, $pieces[$i]{len},
 			"table[$i]: len should be equal to $pieces[$i]{len}";
 	}
 }

@@ -44,7 +44,8 @@ override 'opt_spec' => sub {
 		'strand-bias'       => 'strand-bias|b=s',
 		'seqid-weight'      => 'seqid-weight|w=s',
 		'number-of-reads'   => 'number-of-reads|n=i',
-		'expression-matrix' => 'expression-matrix|f=s'
+		'expression-matrix' => 'expression-matrix|f=s',
+		'snv-file'          => 'snv-file|a=s'
 	);
 
 	for my $opt (@rm_opt) {
@@ -110,6 +111,11 @@ sub validate_opts {
 	my %QUALITY_PROFILE   = %{ $self->_quality_profile_report };
 	my %EXPRESSION_MATRIX = %{ $self->_expression_matrix_report };
 
+	# snv file
+	if ($opts->{'snv-file'} && not -f $opts->{'snv-file'}) {
+		die "<$opts->{'snv-file'}> is not a file. Please, give me a valid snv file\n";
+	}
+
 	#  prefix
 	if ($opts->{prefix} =~ /([\/\\])/) {
 		die "Invalid character in 'prefix' option: $opts->{prefix} => '$1'\n";
@@ -127,7 +133,7 @@ sub validate_opts {
 
 	# quality_profile
 	# If the quality_profile is 'poisson', then check the read-size.
-	# Else look for the quality-profile into the database 
+	# Else look for the quality-profile into the database
 	if ($opts->{'quality-profile'} eq 'poisson') {
 		# 0 < read-size <= 101
 		if (0 > $opts->{'read-size'}) {
@@ -331,6 +337,7 @@ HEADER
 	my %simulator_param = (
 		fastq             => $fastq,
 		fasta_file        => $fasta_file,
+		snv_file          => $opts->{'snv-file'},
 		prefix            => $opts->{'prefix'},
 		output_gzip       => $opts->{'gzip'},
 		seed              => $opts->{'seed'},

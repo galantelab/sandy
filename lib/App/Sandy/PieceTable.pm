@@ -117,6 +117,11 @@ sub delete {
 		croak "Trying to delete a region outside the original sequence";
 	}
 
+	# SPECIAL CASE: Delete at the very end
+	if (($pos + $len) == $self->len) {
+		return $self->_delete_at_end($len);
+	}
+
 	# Split piece at $pos. It will correctly fix the original
 	# piece before the split and insert a new piece afterward.
 	# So I need to catch tha last and fix the start and len fields
@@ -131,6 +136,18 @@ sub delete {
 	$piece->{start} = $piece->{pos} = $new_start;
 	$piece->{len} = $new_len;
 	$piece->{annot} = $annot;
+}
+
+sub _delete_at_end {
+	my ($self, $len) = @_;
+
+	# Just catch the last piece and remove the
+	# last sequence length
+	my $index = $self->_count_pieces - 1;
+	my $piece = $self->_get_piece($index);
+
+	my $new_len = $piece->{len} - $len;
+	$piece->{len} = $new_len;
 }
 
 sub change {
@@ -148,6 +165,11 @@ sub change {
 
 	# Create piece data
 	my $new_piece = $self->_piece_new($ref, 0, 0, $ref_len, $pos, $annot);
+
+	# SPECIAL CASE: Change at the very end
+	if (($pos + $len) == $self->len) {
+		return $self->_change_at_end($new_piece, $len);
+	}
 
 	# Split piece found at position 'pos'.
 	# Update old piece, insert piece and return
@@ -168,6 +190,21 @@ sub change {
 
 	# Then insert new_piece
 	$self->_splice_piece($index, 0, $new_piece);
+}
+
+sub _change_at_end {
+	my ($self, $new_piece, $len) = @_;
+
+	# Just catch the last piece and remove the
+	# last sequence length
+	my $index = $self->_count_pieces - 1;
+	my $piece = $self->_get_piece($index);
+
+	my $new_len = $piece->{len} - $len;
+	$piece->{len} = $new_len;
+
+	# Then insert new_piece
+	$self->_splice_piece($index + 1, 0, $new_piece);
 }
 
 sub calculate_logical_offset {

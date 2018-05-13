@@ -70,6 +70,9 @@ sub _build_gen_header {
 		'%r' => '$info->{read_size}',
 		'%e' => '$info->{sequencing_error}',
 		'%c' => '$info->{seq_id}',
+		'%C' => '$info->{seq_id_type}',
+		'%a' => '$info->{start_ref}',
+		'%b' => '$info->{end_ref}',
 		'%t' => '$info->{start}',
 		'%n' => '$info->{end}',
 		'%i' => '$info->{instrument}',
@@ -77,7 +80,10 @@ sub _build_gen_header {
 		'%R' => '$info->{read}',
 		'%U' => '$info->{num}',
 		'%s' => '$info->{strand}',
-		'%x' => '$info->{error}'
+		'%x' => '$info->{error}',
+		'%w' => '$info->{var_pos}',
+		'%y' => '$info->{var_offset}',
+		'%k' => '$info->{var_pos_rel}'
 	);
 
 	return  $self->with_compile_template($self->template_id, 'info', \%sym_table);
@@ -87,7 +93,6 @@ sub _build_info {
 	my $self = shift;
 
 	my %info = (
-#		instrument       => sprintf("SR%d", getppid),
 		instrument       => 'SR',
 		quality_profile  => $self->quality_profile,
 		read_size        => $self->read_size,
@@ -98,14 +103,17 @@ sub _build_info {
 }
 
 sub sprint_fastq {
-	my ($self, $id, $num, $seq_id, $seq_ref, $seq_size, $is_leader) = @_;
+	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;
 
-	my ($read_ref, $pos, $errors_a) = $self->gen_read($seq_ref, $seq_size, $is_leader);
+	my ($read_ref, $read_pos, $pos, $errors_a, $annot_a) = $self->gen_read($ptable,
+		$ptable_size, $is_leader);
 
-	my ($start, $end) = ($pos + 1, $pos + $self->read_size);
+	my ($start, $end) = ($read_pos + 1, $read_pos + $self->read_size);
+	my ($start_ref, $end_ref) = ($pos + 1, $pos + $self->read_size);
 
 	unless ($is_leader) {
 		($start, $end) = ($end, $start);
+		($start_ref, $end_ref) = ($end_ref, $start_ref);
 	}
 
 	# Set defaut sequencing errors
@@ -118,15 +126,39 @@ sub sprint_fastq {
 			@$errors_a;
 	}
 
+	# Set defaut structural variation
+	my ($var_pos, $var_offset, $var_pos_rel);
+
+	if (@$annot_a) {
+		for my $annot (@$annot_a) {
+			$var_pos .= sprintf "%d:%s," => $annot->{pos} + 1, $annot->{annot};
+			$var_offset .= sprintf "%d:%s," => $annot->{offset} + 1, $annot->{annot};
+			$var_pos_rel .= sprintf "%d:%s," => $is_leader
+				? $annot->{pos_rel} + 1
+				: $self->read_size - $annot->{pos_rel} - 1, $annot->{annot};
+		}
+	} else {
+		($var_pos, $var_offset, $var_pos_rel) = ('none') x 3;
+	}
+
+	# Just remove ',' at the end
+	chop($var_pos, $var_offset, $var_pos_rel) if @$annot_a;
+
 	$self->_set_info(
-		'id'     => $id,
-		'num'    => $num,
-		'seq_id' => $seq_id,
-		'start'  => $start,
-		'end'    => $end,
-		'read'   => 1,
-		'strand' => $is_leader ? 'P' : 'M',
-		'error'  => $errors
+		'id'          => $id,
+		'num'         => $num,
+		'seq_id'      => $seq_id,
+		'start'       => $start,
+		'end'         => $end,
+		'start_ref'   => $start_ref,
+		'end_ref'     => $end_ref,
+		'read'        => 1,
+		'strand'      => $is_leader ? 'P' : 'M',
+		'error'       => $errors,
+		'var_pos'     => $var_pos,
+		'var_offset'  => $var_offset,
+		'var_pos_rel' => $var_pos_rel,
+		'seq_id_type' => $seq_id_type
 	);
 
 	my $gen_header = $self->_gen_header;
