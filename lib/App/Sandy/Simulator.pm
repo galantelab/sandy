@@ -670,6 +670,7 @@ sub _index_snv {
 	my $line = 0;
 
 	# chr pos ref @obs he
+	LINE:
 	while (<$fh>) {
 		$line++;
 
