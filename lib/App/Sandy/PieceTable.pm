@@ -100,10 +100,11 @@ sub insert {
 	# Create piece data
 	my $new_piece = $self->_piece_new($ref, 0, 0, $len, $pos, $annot);
 
-	# Split piece found at position 'pos'.
-	# Update old piece, insert piece and return
-	# index where to insert to
-	my $index = $self->_split_piece($pos);
+	# Insert at end position or split
+	# piece found at position 'pos'.
+	my $index = $pos == $self->len
+		? $self->_count_pieces
+		: $self->_split_piece($pos);
 
 	# Then insert new_piece
 	$self->_splice_piece($index, 0, $new_piece);
@@ -136,6 +137,12 @@ sub delete {
 	$piece->{start} = $piece->{pos} = $new_start;
 	$piece->{len} = $new_len;
 	$piece->{annot} = $annot;
+
+	# If the new len is zero, then remove
+	# this piece
+	if ($new_len == 0) {
+		$self->_splice_piece($index, 1);
+	}
 }
 
 sub _delete_at_end {
@@ -147,7 +154,15 @@ sub _delete_at_end {
 	my $piece = $self->_get_piece($index);
 
 	my $new_len = $piece->{len} - $len;
+
+	# Update!
 	$piece->{len} = $new_len;
+
+	# If the new len is zero, then remove
+	# this piece
+	if ($new_len == 0) {
+		$self->_splice_piece($index, 1);
+	}
 }
 
 sub change {
@@ -188,6 +203,12 @@ sub change {
 	$piece->{start} = $piece->{pos} = $new_start;
 	$piece->{len} = $new_len;
 
+	# If the new len is zero, then remove
+	# this piece
+	if ($new_len == 0) {
+		$self->_splice_piece($index, 1);
+	}
+
 	# Then insert new_piece
 	$self->_splice_piece($index, 0, $new_piece);
 }
@@ -202,6 +223,12 @@ sub _change_at_end {
 
 	my $new_len = $piece->{len} - $len;
 	$piece->{len} = $new_len;
+
+	# If the new len is zero, then remove
+	# this piece
+	if ($new_len == 0) {
+		$self->_splice_piece($index, 1);
+	}
 
 	# Then insert new_piece
 	$self->_splice_piece($index + 1, 0, $new_piece);
@@ -253,42 +280,37 @@ sub lookup {
 sub _split_piece {
 	my ($self, $pos) = @_;
 
-	# Split at start position
-	if ($pos == 0) {
-		return 0;
+	# Catch orig index where pos is inside
+	my $index = $self->_piece_at($pos);
 
-	# Split at end position
-	} elsif ($pos == $self->len) {
-		return $self->_count_pieces;
+	# Get piece which will be updated
+	my $old_piece = $self->_get_piece($index);
 
-	# Split at some middle
-	} else {
-		# Catch orig index where pos is inside
-		my $index = $self->_piece_at($pos);
-
-		# Get piece which will be updated
-		my $old_piece = $self->_get_piece($index);
-
-		# Calculate piece end
-		my $old_end = $old_piece->{start} + $old_piece->{len} - 1;
-
-		# Calculate the corrected length according to the split
-		my $new_len = $pos - $old_piece->{start};
-
-		# Update piece
-		$old_piece->{len} = $new_len;
-
-		# Create the second part of the split after the break position
-		my $piece = $self->_piece_new($old_piece->{ref}, $old_piece->{is_orig},
-			$pos, $old_end - $pos + 1, $pos);
-
-		# Insert second part after updated piece
-		$self->_splice_piece(++$index, 0, $piece);
-
-		# return corrected index that resolves to
-		# the position between the breaked piece
+	# Split at the beggining of a piece,
+	# or this piece has length 1
+	if ($pos == $old_piece->{start}) {
 		return $index;
 	}
+
+	# Calculate piece end
+	my $old_end = $old_piece->{start} + $old_piece->{len} - 1;
+
+	# Calculate the corrected length according to the split
+	my $new_len = $pos - $old_piece->{start};
+
+	# Update piece
+	$old_piece->{len} = $new_len;
+
+	# Create the second part of the split after the break position
+	my $piece = $self->_piece_new($old_piece->{ref}, $old_piece->{is_orig},
+		$pos, $old_end - $pos + 1, $pos);
+
+	# Insert second part after updated piece
+	$self->_splice_piece(++$index, 0, $piece);
+
+	# return corrected index that resolves to
+	# the position between the breaked piece
+	return $index;
 }
 
 sub _is_pos_inside_piece {
