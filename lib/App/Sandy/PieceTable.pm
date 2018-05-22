@@ -71,7 +71,7 @@ sub _build_piece_table {
 }
 
 sub _piece_new {
-	my ($self, $ref, $is_orig, $start, $len, $pos, $annot) = @_;
+	my ($self, $ref, $is_orig, $start, $len, $pos, $annot1, $annot2) = @_;
 
 	my $piece = {
 		'ref'     => $ref,     # reference to sequence
@@ -80,7 +80,8 @@ sub _piece_new {
 		'len'     => $len,     # length
 		'pos'     => $pos,     # position at original sequence
 		'offset'  => 0,        # position at the changed sequence
-		'annot'   => $annot    # custom annotation
+		'annot1'  => $annot1,  # custom annotation - slot 1
+		'annot2'  => $annot2   # custom annotation - slot 2
 	};
 
 	return $piece;
@@ -105,6 +106,13 @@ sub insert {
 	my $index = $pos == $self->len
 		? $self->_count_pieces
 		: $self->_split_piece($pos);
+
+	my $piece = $self->_get_piece($index);
+
+	if (defined $piece && ($pos == $piece->{pos})) {
+		$new_piece->{annot2} = $piece->{annot2};
+		undef $piece->{annot2};
+	}
 
 	# Then insert new_piece
 	$self->_splice_piece($index, 0, $new_piece);
@@ -136,12 +144,16 @@ sub delete {
 	# Update!
 	$piece->{start} = $piece->{pos} = $new_start;
 	$piece->{len} = $new_len;
-	$piece->{annot} = $annot;
+	push @{ $piece->{annot2} } => $annot;
 
 	# If the new len is zero, then remove
 	# this piece
 	if ($new_len == 0) {
 		$self->_splice_piece($index, 1);
+		my $next_piece = $self->_get_piece($index);
+		if (defined $next_piece && defined $piece->{annot2}) {
+			unshift @{ $next_piece->{annot2} } => @{ $piece->{annot2} };
+		}
 	}
 }
 
@@ -194,6 +206,11 @@ sub change {
 
 	# Catch the piece from where I will remove
 	my $piece = $self->_get_piece($index);
+
+	if ($pos == $piece->{pos}) {
+		$new_piece->{annot2} = $piece->{annot2};
+		undef $piece->{annot2};
+	}
 
 	# Fix position and len
 	my $new_start = $pos + $len;

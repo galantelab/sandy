@@ -352,3 +352,16 @@ sub change_at_end : Test(5) {
 			"table[$i]: len should be equal to $pieces[$i]{len}";
 	}
 }
+
+sub ponga : Test() {
+	my $test = shift;
+	require Data::Dumper::Simple;
+
+	my $table = $test->default_table;
+	my $seq = "A large span of text";
+	$table->delete(2, 6, \"delete large");
+	diag Data::Dumper::Dumper($table->piece_table);
+#	$table->insert(\"English ", 13, \"Insert English");
+	$table->delete(8, 5, \"delete span");
+	diag Data::Dumper::Dumper($table->piece_table);
+}
