@@ -88,12 +88,8 @@ sub _build_subseq {
 	my @annot;
 
 	if (not $pieces->[0]{is_orig}) {
-		push @annot => {
-			pos     => $pieces->[0]{pos},
-			offset  => $pieces->[0]{offset},
-			pos_rel => 0,
-			annot   => $pieces->[0]{annot}
-		};
+		push @annot => @{ $pieces->[0]{annot2} } if @{ $pieces->[0]{annot2} };
+		push @annot => $pieces->[0]{annot1} if $pieces->[0]{annot1};
 	}
 
 	my $slice_len = $len < $usable_len
@@ -105,18 +101,8 @@ sub _build_subseq {
 
 	for (my $i = 1; $i < @$pieces; $i++) {
 
-		if (defined $pieces->[$i]{annot}) {
-			my $pos = $pieces->[$i]{is_orig}
-				? $pieces->[$i - 1]{pos} + $pieces->[$i - 1]{len}
-				: $pieces->[$i]{pos};
-
-			push @annot => {
-				pos     => $pos,
-				offset  => $pieces->[$i]{offset},
-				pos_rel => length $read,
-				annot   => $pieces->[$i]{annot}
-			};
-		}
+		push @annot => @{ $pieces->[$i]{annot2} } if @{ $pieces->[$i]{annot2} };
+		push @annot => $pieces->[$i]{annot1} if $pieces->[$i]{annot1};
 
 		$slice_len = $miss_len < $pieces->[$i]{len}
 			? $miss_len

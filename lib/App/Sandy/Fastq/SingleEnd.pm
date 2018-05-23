@@ -81,9 +81,7 @@ sub _build_gen_header {
 		'%U' => '$info->{num}',
 		'%s' => '$info->{strand}',
 		'%x' => '$info->{error}',
-		'%w' => '$info->{var_pos}',
-		'%y' => '$info->{var_offset}',
-		'%k' => '$info->{var_pos_rel}'
+		'%v' => '$info->{var}'
 	);
 
 	return  $self->with_compile_template($self->template_id, 'info', \%sym_table);
@@ -126,23 +124,15 @@ sub sprint_fastq {
 			@$errors_a;
 	}
 
-	# Set structural variation variables
-	my ($var_pos, $var_offset, $var_pos_rel);
+	# Set default structural variation
+	my $var = 'none';
 
+	# Set variation if any
 	if (@$annot_a) {
-		for my $annot (@$annot_a) {
-			$var_pos .= sprintf "%d:%s," => $annot->{pos} + 1, $annot->{annot};
-			$var_offset .= sprintf "%d:%s," => $annot->{offset} + 1, $annot->{annot};
-			$var_pos_rel .= sprintf "%d:%s," => $is_leader
-				? $annot->{pos_rel} + 1
-				: $self->read_size - $annot->{pos_rel} - 1, $annot->{annot};
-		}
-	} else {
-		($var_pos, $var_offset, $var_pos_rel) = ('none') x 3;
+		$var = join ","
+			=> map { sprintf "%d:%s/%s" => $_->{pos} + 1, $_->{ref}, $_->{alt} }
+			@$annot_a;
 	}
-
-	# Just remove ',' at the end
-	chop($var_pos, $var_offset, $var_pos_rel) if @$annot_a;
 
 	$self->_set_info(
 		'id'          => $id,
@@ -155,9 +145,7 @@ sub sprint_fastq {
 		'read'        => 1,
 		'strand'      => $is_leader ? 'P' : 'M',
 		'error'       => $errors,
-		'var_pos'     => $var_pos,
-		'var_offset'  => $var_offset,
-		'var_pos_rel' => $var_pos_rel,
+		'var'         => $var,
 		'seq_id_type' => $seq_id_type
 	);
 
