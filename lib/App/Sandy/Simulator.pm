@@ -591,11 +591,7 @@ sub _populate_piece_table {
 
 	for my $snv (@$snvs) {
 
-		my $annot = {
-			pos => $snv->{pos},
-			ref => $snv->{ref},
-			alt => $snv->{alt}
-		};
+		my $annot = sprintf "%d:%s/%s" => $snv->{pos} + 1, $snv->{ref}, $snv->{alt};
 
 		# Insertion
 		if ($snv->{ref} eq '-') {

@@ -110,15 +110,10 @@ sub sprint_fastq {
 		? join ',' => @$error_a
 		: 'none';
 
-	my $var = 'none';
 	my $annot_a = $attr->{annot};
-
-	# Set variation if any
-	if (@$annot_a) {
-		$var = join ","
-			=> map { sprintf "%d:%s/%s" => $_->{pos} + 1, $_->{ref}, $_->{alt} }
-			@$annot_a;
-	}
+	my $var = @$annot_a
+		? join ',' => @$annot_a
+		: 'none';
 
 	$self->_set_info(
 		'id'          => $id,
