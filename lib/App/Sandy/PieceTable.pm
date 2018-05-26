@@ -2,7 +2,6 @@ package App::Sandy::PieceTable;
 # ABSTRACT: Implement a piece table data structure class
 
 use App::Sandy::Base 'class';
-use App::Sandy::BTree::Interval;
 
 with 'App::Sandy::Role::BSearch';
 
@@ -32,17 +31,6 @@ has 'piece_table' => (
 		_splice_piece  => 'splice',
 		_count_pieces  => 'count',
 		_all_píeces    => 'elements'
-	}
-);
-
-has 'logical_offset' => (
-	is         => 'rw',
-	isa        => 'App::Sandy::BTree::Interval',
-	default    => sub { App::Sandy::BTree::Interval->new },
-	handles    => {
-		_add_offset    => 'insert',
-		_rm_offset     => 'delete',
-		_search_offset => 'search'
 	}
 );
 
@@ -254,29 +242,18 @@ sub _change_at_end {
 sub calculate_logical_offset {
 	# Before lookup() it is necessary to calculate
 	# the positions according to the shift caused by
-	# the structural variations. It will be used to
-	# feed a binary tree
+	# the structural variations.
 	my $self = shift;
-
-	# Remove all old entries, if any, and create a new tree
-	$self->logical_offset(App::Sandy::BTree::Interval->new);
 
 	my $offset_acm = 0;
 
 	# Insert each piece reference into a tree
 	for my $piece ($self->_all_píeces) {
-		# Calculate corrected piece boundaries
-		my $low = $offset_acm;
-		my $high = $offset_acm + $piece->{len} - 1;
-
 		# Update piece offset
 		$piece->{offset} = $offset_acm;
 
 		# Update offset acumulator
 		$offset_acm += $piece->{len};
-
-		# Insert piece into tree
-		$self->_add_offset($low, $high, $piece);
 	}
 
 	# Update logical offset with the corrected length
@@ -287,11 +264,39 @@ sub lookup {
 	# Run 'calculate_logical_offset' before
 	my ($self, $start, $len) = @_;
 
-	# Calculate high boundary
-	my $end = $start + $len - 1;
+	state $comm = sub {
+		my ($pos, $piece) = @_;
+		if ($self->_is_pos_inside_range($pos, $piece->{offset}, $piece->{len})) {
+			return 0;
+		} elsif ($pos > $piece->{offset}) {
+			return 1;
+		} else {
+			return -1;
+		}
+	};
 
-	# Return all pieces overlapping the boundaries
-	return $self->_search_offset($start, $end);
+	my $index = $self->with_bsearch($start, $self->piece_table,
+		$self->_count_pieces, $comm);
+
+	if (not defined $index) {
+		croak "Not found index for range: start = $start, length = $len";
+	}
+
+	my $piece = $self->_get_piece($index);
+	my @pieces;
+
+	do {
+		push @pieces => $piece;
+		$piece = $self->_get_piece(++$index);
+	} while ($piece && $self->_do_overlap($start, $len, $piece->{offset}, $piece->{len}));
+
+	return \@pieces;
+}
+
+sub _do_overlap {
+	my ($self, $start1, $len1, $start2, $len2) = @_;
+	my ($end1, $end2) = ($start1 + $len1 - 1, $start2 + $len2 - 1);
+	return $start1 <= $end2 && $start2 <= $end1;
 }
 
 sub _split_piece {
@@ -330,19 +335,19 @@ sub _split_piece {
 	return $index;
 }
 
-sub _is_pos_inside_piece {
-	my ($self, $pos, $piece) = @_;
-	my $end = $piece->{pos} + $piece->{len} - 1;
-	return $pos >= $piece->{pos} && $pos <= $end;
+sub _is_pos_inside_range {
+	my ($self, $pos, $start, $len) = @_;
+	my $end = $start + $len - 1;
+	return $pos >= $start && $pos <= $end;
 }
 
 sub _piece_at {
 	my ($self, $pos) = @_;
 
 	# State the function to compare at bsearch
-	state $func = sub {
+	state $comm = sub {
 		my ($pos, $piece) = @_;
-		if ($self->_is_pos_inside_piece($pos, $piece)) {
+		if ($self->_is_pos_inside_range($pos, $piece->{pos}, $piece->{len})) {
 			return 0;
 		} elsif ($pos > $piece->{pos}) {
 			return 1;
@@ -353,7 +358,7 @@ sub _piece_at {
 
 	# Search the piece index where $pos is inside the boundaries
 	my $index = $self->with_bsearch($pos, $self->piece_table,
-		$self->_count_pieces, $func);
+		$self->_count_pieces, $comm);
 
 	# Maybe it is undef. I need to take care to not
 	# search to a position that was removed before.
@@ -369,7 +374,7 @@ sub _piece_at {
 	# be afterward
 	if (not $piece->{is_orig}) {
 		$piece = $self->_get_piece(++$index);
-		unless ($self->_is_pos_inside_piece($piece, $pos)) {
+		unless ($self->_is_pos_inside_range($pos, $piece->{pos}, $piece->{len})) {
 			croak "Position is not inside the piece after non original sequence";
 		}
 	}
