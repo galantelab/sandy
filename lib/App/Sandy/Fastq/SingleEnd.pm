@@ -103,29 +103,15 @@ sub _build_info {
 sub sprint_fastq {
 	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;
 
-	my ($read_ref, $read_pos, $pos, $errors_a, $annot_a) = $self->gen_read($ptable,
-		$ptable_size, $is_leader);
+	my ($read_ref, $attr) = $self->gen_read($ptable, $ptable_size, $is_leader);
 
-	my ($start, $end) = ($read_pos + 1, $read_pos + $self->read_size);
-	my ($start_ref, $end_ref) = ($pos + 1, $pos + $self->read_size);
+	my $error_a = $attr->{error};
+	my $error = @$error_a
+		? join ',' => @$error_a
+		: 'none';
 
-	unless ($is_leader) {
-		($start, $end) = ($end, $start);
-		($start_ref, $end_ref) = ($end_ref, $start_ref);
-	}
-
-	# Set defaut sequencing errors
-	my $errors = 'none';
-
-	# Set errors if there are sequencing errors
-	if (@$errors_a) {
-		$errors = join ","
-			=> map { sprintf "%d:%s/%s" => $_->{pos} + 1, $_->{b}, $_->{not_b} }
-			@$errors_a;
-	}
-
-	# Set default structural variation
 	my $var = 'none';
+	my $annot_a = $attr->{annot};
 
 	# Set variation if any
 	if (@$annot_a) {
@@ -138,15 +124,23 @@ sub sprint_fastq {
 		'id'          => $id,
 		'num'         => $num,
 		'seq_id'      => $seq_id,
-		'start'       => $start,
-		'end'         => $end,
-		'start_ref'   => $start_ref,
-		'end_ref'     => $end_ref,
 		'read'        => 1,
-		'strand'      => $is_leader ? 'P' : 'M',
-		'error'       => $errors,
+		'error'       => $error,
 		'var'         => $var,
-		'seq_id_type' => $seq_id_type
+		'seq_id_type' => $seq_id_type,
+		$is_leader
+			? (
+				'start'     => $attr->{start},
+				'end'       => $attr->{end},
+				'start_ref' => $attr->{start_ref},
+				'end_ref'   => $attr->{end_ref},
+				'strand'    => 'P')
+			: (
+				'start'     => $attr->{end},
+				'end'       => $attr->{start},
+				'start_ref' => $attr->{end_ref},
+				'end_ref'   => $attr->{start_ref},
+				'strand'    => 'M')
 	);
 
 	my $gen_header = $self->_gen_header;

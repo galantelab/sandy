@@ -112,7 +112,15 @@ sub _build_subseq {
 		$miss_len -= $slice_len;
 	}
 
-	return (\$read, $pos, $pieces->[0]{pos} + $offset, \@annot);
+	my $attr = {
+		'start'     => $pos + 1,
+		'end'       => $pos + $len,
+		'start_ref' => $pieces->[0]{is_orig} ? $pieces->[0]{pos} + $offset + 1 : 'NA',
+		'end_ref'   => $pieces->[-1]{is_orig} ? $pieces->[0]{pos} + $offset + $len : 'NA',
+		'annot'     => \@annot
+	};
+
+	return (\$read, $attr);
 }
 
 sub insert_sequencing_error {
@@ -129,7 +137,7 @@ sub insert_sequencing_error {
 		my $not_b = $self->_randb($b);
 
 		substr($$seq_ref, $pos, 1) = $not_b;
-		push @errors => { b => $b, not_b => $not_b, pos => $pos };
+		push @errors => sprintf("%d:%s/%s", $pos + 1, $b, $not_b);
 	}
 
 	return \@errors;

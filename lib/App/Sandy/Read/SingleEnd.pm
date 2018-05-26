@@ -15,15 +15,15 @@ sub gen_read {
 			=> $ptable_size, $self->read_size;
 	}
 
-	my ($read_ref, $read_pos, $pos, $annot_a) = $self->subseq_rand_ptable($ptable,
-		$ptable_size, $self->read_size);
+	my ($read_ref, $attr) = $self->subseq_rand_ptable($ptable, $ptable_size,
+		$self->read_size);
 
 	unless ($is_leader) {
 		$self->reverse_complement($read_ref);
 	}
 
 	$self->update_count_base($self->read_size);
-	my $errors_a = $self->insert_sequencing_error($read_ref);
+	$attr->{error} = $self->insert_sequencing_error($read_ref);
 
-	return ($read_ref, $read_pos, $pos, $errors_a, $annot_a);
+	return ($read_ref, $attr);
 }
