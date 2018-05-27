@@ -57,21 +57,31 @@ sub gen_read {
 		$fragment_size = $self->_random_half_normal;
 	}
 
-	my ($fragment_ref, $fragment_pos, $pos, $annot_a) = $self->subseq_rand_ptable($ptable,
-		$ptable_size, $fragment_size);
+	# Build the fragment string
+	my ($fragment_ref, $attr) = $self->subseq_rand_ptable($ptable, $ptable_size,
+		$fragment_size);
 
+	# Catch R1 substring
 	my $read1_ref = $self->subseq($fragment_ref, $fragment_size, $self->read_size, 0);
-	$self->update_count_base($self->read_size);
-	my $errors1_a = $self->insert_sequencing_error($read1_ref);
+	@$attr{qw/start1 end1/} = ($attr->{start}, $attr->{start} + $self->read_size - 1);
 
-	my $read2_ref = $self->subseq($fragment_ref, $fragment_size, $self->read_size, $fragment_size - $self->read_size);
+	# Insert sequencing error
+	$self->update_count_base($self->read_size);
+	$attr->{error1} = $self->insert_sequencing_error($read1_ref);
+
+	# Catch R2 substring
+	my $read2_ref = $self->subseq($fragment_ref, $fragment_size, $self->read_size,
+		$fragment_size - $self->read_size);
+	@$attr{qw/start2 end2/} = ($attr->{end}, $attr->{end} - $self->read_size + 1);
+
+	# Reverse completement
 	$self->reverse_complement($read2_ref);
-	$self->update_count_base($self->read_size);
-	my $errors2_a = $self->insert_sequencing_error($read2_ref);
 
-	return $is_leader
-		? ($read1_ref, $errors1_a, $read2_ref, $errors2_a, $fragment_pos, $pos, $fragment_size, $annot_a)
-		: ($read2_ref, $errors2_a, $read1_ref, $errors1_a, $fragment_pos, $pos, $fragment_size, $annot_a);
+	# Insert sequencing error
+	$self->update_count_base($self->read_size);
+	$attr->{error2} = $self->insert_sequencing_error($read2_ref);
+
+	return ($read1_ref, $read2_ref, $attr);
 }
 
 sub _random_half_normal {
