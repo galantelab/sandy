@@ -152,7 +152,7 @@ sub reverse_complement :Test(1) {
 		"The reverse_complement must return the reverse complement";
 }
 
-sub subseq_rand_ptable : Test(10) {
+sub subseq_rand_ptable : Test(20) {
 	my $test = shift;
 
 	my $read = $test->default_read;
@@ -181,5 +181,22 @@ sub subseq_rand_ptable : Test(10) {
 			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";
 #		$" = ", ";
 #		diag sprintf "[%s] %s\n" => $$seq_ref, join "; ", map { "pos=$_->{pos},offset=$_->{offset},rel=$_->{pos_rel}:$_->{annot}" } @$annot;
+	}
+
+	# A large span of text
+	my $alt_seq2 = "A span of English Ponga";
+
+	# Try to chnage text to Ponga
+	$table->change(\"Ponga", 16, 4, "text/Ponga");
+	$table->calculate_logical_offset;
+
+#	diag Dumper($table->piece_table);
+
+	for my $i (1..10) {
+		my ($seq_ref, $attr) = $read->subseq_rand_ptable($table,
+			$table->logical_len, $len);
+		my $true_seq = substr $alt_seq2, $attr->{start} - 1, $len;
+		ok $$seq_ref eq $true_seq,
+			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";
 	}
 }
