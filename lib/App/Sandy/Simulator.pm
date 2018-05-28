@@ -6,11 +6,10 @@ use App::Sandy::Fastq::SingleEnd;
 use App::Sandy::Fastq::PairedEnd;
 use App::Sandy::InterlaceProcesses;
 use App::Sandy::WeightedRaffle;
-use App::Sandy::BTree::Interval;
 use App::Sandy::PieceTable;
 use App::Sandy::DB::Handle::Expression;
-use Scalar::Util 'looks_like_number';
-use List::Util 'sum';
+use Scalar::Util qw/looks_like_number refaddr/;
+use List::Util qw/sum max/;
 use File::Cat 'cat';
 use Parallel::ForkManager;
 
@@ -522,15 +521,10 @@ sub _build_piece_table {
 
 		# If there is indexed_snv for seq_id, then construct the piece table with it
 		if (defined $indexed_snv && defined $indexed_snv->{$seq_id}) {
-			my $snv_tree = $indexed_snv->{$seq_id};
-
-			# Catch all snv data
-			my @snvs;
-			my $catcher = sub { push @snvs => shift->data };
-			$snv_tree->inorder($catcher);
+			my $snvs = $indexed_snv->{$seq_id};
 
 			# Filter only the homozygotic snvs to feed reference seq_id
-			my @snvs_homo = grep { $_->{plo} eq 'HO' } @snvs;
+			my @snvs_homo = grep { $_->{plo} eq 'HO' } @$snvs;
 
 			if (@snvs_homo) {
 				# Populate reference seq_id
@@ -541,7 +535,7 @@ sub _build_piece_table {
 			$piece_table{$seq_id}{alt}{table} = App::Sandy::PieceTable->new(orig => $seq);
 
 			# Populate alternative seq_id
-			$self->_populate_piece_table($piece_table{$seq_id}{alt}{table}, \@snvs);
+			$self->_populate_piece_table($piece_table{$seq_id}{alt}{table}, $snvs);
 		}
 	}
 
@@ -610,54 +604,156 @@ sub _populate_piece_table {
 
 sub _validate_indexed_snv {
 	my ($self, $indexed_snv) = @_;
+	my $snv_file = $self->snv_file;
 
-	# Validate indexed snv against indexed fasta
+	log_msg ":: Removing overlapping entries in snv file '$snv_file', if any ...";
+	$self->_validate_indexed_snv_against_itself($indexed_snv);
+
+	log_msg ":: Validate snv file '$snv_file' against indexed fasta ...";
+	$self->_validate_indexed_snv_against_fasta($indexed_snv);
+}
+
+sub _validate_indexed_snv_against_fasta {
+	my ($self, $indexed_snv) = @_;
+
 	my $indexed_fasta = $self->_fasta;
 	my $snv_file = $self->snv_file;
 
-	log_msg ":: Validate snv file '$snv_file' against indexed fasta";
-
 	for my $seq_id (keys %$indexed_snv) {
-		my $tree = delete $indexed_snv->{$seq_id};
+		my $snvs = delete $indexed_snv->{$seq_id};
 
 		my $seq = \$indexed_fasta->{$seq_id}{seq}
 			or next;
 		my $size = $indexed_fasta->{$seq_id}{size};
 
-		my @snvs;
-		my $catcher = sub { push @snvs => shift->data };
+		my @saved_snvs;
 
-		$tree->inorder($catcher);
-		my @to_remove;
-
-		for my $snv (@snvs) {
+		for my $snv (@$snvs) {
 			# Insertions may accur until one base after the
 			# end of the sequence, not more
 			if ($snv->{ref} eq '-' && $snv->{pos} > $size) {
 				log_msg sprintf ":: In validating '%s': Insertion position, %s at %s:%d, outside fasta sequence",
 					$snv_file, $snv->{alt}, $seq_id, $snv->{pos} + 1;
 
-				push @to_remove => $snv;
-
+				# Next snv
+				next;
 			# Deletions and changes. Just verify if the reference exists
 			} elsif ($snv->{ref} ne '-') {
-				my $loc = index $$seq, $snv->{ref}, $snv->{pos};
+				my $ref = substr $$seq, $snv->{pos}, length($snv->{ref});
 
-				if ($loc == -1 || $loc != $snv->{pos}) {
+				if ($ref ne $snv->{ref}) {
 					log_msg sprintf ":: In validating '%s': Not found reference '%s' at fasta position %s:%d",
 						$snv_file, $snv->{ref}, $seq_id, $snv->{pos} + 1;
 
-					push @to_remove => $snv;
+					# Next snv
+					next;
+				}
+			}
+
+			push @saved_snvs  => $snv;
+		}
+
+		if (@saved_snvs) {
+			$indexed_snv->{$seq_id} = [@saved_snvs];
+		}
+	}
+}
+
+sub _validate_indexed_snv_against_itself {
+	my ($self, $indexed_snv) = @_;
+
+	for my $seq_id (keys %$indexed_snv) {
+		my $snvs_a = delete $indexed_snv->{$seq_id};
+		my @sorted_snvs = sort { $a->{low} <=> $b->{low} } @$snvs_a;
+
+		my $prev_snv = $sorted_snvs[0];
+		my $high = $prev_snv->{high};
+		push my @snv_cluster => $prev_snv;
+
+		for (my $i = 1; $i < @sorted_snvs; $i++) {
+			my $next_snv = $sorted_snvs[$i];
+
+			# If not overlapping
+			if ($next_snv->{low} > $high) {
+				my $valid_snvs = $self->_validate_indexed_snv_cluster($seq_id, \@snv_cluster);
+				push @{ $indexed_snv->{$seq_id} } => @$valid_snvs;
+				@snv_cluster = ();
+			}
+
+			push @snv_cluster => $next_snv;
+			$high = max $prev_snv->{high}, $next_snv->{high};
+			$prev_snv = $next_snv;
+		}
+
+		my $valid_snvs = $self->_validate_indexed_snv_cluster($seq_id, \@snv_cluster);
+		push @{ $indexed_snv->{$seq_id} } => @$valid_snvs;
+	}
+}
+
+sub _validate_indexed_snv_cluster {
+	my ($self, $seq_id, $snvs) = @_;
+	my $snv_file = $self->snv_file;
+
+	# My rules:
+	# The biggest structural variation gains precedence.
+	# If occurs an overlapping, I search to the biggest variation among
+	# the saved alterations and compare it with the actual entry:
+	#    *** Remove all overlapping variations if actual entry is bigger;
+	#    *** Skip actual entry if it is lower than the biggest variation
+	#    *** Insertionw can be before any alterations
+
+	my @saved_snvs;
+	my %blacklist;
+
+	OUTER: for (my $i = 0; $i < @$snvs; $i++) {
+		my $prev_snv = $snvs->[$i];
+
+		if ($blacklist{refaddr($prev_snv)}) {
+			next OUTER;
+		}
+
+		INNER: for (my $j = 0; $j < @$snvs; $j++) {
+			my $next_snv = $snvs->[$j];
+
+			if (($i == $j) || $blacklist{refaddr($next_snv)}) {
+				next INNER;
+			}
+
+			# Insertion after insertion
+			if ($next_snv->{ref} eq '-' && $prev_snv->{ref} eq '-' && $next_snv->{pos} != $prev_snv->{pos}) {
+				next INNER;
+
+			# Insertion before alteration
+			} elsif ($next_snv->{ref} eq '-' && $prev_snv->{ref} ne '-' && $next_snv->{pos} < $prev_snv->{pos}) {
+				next INNER;
+
+			# In this case, it gains the biggest one
+			} else {
+				my $prev_size = $prev_snv->{high} - $prev_snv->{low} + 1;
+				my $next_size = $next_snv->{high} - $next_snv->{low} + 1;
+
+				if ($prev_size >= $next_size) {
+					log_msg sprintf ":: Alteration [%s %d %s %s %s] masks [%s %d %s %s %s] at '%s' line %d\n"
+						=> $seq_id, $prev_snv->{pos}+1, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo}, $seq_id, $next_snv->{pos}+1,
+						$next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo}, $snv_file, $next_snv->{line};
+
+					$blacklist{refaddr($next_snv)} = 1;
+					next INNER;
+				} else {
+					log_msg sprintf ":: Alteration [%s %d %s %s %s] masks [%s %d %s %s %s] at '%s' line %d\n"
+						=> $seq_id, $next_snv->{pos}+1, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo}, $seq_id, $prev_snv->{pos}+1,
+						$prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo}, $snv_file, $prev_snv->{line};
+
+					$blacklist{refaddr($prev_snv)} = 1;
+					next OUTER;
 				}
 			}
 		}
 
-		if (scalar @to_remove < scalar @snvs) {
-			$indexed_snv->{$seq_id} = $tree;
-		}
-
-		$tree->delete($_->{low}, $_->{high}) for @to_remove;
+		push @saved_snvs => $prev_snv;
 	}
+
+	return \@saved_snvs;
 }
 
 sub _index_snv {
@@ -670,7 +766,6 @@ sub _index_snv {
 	my $line = 0;
 
 	# chr pos ref @obs he
-	LINE:
 	while (<$fh>) {
 		$line++;
 
@@ -704,64 +799,12 @@ sub _index_snv {
 			next;
 		}
 
-		if (not defined $indexed_snv{$fields[0]}) {
-			$indexed_snv{$fields[0]} = App::Sandy::BTree::Interval->new;
-		}
-
-		my $tree = $indexed_snv{$fields[0]};
-
 		# Sequence inside perl begins at 0
 		my $position = int($fields[1] - 1);
 
 		# Compare the alterations and reference to guess the max variation on sequence
-		my $size_of_variation = ( sort { $b <=> $a } map { length } $fields[3], $fields[2] )[0];
-
-		my $low = $position;
+		my $size_of_variation = max map { length } $fields[2], $fields[3];
 		my $high = $position + $size_of_variation - 1;
-
-		my $snvs = $tree->search($low, $high);
-
-		# My rules:
-		# The biggest structural variation gains precedence.
-		# If occurs an overlapping, I search to the biggest variation among
-		# the saved alterations and compare it with the actual entry:
-		#    *** Remove all overlapping variations if actual entry is bigger;
-		#    *** Skip actual entry if it is lower than the biggest variation
-		#    *** Insertionw can be before any alterations
-		my @to_remove;
-
-		NODE:
-		for my $snv (@$snvs) {
-			# Insertion after insertion
-			if ($snv->{ref} eq '-' && $fields[2] eq '-' && $fields[1] != $snv->{pos}) {
-				next NODE;
-
-			# Alteration after insertion
-			} elsif ($snv->{ref} eq '-' && $fields[2] ne '-' && $fields[1] > $snv->{pos}) {
-				next NODE;
-
-			# In this case, it gains the biggest one
-			} else {
-				my $size_of_variation_saved = $snv->{high} - $snv->{low} + 1;
-
-				if ($size_of_variation_saved >= $size_of_variation) {
-					log_msg sprintf ":: Early alteration [%s %d %s %s %s] masks [%s %d %s %s %s] at '%s' line %d\n"
-						=> $fields[0], $snv->{pos}+1, $snv->{ref}, $snv->{alt}, $snv->{plo}, $fields[0], $position+1,
-						$fields[2], $fields[3], $fields[4], $snv_file, $line;
-
-					next LINE;
-				} else {
-					log_msg sprintf ":: Alteration [%s %d %s %s %s] masks early declaration [%s %d %s %s %s] at '%s' line %d\n"
-						=> $fields[0], $position+1, $fields[2], $fields[3], $fields[4], $fields[0], $snv->{pos}+1, $snv->{ref},
-						$snv->{alt}, $snv->{plo}, $snv_file, $line;
-
-					push @to_remove => $snv;
-				}
-			}
-		}
-
-		# Remove the overlapping node
-		$tree->delete($_->{low}, $_->{high}) for @to_remove;
 
 		my %variation = (
 			ref  => $fields[2],
@@ -769,10 +812,11 @@ sub _index_snv {
 			plo  => $fields[4],
 			pos  => $position,
 			low  => $position,
-			high => $high
+			high => $high,
+			line => $line
 		);
 
-		$tree->insert($low, $high, \%variation);
+		push @{ $indexed_snv{$fields[0]} } => \%variation;
 	}
 
 	close $fh
