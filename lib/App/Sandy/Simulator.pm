@@ -641,7 +641,7 @@ sub _validate_indexed_snv_against_fasta {
 			} elsif ($snv->{ref} ne '-') {
 				my $ref = substr $$seq, $snv->{pos}, length($snv->{ref});
 
-				if ($ref ne $snv->{ref}) {
+				if (uc($ref) ne uc($snv->{ref})) {
 					log_msg sprintf ":: In validating '%s': Not found reference '%s' at fasta position %s:%d",
 						$snv_file, $snv->{ref}, $seq_id, $snv->{pos} + 1;
 
