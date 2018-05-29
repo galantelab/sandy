@@ -117,7 +117,7 @@ sub _build_subseq {
 	my $start_ref = $pieces->[0]{pos} + $offset;
 	my $end_ref = $start_ref + $len - 1;
 	my $read_end_ref = $start_ref + $self->read_size - 1;
-	my $read_end_piece = first { $self->_is_pos_inside_piece($read_end_ref, $_) } @$pieces;
+	my $read_end_piece = first { $self->_is_pos_inside_piece($read_end_ref, $_) } reverse @$pieces;
 	my $read_start_ref = $end_ref - $self->read_size + 1;
 	my $read_start_piece = first { $self->_is_pos_inside_piece($read_start_ref, $_) } @$pieces;
 

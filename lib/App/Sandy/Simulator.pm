@@ -681,7 +681,7 @@ sub _validate_indexed_snv_against_itself {
 			}
 
 			push @snv_cluster => $next_snv;
-			$high = max $prev_snv->{high}, $next_snv->{high};
+			$high = max $high, $next_snv->{high};
 			$prev_snv = $next_snv;
 		}
 

@@ -232,7 +232,7 @@ sub _change_at_end {
 	# If the new len is zero, then remove
 	# this piece
 	if ($new_len == 0) {
-		$self->_splice_piece($index, 1);
+		$self->_splice_piece($index--, 1);
 	}
 
 	# Then insert new_piece
@@ -370,13 +370,44 @@ sub _piece_at {
 	# Catch the piece at index
 	my $piece = $self->_get_piece($index);
 
-	# If I catched a non original sequence, then it must
-	# be afterward
+	# It needs to catch a orig piece, so if the piece
+	# is an insertion, it will search forward and backward
+	# from the actual index
 	if (not $piece->{is_orig}) {
-		$piece = $self->_get_piece(++$index);
-		unless ($self->_is_pos_inside_range($pos, $piece->{pos}, $piece->{len})) {
-			croak "Position is not inside the piece after non original sequence";
+		my $new_index;
+
+		# Search forward
+		for (my $i = $index + 1; $i < $self->_count_pieces; $i++) {
+			my $piece = $self->_get_piece($i);
+			if ($piece->{is_orig}) {
+				if ($self->_is_pos_inside_range($pos, $piece->{pos}, $piece->{len})) {
+					$new_index = $i;
+				}
+
+				break;
+			}
 		}
+
+		if (not defined $new_index) {
+			# Search backward
+			for (my $i = $index - 1; $i >= 0; $i--) {
+				my $piece = $self->_get_piece($i);
+				if ($piece->{is_orig}) {
+					if ($self->_is_pos_inside_range($pos, $piece->{pos}, $piece->{len})) {
+						$new_index = $i;
+					}
+
+					break;
+				}
+			}
+
+			# Not found at all :(
+			if (not defined $new_index) {
+				croak "There is no orig position to '$pos'";
+			}
+		}
+
+		$index = $new_index;
 	}
 
 	return $index;
