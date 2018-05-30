@@ -10,8 +10,8 @@ with 'App::Sandy::Role::Digest';
 # VERSION
 
 sub default_opt {
-	'paired-end-id'    => '%i.%U_%c_%s_%S_%E',
-	'single-end-id'    => '%i.%U_%c_%s_%t_%n',
+	'paired-end-id'    => '%i.%U:%c:%F:%X-%Z',
+	'single-end-id'    => '%i.%U:%c:%s:%t-%n',
 	'seed'             => time,
 	'verbose'          => 0,
 	'prefix'           => 'out',
