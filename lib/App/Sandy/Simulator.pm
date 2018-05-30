@@ -318,10 +318,15 @@ sub _retrieve_expression_matrix {
 
 sub _build_seqid_raffle {
 	my $self = shift;
+
+	# Get the piece table
+	my $piece_table = $self->_piece_table;
+
+	# The builded function
 	my $seqid_sub;
+
 	given ($self->seqid_weight) {
 		when ('same') {
-			my $piece_table = $self->_piece_table;
 			my @keys;
 
 			while (my ($seq_id, $type_h) = each %$piece_table)  {
@@ -345,9 +350,10 @@ sub _build_seqid_raffle {
 			# Catch expression-matrix entry from database
 			my $indexed_file = $self->_retrieve_expression_matrix;
 
-			# Validate expression_matrix
+			# Get fasta index
 			my $indexed_fasta = $self->_fasta;
 
+			# Validate expression_matrix
 			for my $id (keys %$indexed_file) {
 				# If not exists into indexed_fasta, it must then exist into fasta_tree
 				unless (exists $indexed_fasta->{$id} || $self->_exists_fasta_tree($id)) {
@@ -362,7 +368,6 @@ sub _build_seqid_raffle {
 					=> $self->expression_matrix, $self->fasta_file;
 			}
 
-			my $piece_table = $self->_piece_table;
 			my (@keys, @weights);
 
 			while (my ($seq_id, $counts) = each %$indexed_file) {
@@ -451,7 +456,6 @@ sub _build_seqid_raffle {
 			$seqid_sub = sub { $raffler->weighted_raffle };
 		}
 		when ('length') {
-			my $piece_table = $self->_piece_table;
 			my (@keys, @weights);
 
 			while (my ($seq_id, $type_h) = each %$piece_table) {
