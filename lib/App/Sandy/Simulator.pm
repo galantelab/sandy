@@ -1000,7 +1000,7 @@ sub run_simulation {
 			} finally {
 				unless (@_) {
 					for my $fh_idx (0..$#fhs) {
-						$counter{$id}++;
+						$counter{$id->{seq_id}}++;
 						$fhs[$fh_idx]->say(${$fastq_entry[$fh_idx]})
 							or die "Cannot write to $files_t[$fh_idx]: $!\n";
 					}
