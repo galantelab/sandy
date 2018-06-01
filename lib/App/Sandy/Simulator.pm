@@ -327,24 +327,20 @@ sub _build_seqid_raffle {
 
 	given ($self->seqid_weight) {
 		when ('same') {
-			my @keys;
+			my ($keys, $weights) = $self->_populate_key_weight($piece_table, sub { 1 });
 
-			while (my ($seq_id, $type_h) = each %$piece_table)  {
-				my @types = keys %$type_h;
-
-				for my $type (@types) {
-
-					my %key = (
-						'seq_id' => $seq_id,
-						'type'   => $type
-					);
-
-					push @keys => \%key;
+			# If weight == 1 means that there are 2 keys for
+			# the same seq_id.
+			# If weight == 2 means that there is only one key
+			# for the seq_id, so I double that key
+			for (my $i = 0; $i < @$weights; $i++) {
+				if ($weights->[$i] > 1) {
+					push @$keys => $keys->[$i];
 				}
 			}
 
-			my $keys_size = scalar @keys;
-			$seqid_sub = sub { $keys[int(rand($keys_size))] };
+			my $keys_size = scalar @$keys;
+			$seqid_sub = sub { $keys->[int(rand($keys_size))] };
 		}
 		when ('count') {
 			# Catch expression-matrix entry from database
@@ -368,122 +364,110 @@ sub _build_seqid_raffle {
 					=> $self->expression_matrix, $self->fasta_file;
 			}
 
-			my (@keys, @weights);
+			my (%ptable_ind, %ptable_cluster);
 
-			while (my ($seq_id, $counts) = each %$indexed_file) {
-				# The fasta size to calculate the correct weight
-				my $fasta_size = $indexed_fasta->{$seq_id}{size};
+			# Split indexed_file seq_ids between those
+			# into piece_table and those that represents a cluster
+			# of seq_ids as in gene -> transcript relationship
+			for my $seq_id (keys %$indexed_file) {
+				if (exists $piece_table->{$seq_id}) {
+					$ptable_ind{$seq_id} = $piece_table->{$seq_id};
 
-				if (not exists $piece_table->{$seq_id}) {
-					# This entry must be related to some cluster: 'gene'
+				} else {
 					my $ids = $self->_get_fasta_tree($seq_id);
 
 					unless (@$ids) {
 						croak "seq_id '$seq_id' not found into piece_table";
 					}
 
-					# total size among all ids of cluster
-					my $total = sum
-						map { $_->{size} }
-						map { values %$_ }
-						@{ $piece_table->{@$ids} };
-
-					for my $id (@$ids) {
-						my $type_h = $piece_table->{$id};
-
-						# factor1: Correct weight according to
-						# presence absence of alternative seq_id
-						my $factor1 = scalar keys %$type_h == 1
-							? 2
-							: 1;
-
-						while (my ($type, $table_h) = each %$type_h) {
-
-							my %key = (
-								'seq_id' => $seq_id,
-								'type'   => $type
-							);
-
-							# Divide the counts among all ids
-							my $ratio = $table_h->{size} / $total;
-
-							# Correct the weight according to the size
-							my $factor2 = $table_h->{size} / $fasta_size;
-
-							# size/total * counts  * factor1 * factor2
-							my $counts = $indexed_file->{$seq_id};
-
-							push @keys => \%key;
-							push @weights => int($counts * $factor1 * $factor2 * $ratio);
-						}
-					}
-				} else {
-
-					# There is seq_id into piece_table
-					my $type_h = $piece_table->{$seq_id};
-
-					# factor1: Correct weight according to
-					# presence absence of alternative seq_id
-					my $factor1 = scalar keys %$type_h == 1
-						? 2
-						: 1;
-
-					while (my ($type, $table_h) = each %$type_h) {
-
-						my %key = (
-							'seq_id' => $seq_id,
-							'type'   => $type
-						);
-
-						my $counts = $indexed_file->{$seq_id};
-
-						# Correct the weight according to the
-						# structural variation change by the ratio
-						# between the table size and fasta size
-						my $factor2 = $table_h->{size} / $fasta_size;
-
-						push @keys => \%key;
-						push @weights => int($counts * $factor1 * $factor2);
-					}
+					$ptable_cluster{$seq_id} = $ids;
 				}
 			}
 
+			# Let's calculate the weight taking in acount
+			# the size  increase/decrease
+			my $calc_ind_weight = sub {
+				my ($seq_id, $type) = @_;
+
+				my $counts = $indexed_file->{$seq_id};
+				my $size = $piece_table->{$seq_id}{$type}{size};
+				my $fasta_size = $indexed_fasta->{$seq_id}{size};
+
+				# Correct the weight according to the
+				# structural variation change by the ratio
+				# between the table size and fasta size
+				my $factor = $size / $fasta_size;
+
+				return int($counts * $factor);
+			};
+
+			my ($keys, $weights) = $self->_populate_key_weight(\%ptable_ind,
+				$calc_ind_weight);
+
+			# If there are seq_id cluster like, then its is
+			# time to calculate these weights
+			for my $seq_id (sort keys %ptable_cluster) {
+				my %ptable;
+
+				# Slice piece_table hash
+				my $ids = $ptable_cluster{$seq_id};
+				@ptable{@$ids} = @$piece_table{@$ids};
+
+				# total size among all ids of cluster
+				my %total;
+
+				# Calculate the total size by type
+				for my $type_h (values %ptable) {
+					for my $type (keys %$type_h) {
+						$total{$type} += $type_h->{$type}{size};
+					}
+				}
+
+				# Calculate the weight taking in acount the size increase/decrease
+				# and the ratio between the total size by type and the table size.
+				# The problem here is that I must divide the 'counts' for some 'seq_id'
+				# among all ids that belong to it
+				my $calc_cluster_weight = sub {
+					my ($id, $type) = @_;
+
+					my $counts = $indexed_file->{$seq_id};
+					my $size = $piece_table->{$seq_id}{$type}{size};
+					my $fasta_size = $indexed_fasta->{$seq_id}{size};
+
+					# Divide the counts among all ids
+					my $ratio = $size / $total{$type};
+
+					# Correct the weight according to the size
+					my $factor = $size / $fasta_size;
+
+					return int($counts * $factor * $ratio);
+				};
+
+				my ($k, $w) = $self->_populate_key_weight(\%ptable,
+					$calc_cluster_weight);
+
+				push @$keys => @$k;
+				push @$weights => @$w;
+			}
+
 			my $raffler = App::Sandy::WeightedRaffle->new(
-				'weights' => \@weights,
-				'keys'    => \@keys
+				'weights' => $weights,
+				'keys'    => $keys
 			);
 
 			$seqid_sub = sub { $raffler->weighted_raffle };
 		}
 		when ('length') {
-			my (@keys, @weights);
+			my $calc_weight = sub {
+				my ($seq_id, $type) = @_;
+				return $piece_table->{$seq_id}{$type}{size};
+			};
 
-			while (my ($seq_id, $type_h) = each %$piece_table) {
-
-				# If there is no alternative seq_id, the
-				# set a factor to correct the size.
-				# It is necessary because the seq_ids with
-				# alternative and reference will double its
-				# own coverage
-				my $factor = scalar keys %$type_h == 1
-					? 2
-					: 1;
-
-				while (my ($type, $table_h) = each %$type_h) {
-
-					my %key = (
-						'seq_id' => $seq_id,
-						'type'   => $type
-					);
-
-					push @keys => \%key;
-					push @weights => ($table_h->{size} * $factor);
-				}
-			}
+			my ($keys, $weights) = $self->_populate_key_weight($piece_table, $calc_weight);
 
 			my $raffler = App::Sandy::WeightedRaffle->new(
-				weights => \@weights,
-				keys    => \@keys
+				weights => $weights,
+				keys    => $keys
 			);
 
 			$seqid_sub = sub { $raffler->weighted_raffle };
@@ -494,6 +478,42 @@ sub _build_seqid_raffle {
 	}
 
 	return $seqid_sub;
+}
+
+sub _populate_key_weight {
+	my ($self, $piece_table, $calc_weight) = @_;
+
+	my (@keys, @weights);
+
+	# It needs to be sorted in order to the
+	# seed works
+	for my $seq_id (sort keys %$piece_table) {
+		my $type_h = $piece_table->{$seq_id};
+
+		# If there is no alternative seq_id, the
+		# set a factor to correct the size.
+		# It is necessary because the seq_ids with
+		# alternative and reference will double its
+		# own coverage
+		my $factor = scalar keys %$type_h == 1
+			? 2
+			: 1;
+
+		for my $type (sort keys %$type_h) {
+
+			my %key = (
+				'seq_id' => $seq_id,
+				'type'   => $type
+			);
+
+			my $weight = $calc_weight->($seq_id, $type);
+
+			push @keys => \%key;
+			push @weights => ($weight * $factor);
+		}
+	}
+
+	return (\@keys, \@weights);
 }
 
 sub _build_piece_table {
