@@ -284,30 +284,31 @@ sub _build_fasta {
 		die sprintf "Fasta file '%s' has no valid entry\n" => $self->fasta_file;
 	}
 
-	# Remove no valid entries from id -> pid relation
-	$self->_delete_fasta_rtree(@blacklist) if @blacklist;
+	# If fasta_rtree has entries
+	unless ($self->_has_no_fasta_rtree) {
+		# Remove no valid entries from id -> pid relation
+		$self->_delete_fasta_rtree(@blacklist) if @blacklist;
+	}
 
-	# Reverse fasta_rtree to pid -> \@ids
+	return $indexed_fasta;
+}
+
+sub _populate_fasta_tree {
+	my $self = shift;
+
+	# If fasta_rtree has entries
 	unless ($self->_has_no_fasta_rtree) {
 		# Build parent -> child ids relation
 		my %fasta_tree;
 
+		# Reverse fasta_rtree to pid -> \@ids
 		for my $pair ($self->_fasta_rtree_pairs) {
 			my ($id, $pid) = (@$pair);
 			push @{ $fasta_tree{$pid} } => $id;
 		}
 
-		# Need to sort ids to ensure that raffle will
-		# be reproducible
-		while (my ($pid, $ids) = each %fasta_tree) {
-			my @sorted_ids = sort @$ids;
-			$fasta_tree{$pid} = \@sorted_ids;
-		}
-
 		$self->_set_fasta_tree(%fasta_tree);
 	}
-
-	return $indexed_fasta;
 }
 
 sub _retrieve_expression_matrix {
@@ -346,22 +347,22 @@ sub _build_seqid_raffle {
 			# Catch expression-matrix entry from database
 			my $indexed_file = $self->_retrieve_expression_matrix;
 
-			# Get fasta index
+			# Catch indexed fasta
 			my $indexed_fasta = $self->_fasta;
 
 			# Validate expression_matrix
 			for my $id (keys %$indexed_file) {
 				# If not exists into indexed_fasta, it must then exist into fasta_tree
-				unless (exists $indexed_fasta->{$id} || $self->_exists_fasta_tree($id)) {
-					log_msg sprintf ":: Ignoring seqid '$id' from expression-matrix '%s': It is not found into the indexed fasta file '%s'"
-						=> $self->expression_matrix, $self->fasta_file;
+				unless (exists $piece_table->{$id} || $self->_exists_fasta_tree($id)) {
+					log_msg sprintf ":: Ignoring seqid '%s' from expression-matrix '%s': It is not found into the indexed fasta"
+						=> $id, $self->expression_matrix;
 					delete $indexed_file->{$id};
 				}
 			}
 
 			unless (%$indexed_file) {
-				die sprintf "No valid seqid entry of the expression-matrix '%s' is recorded into the indexed fasta file '%s'\n"
-					=> $self->expression_matrix, $self->fasta_file;
+				die sprintf "No valid seqid entry of the expression-matrix '%s' is recorded into the indexed fasta\n"
+					=> $self->expression_matrix;
 			}
 
 			my (%ptable_ind, %ptable_cluster);
@@ -376,6 +377,7 @@ sub _build_seqid_raffle {
 				} else {
 					my $ids = $self->_get_fasta_tree($seq_id);
 
+					# Bug catcher
 					unless (@$ids) {
 						croak "seq_id '$seq_id' not found into piece_table";
 					}
@@ -600,7 +602,12 @@ sub _build_piece_table {
 
 	# Initialize the logical offsets and valodate the
 	# new size due to the structural variation
-	while (my ($seq_id, $type_h) = each %piece_table) {
+
+	my @blacklist;
+
+	for my $seq_id (keys %piece_table) {
+		my $type_h = delete $piece_table{$seq_id};
+
 		for my $type (keys %$type_h) {
 			my $table_h = delete $type_h->{$type};
 			my $table = $table_h->{table};
@@ -633,7 +640,31 @@ sub _build_piece_table {
 			$table_h->{size} = $new_size;
 			$type_h->{$type} = $table_h;
 		}
+
+		# if there is at least one type,
+		# then return it to the piece_table
+		if (%$type_h) {
+			$piece_table{$seq_id} = $type_h;
+
+		# else, just remove it!
+		} else {
+			push @blacklist => $seq_id;
+		}
 	}
+
+	unless (%piece_table) {
+		die sprintf "All fasta entries were removed due to deletions. Please, verify the file '%s'\n"
+			=> $snv_file;
+	}
+
+	# If fasta_rtree has entries
+	unless ($self->_has_no_fasta_rtree) {
+		# Remove no valid entries from id -> pid relation
+		$self->_delete_fasta_rtree(@blacklist) if @blacklist;
+	}
+
+	# Make the id -> pid relationship
+	$self->_populate_fasta_tree;
 
 	# HASH -> SEQ_ID -> @(REF @ALT) -> @(TABLE SIZE)
 	return \%piece_table;
