@@ -9,7 +9,7 @@ use App::Sandy::WeightedRaffle;
 use App::Sandy::PieceTable;
 use App::Sandy::DB::Handle::Expression;
 use Scalar::Util qw/looks_like_number refaddr/;
-use List::Util qw/sum max/;
+use List::Util qw/sum max min/;
 use File::Cat 'cat';
 use Parallel::ForkManager;
 
@@ -398,11 +398,15 @@ sub _build_seqid_raffle {
 				# between the table size and fasta size
 				my $factor = $size / $fasta_size;
 
-				return int($counts * $factor);
+				return $counts * $factor;
 			};
 
-			my ($keys, $weights) = $self->_populate_key_weight(\%ptable_ind,
-				$calc_ind_weight);
+			my ($keys, $weights);
+
+			if (%ptable_ind) {
+				($keys, $weights) = $self->_populate_key_weight(\%ptable_ind,
+					$calc_ind_weight);
+			}
 
 			# If there are seq_id cluster like, then its is
 			# time to calculate these weights
@@ -431,8 +435,8 @@ sub _build_seqid_raffle {
 					my ($id, $type) = @_;
 
 					my $counts = $indexed_file->{$seq_id};
-					my $size = $piece_table->{$seq_id}{$type}{size};
-					my $fasta_size = $indexed_fasta->{$seq_id}{size};
+					my $size = $piece_table->{$id}{$type}{size};
+					my $fasta_size = $indexed_fasta->{$id}{size};
 
 					# Divide the counts among all ids
 					my $ratio = $size / $total{$type};
@@ -440,7 +444,7 @@ sub _build_seqid_raffle {
 					# Correct the weight according to the size
 					my $factor = $size / $fasta_size;
 
-					return int($counts * $factor * $ratio);
+					return $counts * $factor * $ratio;
 				};
 
 				my ($k, $w) = $self->_populate_key_weight(\%ptable,
@@ -449,6 +453,15 @@ sub _build_seqid_raffle {
 				push @$keys => @$k;
 				push @$weights => @$w;
 			}
+
+			unless (@$keys && @$weights) {
+				croak "No keys weights have been set";
+			}
+
+			# It is very necessary in order
+			# to avoid truncation of numbers
+			# between zero and one
+			$self->_round_weight($weights);
 
 			my $raffler = App::Sandy::WeightedRaffle->new(
 				'weights' => $weights,
@@ -463,7 +476,11 @@ sub _build_seqid_raffle {
 				return $piece_table->{$seq_id}{$type}{size};
 			};
 
-			my ($keys, $weights) = $self->_populate_key_weight($piece_table, $calc_weight);
+			my ($keys, $weights) = $self->_populate_key_weight($piece_table,
+				$calc_weight);
+
+			# Just in case ...
+			$self->_round_weight($weights);
 
 			my $raffler = App::Sandy::WeightedRaffle->new(
 				weights => $weights,
@@ -480,6 +497,24 @@ sub _build_seqid_raffle {
 	return $seqid_sub;
 }
 
+sub _round_weight {
+	my ($self, $weights) = @_;
+
+	my $min = min @$weights;
+
+	if ($min <= 0) {
+		croak "min weight le to zero: $min";
+	}
+
+	my $factor = $min < 1
+		? (1 / $min)
+		: 1;
+
+	for my $weight (@$weights) {
+		$weight = int($weight * $factor + 0.5);
+	}
+}
+
 sub _populate_key_weight {
 	my ($self, $piece_table, $calc_weight) = @_;
 
@@ -490,7 +525,7 @@ sub _populate_key_weight {
 	for my $seq_id (sort keys %$piece_table) {
 		my $type_h = $piece_table->{$seq_id};
 
-		# If there is no alternative seq_id, the
+		# If there is no alternative seq_id, then
 		# set a factor to correct the size.
 		# It is necessary because the seq_ids with
 		# alternative and reference will double its
@@ -509,7 +544,7 @@ sub _populate_key_weight {
 			my $weight = $calc_weight->($seq_id, $type);
 
 			push @keys => \%key;
-			push @weights => ($weight * $factor);
+			push @weights => $weight * $factor;
 		}
 	}
 

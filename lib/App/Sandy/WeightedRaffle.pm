@@ -17,7 +17,7 @@ has 'keys' => (
 
 has 'weights' => (
 	is         => 'ro',
-	isa        => 'ArrayRef[Int]',
+	isa        => 'ArrayRef[My:IntGt0]',
 	required   => 1
 );
 
