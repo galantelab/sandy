@@ -675,7 +675,9 @@ sub _populate_piece_table {
 
 	for my $snv (@$snvs) {
 
-		my $annot = sprintf "%d:%s/%s" => $snv->{pos} + 1, $snv->{ref}, $snv->{alt};
+		my $annot = defined $snv->{id} && $snv->{id} ne '.'
+			? sprintf "%d:%s"    => $snv->{pos} + 1, $snv->{id}
+			: sprintf "%d:%s/%s" => $snv->{pos} + 1, $snv->{ref}, $snv->{alt};
 
 		# Insertion
 		if ($snv->{ref} eq '-') {
@@ -866,8 +868,8 @@ sub _index_snv {
 		chomp;
 		my @fields = split;
 
-		die "Not found all fields (SEQID, POSITION, REFERENCE, OBSERVED, PLOIDY) into file '$snv_file' at line $line\n"
-			unless scalar @fields >= 5;
+		die "Not found all fields (SEQID, POSITION, ID, REFERENCE, OBSERVED, PLOIDY) into file '$snv_file' at line $line\n"
+			unless scalar @fields >= 6;
 
 		die "Second column, position, does not seem to be a number into file '$snv_file' at line $line\n"
 			unless looks_like_number($fields[1]);
@@ -875,16 +877,16 @@ sub _index_snv {
 		die "Second column, position, has a value lesser or equal to zero into file '$snv_file' at line $line\n"
 			if $fields[1] <= 0;
 
-		die "Third column, reference, does not seem to be a valid entry: '$fields[2]' into file '$snv_file' at line $line\n"
-			unless $fields[2] =~ /^(\w+|-)$/;
-
-		die "Fourth column, alteration, does not seem to be a valid entry: '$fields[3]' into file '$snv_file' at line $line\n"
+		die "Fourth column, reference, does not seem to be a valid entry: '$fields[3]' into file '$snv_file' at line $line\n"
 			unless $fields[3] =~ /^(\w+|-)$/;
 
-		die "Fifth column, ploidy, has an invalid entry: '$fields[4]' into file '$snv_file' at line $line. Valid ones are 'HE' or 'HO'\n"
-			unless $fields[4] =~ /^(HE|HO)$/;
+		die "Fifth column, alteration, does not seem to be a valid entry: '$fields[4]' into file '$snv_file' at line $line\n"
+			unless $fields[4] =~ /^(\w+|-)$/;
 
-		if ($fields[2] eq $fields[3]) {
+		die "Sixth column, ploidy, has an invalid entry: '$fields[5]' into file '$snv_file' at line $line. Valid ones are 'HE' or 'HO'\n"
+			unless $fields[5] =~ /^(HE|HO)$/;
+
+		if ($fields[3] eq $fields[4]) {
 			warn "There is an alteration equal to the reference at '$snv_file' line $line. I will ignore it\n";
 			next;
 		}
@@ -893,13 +895,14 @@ sub _index_snv {
 		my $position = int($fields[1] - 1);
 
 		# Compare the alterations and reference to guess the max variation on sequence
-		my $size_of_variation = max map { length } $fields[2], $fields[3];
+		my $size_of_variation = max map { length } $fields[3], $fields[4];
 		my $high = $position + $size_of_variation - 1;
 
 		my %variation = (
-			ref  => $fields[2],
-			alt  => $fields[3],
-			plo  => $fields[4],
+			id   => $fields[2],
+			ref  => $fields[3],
+			alt  => $fields[4],
+			plo  => $fields[5],
 			pos  => $position,
 			low  => $position,
 			high => $high,
