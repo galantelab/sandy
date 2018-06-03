@@ -7,7 +7,10 @@ use App::Sandy::Base 'role';
 
 sub with_compile_template {
 	my ($self, $template, $input_name, $sym_table) = @_;
-	die "sym_table is not a hashref" unless ref $sym_table eq 'HASH';
+	croak "sym_table is not a hashref" unless ref $sym_table eq 'HASH';
+
+	# Inactivate perl reserved characters $, @, &, #
+	$template =~ s/(?<!\\)[\$\@\#\&]/\\$&/g;
 
 	while (my ($sym, $variable) = each %$sym_table) {
 		$template =~ s/$sym/$variable/g;
