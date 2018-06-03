@@ -825,16 +825,18 @@ sub _validate_indexed_snv_cluster {
 				my $next_size = $next_snv->{high} - $next_snv->{low} + 1;
 
 				if ($prev_size >= $next_size) {
-					log_msg sprintf ":: Alteration [%s %d %s %s %s] masks [%s %d %s %s %s] at '%s' line %d\n"
-						=> $seq_id, $prev_snv->{pos}+1, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo}, $seq_id, $next_snv->{pos}+1,
-						$next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo}, $snv_file, $next_snv->{line};
+					log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d\n"
+						=> $seq_id, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
+						$seq_id, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
+						$snv_file, $next_snv->{line};
 
 					$blacklist{refaddr($next_snv)} = 1;
 					next INNER;
 				} else {
-					log_msg sprintf ":: Alteration [%s %d %s %s %s] masks [%s %d %s %s %s] at '%s' line %d\n"
-						=> $seq_id, $next_snv->{pos}+1, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo}, $seq_id, $prev_snv->{pos}+1,
-						$prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo}, $snv_file, $prev_snv->{line};
+					log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d\n"
+						=> $seq_id, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
+						$seq_id, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
+						$snv_file, $prev_snv->{line};
 
 					$blacklist{refaddr($prev_snv)} = 1;
 					next OUTER;
