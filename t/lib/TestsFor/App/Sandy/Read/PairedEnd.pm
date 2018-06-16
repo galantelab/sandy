@@ -6,7 +6,9 @@ use base 'TestsFor::App::Sandy::Read';
 
 sub startup : Tests(startup) {
 	my $test = shift;
+	my $class = ref $test;
 	$test->SUPER::startup;
+	$class->mk_classdata('table_read');
 }
 
 sub setup : Tests(setup) {
@@ -18,6 +20,10 @@ sub setup : Tests(setup) {
 	);
 
 	$test->SUPER::setup(%default_attr);
+
+	my $seq = $test->seq;
+	$test->table_read(App::Sandy::PieceTable->new(orig => \$seq));
+	$test->table_read->calculate_logical_offset;
 }
 
 sub constructor : Tests(9) {
@@ -33,7 +39,7 @@ sub constructor : Tests(9) {
 	}
 
 	my %attrs = %default_attr;
-	
+
 	$attrs{fragment_mean} = 50;
 	$attrs{read_size} = 51;
 	throws_ok { $class->new(%attrs) }
@@ -41,34 +47,34 @@ sub constructor : Tests(9) {
 		"Setting fragment_mean to less than read_size should fail";
 }
 
-sub gen_read : Tests(122) {
+sub gen_read : Tests(62) {
 	my $test = shift;
 
 	my $read = $test->default_read;
 	my $seq = $test->seq;
-	my $seq_len = $test->seq_len;
+	my $table = $test->table_read;
 
-	throws_ok { $read->gen_read(\$seq, $read->read_size - 1, 1) }
+	throws_ok { $read->gen_read($table, $read->read_size - 1, 1) }
 	qr/must be greater or equal to fragment_mean/,
 		"Sequence length lesser than read_size must return error";
-	
+
 	my $err = 0;
 	for (1..100) {
-		my ($r1_ref, $err1_a, $r2_ref, $err2_a, $frag_pos, $frag_size) = $read->gen_read(\$seq, $seq_len, 1);
-		$err++ unless defined $$r1_ref && defined $$r2_ref && defined $frag_pos && defined $frag_size;
+		my ($r1_ref, $r2_ref, $attr) = $read->gen_read($table, $table->logical_len, 1);
+		$err++ unless defined $$r1_ref && defined $$r2_ref;
 	}
 
 	ok $err == 0, "100 tries: It must not give error";
-	
+
 	for my $i (0..9) {
 		#For leader strand
-		my ($r1_ref, $err1_a, $r2_ref, $err2_a, $frag_pos, $frag_size) = $read->gen_read(\$seq, $seq_len, 1);
+		my ($r1_ref, $r2_ref, $attr) = $read->gen_read($table, $table->logical_len, 1);
 		ok index($seq, $$r1_ref) < 0,
 			"Sequence with error must be outside seq in gen_read (PairEnd -> read1). Try $i";
 		my $r1_l1 = substr $$r1_ref, 0, $read->read_size - 1;
 		ok index($seq, $r1_l1) >= 0,
 			"Sequence with error (but last char -> err) must be inside seq in gen_read (PairedEnd -> read1). Try $i";
-		is index($seq, $r1_l1), $frag_pos,
+		is index($seq, $r1_l1), $attr->{start} - 1,
 			"Position returned must be equal to index in gen_read (PairEnd -> read1). Try $i";
 
 		$read->reverse_complement($r2_ref);
@@ -77,44 +83,7 @@ sub gen_read : Tests(122) {
 		my $r2_f1 = substr $$r2_ref, 1, $read->read_size;
 		ok index($seq, $r2_f1) >= 0,
 			"Sequence with error (but first char -> err) must be inside seq in gen_read (PairedEnd -> read2). Try $i";
-		is index($seq, $r2_f1), $frag_pos + $frag_size - $read->read_size + 1,
+		is index($seq, $r2_f1), $attr->{read_start_ref},
 			"Position returned + fragment size must be equal to index in gen_read (PairEnd -> read2). Try $i";
-
-		#For retarded strand
-		my ($r3_ref, $err3_a, $r4_ref, $err4_a, $frag_pos2, $frag_size2) = $read->gen_read(\$seq, $seq_len, 0);
-		ok index($seq, $$r4_ref) < 0,
-			"Sequence with error must be outside seq in gen_read (PairEnd, reverse_complement -> read2). Try $i";
-		my $r4_l1 = substr $$r4_ref, 0, $read->read_size - 1;
-		ok index($seq, $r4_l1) >= 0,
-			"Sequence with error (but last char -> err) must be inside seq in gen_read (PairedEnd, reverse_complement -> read2). Try $i";
-		is index($seq, $r4_l1), $frag_pos2,
-			"Position returned must be equal to index in gen_read (PairEnd, reverse_complement -> read2). Try $i";
-
-		$read->reverse_complement($r3_ref);
-		ok index($seq, $$r3_ref) < 0,
-			"Sequence with error must be outside seq in gen_read (PairEnd, reverse_complement -> read1). Try $i";
-		my $r3_f1 = substr $$r2_ref, 1, $read->read_size;
-		ok index($seq, $r3_f1) >= 0,
-			"Sequence with error (but first char -> err) must be inside seq in gen_read (PairedEnd, reverse_complement -> read1). Try $i";
-		is index($seq, $r3_f1), $frag_pos + $frag_size - $read->read_size + 1,
-			"Position returned + fragment size must be equal to index in gen_read (PairEnd, reverse_complement -> read1). Try $i";
 	}
 }
-
-#sub normality : Tests(1) {
-#	my $test = shift;
-#	my $read = $test->default_read;
-#
-#	SKIP: {
-#		eval { require Statistics::Normality };
-#		skip 'Statistics::Normality not installed', 1 if $@;
-#		
-#		my @dist;
-#		push @dist => ($read->_random_half_normal - 2 * $read->read_size) for 1..100;
-#
-#		my $pval = Statistics::Normality::shapiro_wilk_test(\@dist);
-#		ok $pval >= 0.05,
-#			"Shapiro wilk test: pval ($pval) must be greater than alpha level (0.05) to accept the null-hypothesis";
-#	}
-#}
-

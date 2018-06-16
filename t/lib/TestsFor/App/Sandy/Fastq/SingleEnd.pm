@@ -2,12 +2,14 @@ package TestsFor::App::Sandy::Fastq::SingleEnd;
 # ABSTRACT: Tests for 'App::Sandy::Fastq::SingleEnd' class
 
 use App::Sandy::Base 'test';
+use App::Sandy::PieceTable;
 use base 'TestsFor::App::Sandy::Fastq';
-use autodie;
 
 sub startup : Tests(startup) {
 	my $test = shift;
+	my $class = ref $test;
 	$test->SUPER::startup;
+	$class->mk_classdata('table_read');
 }
 
 sub setup : Tests(setup) {
@@ -15,10 +17,13 @@ sub setup : Tests(setup) {
 
 	my %default_attr = (
 		sequencing_error => 0.1,
-		template_id      => 'sr0001 simulation_read length=%r position=%c:%t-%n'
+		template_id      => 'sr0001 simulation_read length=%r position=%c:%a-%b'
 	);
 
 	$test->SUPER::setup(%default_attr);
+	my $seq = $test->seq;
+	$test->table_read(App::Sandy::PieceTable->new(orig => \$seq));
+	$test->table_read->calculate_logical_offset;
 }
 
 sub cleanup : Tests(shutdown) {
@@ -46,10 +51,11 @@ sub sprint_fastq : Tests(3) {
 	my $fastq = $test->default_fastq;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
+	my $table = $test->table_read;
 
 	my $id = "sr0001";
 	my $seq_name = "Chr1";
-	my $read_ref = $fastq->sprint_fastq($id, 1, $seq_name, \$seq, length $seq, 1);
+	my $read_ref = $fastq->sprint_fastq($id, 1, $seq_name, 'ref', $table, $table->logical_len, 1);
 	my $read_size = $fastq->read_size;
 
 	my $header = qr/simulation_read length=$read_size position=${seq_name}:\d+-\d+/;
@@ -66,7 +72,7 @@ sub sprint_fastq : Tests(3) {
 	is $pos, $pos_t,
 		"The seq_name:start-end inside fastq header should be the correct relative position";
 
-	my $read2_ref = $fastq->sprint_fastq($id, 1, $seq_name, \$seq, length $seq, 0);
+	my $read2_ref = $fastq->sprint_fastq($id, 1, $seq_name, 'ref', $table, $table->logical_len, 0);
 
 	my @lines2 = split /\n/ => $$read2_ref;
 	$fastq->_read->reverse_complement(\$lines2[1]);
@@ -78,5 +84,3 @@ sub sprint_fastq : Tests(3) {
 	is $pos2, $pos2_t,
 		"The seq_name:end-start inside fastq header should be the correct relative position";
 }
-
-## --- end class TestsFor::Fastq::SingleEnd;

@@ -2,12 +2,14 @@ package TestsFor::App::Sandy::Fastq::PairedEnd;
 # ABSTRACT: Tests for 'App::Sandy::Fastq::PairedEnd' class
 
 use App::Sandy::Base 'test';
+use App::Sandy::PieceTable;
 use base 'TestsFor::App::Sandy::Fastq';
-use autodie;
 
 sub startup : Tests(startup) {
 	my $test = shift;
+	my $class = ref $test;
 	$test->SUPER::startup;
+	$class->mk_classdata('table_read');
 }
 
 sub setup : Tests(setup) {
@@ -21,6 +23,9 @@ sub setup : Tests(setup) {
 	);
 
 	$test->SUPER::setup(%default_attr);
+	my $seq = $test->seq;
+	$test->table_read(App::Sandy::PieceTable->new(orig => \$seq));
+	$test->table_read->calculate_logical_offset;
 }
 
 sub cleanup : Tests(shutdown) {
@@ -48,11 +53,14 @@ sub sprint_fastq : Tests(6) {
 	my $fastq = $test->default_fastq;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
+	my $table = $test->table_read;
 
 	my $id = "SR0001";
 	my $seq_name = "Chr1";
-	my ($read1_ref, $read2_ref) = $fastq->sprint_fastq($id, 1, $seq_name, \$seq, length $seq, 1);
+	my ($read1_ref, $read2_ref) = $fastq->sprint_fastq($id, 1, $seq_name, 'ref', $table,
+		$table->logical_len, 1);
 	my $read_size = $fastq->read_size;
+
 	my $header = qr/simulation_read length=$read_size position=${seq_name}:\d+-\d+/;
 	my $rg = qr/\@.+${header}\n.+\n\+\n.+/;
 
@@ -60,7 +68,7 @@ sub sprint_fastq : Tests(6) {
 		ok $$_ =~ $rg,
 			"read retuned by 'fastq' must be in fastq format";
 	}
-	
+
 	# Testing leader strand paired-end fastq
 	my @lines1 = split /\n/ => $$read1_ref;
 	my $read_seq1_l1 = substr $lines1[1], 0, $fastq->read_size - 1;
@@ -80,9 +88,10 @@ sub sprint_fastq : Tests(6) {
 
 	is $pos_s2, $pos_s2_t,
 		"The seq_name:end-start inside read 2 fastq header should be the correct relative position";
-	
+
 	# Testing retarded strand paired-end fastq
-	my ($read2_1_ref, $read2_2_ref) = $fastq->sprint_fastq($id, 1, $seq_name, \$seq, length $seq, 0);
+	my ($read2_1_ref, $read2_2_ref) = $fastq->sprint_fastq($id, 1, $seq_name, 'ref', $table,
+		$table->logical_len, 0);
 
 	my @lines3 = split /\n/ => $$read2_1_ref;
 	$fastq->_read->reverse_complement(\$lines3[1]);
@@ -103,5 +112,3 @@ sub sprint_fastq : Tests(6) {
 	is $pos2_s2, $pos2_s2_t,
 		"The seq_name:start-end inside read 2 fastq header (retarded strand) should be the correct relative position";
 }
-
-## --- end class TestsFor::Fastq::PairedEnd
