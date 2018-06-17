@@ -40,16 +40,19 @@ sub execute {
 	my ($self, $opts, $args) = @_;
 
 	my $report_ref = $self->make_report;
-	my $t1 = Text::SimpleTable::AutoWidth->new;
 
-	$t1->captions(['structural variation', 'source', 'provider', 'date']);
+	if (%$report_ref) {
+		my $t1 = Text::SimpleTable::AutoWidth->new;
 
-	for my $structural_variation (sort keys %$report_ref) {
-		my $attr = $report_ref->{$structural_variation};
-		$t1->row($structural_variation, $attr->{source}, $attr->{provider}, $attr->{date});
+		$t1->captions(['structural variation', 'source', 'provider', 'date']);
+
+		for my $structural_variation (sort keys %$report_ref) {
+			my $attr = $report_ref->{$structural_variation};
+			$t1->row($structural_variation, $attr->{source}, $attr->{provider}, $attr->{date});
+		}
+
+		print $t1->draw;
 	}
-
-	print $t1->draw;
 }
 
 __END__

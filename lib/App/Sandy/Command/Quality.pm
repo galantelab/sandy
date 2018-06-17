@@ -40,16 +40,19 @@ sub execute {
 	my ($self, $opts, $args) = @_;
 
 	my $report_ref = $self->make_report;
-	my $t1 = Text::SimpleTable::AutoWidth->new;
 
-	$t1->captions(['quality profile', 'size', 'source', 'provider', 'date']);
+	if (%$report_ref) {
+		my $t1 = Text::SimpleTable::AutoWidth->new;
 
-	for my $quality_profile (sort keys %$report_ref) {
-		my $attr = $report_ref->{$quality_profile};
-		$t1->row($quality_profile, $attr->{size}, $attr->{source}, $attr->{provider}, $attr->{date});
+		$t1->captions(['quality profile', 'size', 'source', 'provider', 'date']);
+
+		for my $quality_profile (sort keys %$report_ref) {
+			my $attr = $report_ref->{$quality_profile};
+			$t1->row($quality_profile, $attr->{size}, $attr->{source}, $attr->{provider}, $attr->{date});
+		}
+
+		print $t1->draw;
 	}
-
-	print $t1->draw;
 }
 
 __END__

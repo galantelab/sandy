@@ -40,16 +40,19 @@ sub execute {
 	my ($self, $opts, $args) = @_;
 
 	my $report_ref = $self->make_report;
-	my $t1 = Text::SimpleTable::AutoWidth->new;
 
-	$t1->captions([qw/expression-matrix source provider date/]);
+	if (%$report_ref) {
+		my $t1 = Text::SimpleTable::AutoWidth->new;
 
-	for my $expression_matrix (sort keys %$report_ref) {
-		my $attr = $report_ref->{$expression_matrix};
-		$t1->row($expression_matrix, $attr->{source}, $attr->{provider}, $attr->{date});
+		$t1->captions([qw/expression-matrix source provider date/]);
+
+		for my $expression_matrix (sort keys %$report_ref) {
+			my $attr = $report_ref->{$expression_matrix};
+			$t1->row($expression_matrix, $attr->{source}, $attr->{provider}, $attr->{date});
+		}
+
+		print $t1->draw;
 	}
-
-	print $t1->draw;
 }
 
 __END__
