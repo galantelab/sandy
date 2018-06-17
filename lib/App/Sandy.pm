@@ -13,6 +13,7 @@ sub command_map {
 	transcriptome => 'App::Sandy::Command::Transcriptome',
 	quality       => 'App::Sandy::Command::Quality',
 	expression    => 'App::Sandy::Command::Expression',
+	variation     => 'App::Sandy::Command::Variation',
 	version       => 'App::Sandy::Command::Version',
 	citation      => 'App::Sandy::Command::Citation'
 }
@@ -37,12 +38,15 @@ __END__
   version                  print the current version
   citation                 export citation in BibTeX format
 
+ Database commands:
+  quality                  manage quality profile database
+  expression               manage expression-matrix database
+  variation                manage structural variation database
+
  Main commands:
   genome                   simulate genome sequencing
   transcriptome            simulate transcriptome sequencing
   custom                   simulate custom sequencing
-  quality                  manage quality profile database
-  expression               manage expression-matrix database
 
 =head1 DESCRIPTION
 

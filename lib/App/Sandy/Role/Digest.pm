@@ -4,6 +4,7 @@ package App::Sandy::Role::Digest;
 use App::Sandy::Base 'role';
 use App::Sandy::DB::Handle::Quality;
 use App::Sandy::DB::Handle::Expression;
+use App::Sandy::DB::Handle::Variation;
 use App::Sandy::Fastq::SingleEnd;
 use App::Sandy::Fastq::PairedEnd;
 use App::Sandy::Simulator;
@@ -26,26 +27,26 @@ override 'opt_spec' => sub {
 	my @rm_opt = $self->rm_opt;
 
 	my %all_opt = (
-		'seed'              => 'seed|s=i',
-		'prefix'            => 'prefix|p=s',
-		'id'                => 'id|I=s',
-		'append-id'         => 'append-id|i=s',
-		'verbose'           => 'verbose|v',
-		'output-dir'        => 'output-dir|o=s',
-		'jobs'              => 'jobs|j=i',
-		'gzip'              => 'gzip|z!',
-		'coverage'          => 'coverage|c=f',
-		'read-size'         => 'read-size|r=i',
-		'fragment-mean'     => 'fragment-mean|m=i',
-		'fragment-stdd'     => 'fragment-stdd|d=i',
-		'sequencing-error'  => 'sequencing-error|e=f',
-		'sequencing-type'   => 'sequencing-type|t=s',
-		'quality-profile'   => 'quality-profile|q=s',
-		'strand-bias'       => 'strand-bias|b=s',
-		'seqid-weight'      => 'seqid-weight|w=s',
-		'number-of-reads'   => 'number-of-reads|n=i',
-		'expression-matrix' => 'expression-matrix|f=s',
-		'snv-file'          => 'snv-file|a=s'
+		'seed'                 => 'seed|s=i',
+		'prefix'               => 'prefix|p=s',
+		'id'                   => 'id|I=s',
+		'append-id'            => 'append-id|i=s',
+		'verbose'              => 'verbose|v',
+		'output-dir'           => 'output-dir|o=s',
+		'jobs'                 => 'jobs|j=i',
+		'gzip'                 => 'gzip|z!',
+		'coverage'             => 'coverage|c=f',
+		'read-size'            => 'read-size|r=i',
+		'fragment-mean'        => 'fragment-mean|m=i',
+		'fragment-stdd'        => 'fragment-stdd|d=i',
+		'sequencing-error'     => 'sequencing-error|e=f',
+		'sequencing-type'      => 'sequencing-type|t=s',
+		'quality-profile'      => 'quality-profile|q=s',
+		'strand-bias'          => 'strand-bias|b=s',
+		'seqid-weight'         => 'seqid-weight|w=s',
+		'number-of-reads'      => 'number-of-reads|n=i',
+		'expression-matrix'    => 'expression-matrix|f=s',
+		'structural-variation' => 'structural-variation|a=s'
 	);
 
 	for my $opt (@rm_opt) {
@@ -72,6 +73,11 @@ sub _quality_profile_report {
 
 sub _expression_matrix_report {
 	state $report = App::Sandy::DB::Handle::Expression->new->make_report;
+	return $report;
+}
+
+sub _structural_variation_report {
+	state $report = App::Sandy::DB::Handle::Variation->new->make_report;
 	return $report;
 }
 
@@ -104,17 +110,13 @@ sub validate_opts {
 	$self->fill_opts($opts, \%default_opt);
 
 	# Possible alternatives
-	my %STRAND_BIAS       = map { $_ => 1 } @{ &STRAND_BIAS_OPT     };
-	my %SEQID_WEIGHT      = map { $_ => 1 } @{ &SEQID_WEIGHT_OPT    };
-	my %SEQUENCING_TYPE   = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT };
-	my %COUNT_LOOPS_BY    = map { $_ => 1 } @{ &COUNT_LOOPS_BY_OPT  };
-	my %QUALITY_PROFILE   = %{ $self->_quality_profile_report };
-	my %EXPRESSION_MATRIX = %{ $self->_expression_matrix_report };
-
-	# snv file
-	if ($opts->{'snv-file'} && not -f $opts->{'snv-file'}) {
-		die "<$opts->{'snv-file'}> is not a file. Please, give me a valid snv file\n";
-	}
+	my %STRAND_BIAS          = map { $_ => 1 } @{ &STRAND_BIAS_OPT     };
+	my %SEQID_WEIGHT         = map { $_ => 1 } @{ &SEQID_WEIGHT_OPT    };
+	my %SEQUENCING_TYPE      = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT };
+	my %COUNT_LOOPS_BY       = map { $_ => 1 } @{ &COUNT_LOOPS_BY_OPT  };
+	my %QUALITY_PROFILE      = %{ $self->_quality_profile_report };
+	my %EXPRESSION_MATRIX    = %{ $self->_expression_matrix_report };
+	my %STRUCTURAL_VARIATION = %{ $self->_structural_variation_report };
 
 	#  prefix
 	if ($opts->{prefix} =~ /([\/\\])/) {
@@ -150,6 +152,12 @@ sub validate_opts {
 			die "Option quality-profile='$opts->{'quality-profile'}' does not exist into the database.\n",
 				"Please check '$progname quality' to see the available profiles or use '--quality-profile=poisson'\n";
 		}
+	}
+
+	# structural-variation
+	if (not exists $STRUCTURAL_VARIATION{$opts->{'structural-variation'}}) {
+		die "Option structural-variation='$opts->{'structural-variation'}' does not exist into the database.\n",
+			"Please check '$progname variation' to see the available structural variations\n";
 	}
 
 	# strand_bias (STRAND_BIAS_OPT)
@@ -335,19 +343,19 @@ HEADER
 	}
 
 	my %simulator_param = (
-		fastq             => $fastq,
-		fasta_file        => $fasta_file,
-		snv_file          => $opts->{'snv-file'},
-		prefix            => $opts->{'prefix'},
-		output_gzip       => $opts->{'gzip'},
-		seed              => $opts->{'seed'},
-		count_loops_by    => $opts->{'count-loops-by'},
-		number_of_reads   => $opts->{'number-of-reads'},
-		coverage          => $opts->{'coverage'},
-		jobs              => $opts->{'jobs'},
-		strand_bias       => $opts->{'strand-bias'},
-		seqid_weight      => $opts->{'seqid-weight'},
-		expression_matrix => $opts->{'expression-matrix'}
+		fastq                => $fastq,
+		fasta_file           => $fasta_file,
+		prefix               => $opts->{'prefix'},
+		output_gzip          => $opts->{'gzip'},
+		seed                 => $opts->{'seed'},
+		count_loops_by       => $opts->{'count-loops-by'},
+		number_of_reads      => $opts->{'number-of-reads'},
+		coverage             => $opts->{'coverage'},
+		jobs                 => $opts->{'jobs'},
+		strand_bias          => $opts->{'strand-bias'},
+		seqid_weight         => $opts->{'seqid-weight'},
+		expression_matrix    => $opts->{'expression-matrix'},
+		structural_variation => $opts->{'structural-variation'}
 	);
 
 	my $simulator;
