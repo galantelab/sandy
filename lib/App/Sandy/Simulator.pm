@@ -8,8 +8,8 @@ use App::Sandy::InterlaceProcesses;
 use App::Sandy::WeightedRaffle;
 use App::Sandy::PieceTable;
 use App::Sandy::DB::Handle::Expression;
-use Scalar::Util qw/looks_like_number refaddr/;
-use List::Util qw/sum max min/;
+use App::Sandy::DB::Handle::Variation;
+use List::Util 'min';
 use File::Cat 'cat';
 use Parallel::ForkManager;
 
@@ -47,12 +47,6 @@ has 'fasta_file' => (
 	required   => 1
 );
 
-has 'snv_file' => (
-	is         => 'ro',
-	isa        => 'My:File',
-	required   => 0
-);
-
 has 'coverage' => (
 	is         => 'ro',
 	isa        => 'My:NumGt0',
@@ -84,6 +78,12 @@ has 'seqid_weight' => (
 );
 
 has 'expression_matrix' => (
+	is         => 'ro',
+	isa        => 'Str',
+	required   => 0
+);
+
+has 'structural_variation' => (
 	is         => 'ro',
 	isa        => 'Str',
 	required   => 0
@@ -553,18 +553,23 @@ sub _populate_key_weight {
 	return (\@keys, \@weights);
 }
 
+sub _retrieve_structural_variation {
+	my $self = shift;
+	my $variation = App::Sandy::DB::Handle::Variation->new;
+	return $variation->retrievedb($self->structural_variation);
+}
+
 sub _build_piece_table {
 	my $self = shift;
 
-	my $snv_file = $self->snv_file;
+	my $structural_variation = $self->structural_variation;
 	my $indexed_snv;
 
-	if (defined $snv_file) {
-		log_msg ":: Indexing snv file '$snv_file' ...";
-		$indexed_snv = $self->_index_snv;
-
-		log_msg ":: Validating snv file '$snv_file' ...";
-		$self->_validate_indexed_snv($indexed_snv);
+	# Retrieve structural variation if the user provided it
+	if (defined $self->structural_variation) {
+		$indexed_snv = $self->_retrieve_structural_variation;
+		log_msg ":: Validate structural variation '$structural_variation' against indexed fasta ...";
+		$self->_validate_indexed_snv_against_fasta($indexed_snv);
 	}
 
 	# Catch index fasta
@@ -621,13 +626,13 @@ sub _build_piece_table {
 			given (ref $self->fastq) {
 				when ('App::Sandy::Fastq::SingleEnd') {
 					if ($new_size < $self->fastq->read_size) {
-						log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required read-size\n";
+						log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required read-size";
 						next;
 					}
 				}
 				when ('App::Sandy::Fastq::PairedEnd') {
 					if ($new_size < $self->fastq->fragment_mean) {
-						log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required fragment mean\n";
+						log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required fragment mean";
 						next;
 					}
 				}
@@ -653,8 +658,8 @@ sub _build_piece_table {
 	}
 
 	unless (%piece_table) {
-		die sprintf "All fasta entries were removed due to deletions. Please, verify the file '%s'\n"
-			=> $snv_file;
+		die "All fasta entries were removed due to deletions. ",
+			"Please, verify the structural variation '$structural_variation'\n";
 	}
 
 	# If fasta_rtree has entries
@@ -692,17 +697,6 @@ sub _populate_piece_table {
 			$table->change(\$snv->{alt}, $snv->{pos}, length $snv->{ref}, $annot);
 		}
 	}
-}
-
-sub _validate_indexed_snv {
-	my ($self, $indexed_snv) = @_;
-	my $snv_file = $self->snv_file;
-
-	log_msg ":: Removing overlapping entries in snv file '$snv_file', if any ...";
-	$self->_validate_indexed_snv_against_itself($indexed_snv);
-
-	log_msg ":: Validate snv file '$snv_file' against indexed fasta ...";
-	$self->_validate_indexed_snv_against_fasta($indexed_snv);
 }
 
 sub _validate_indexed_snv_against_fasta {
@@ -749,175 +743,6 @@ sub _validate_indexed_snv_against_fasta {
 			$indexed_snv->{$seq_id} = [@saved_snvs];
 		}
 	}
-}
-
-sub _validate_indexed_snv_against_itself {
-	my ($self, $indexed_snv) = @_;
-
-	for my $seq_id (keys %$indexed_snv) {
-		my $snvs_a = delete $indexed_snv->{$seq_id};
-		my @sorted_snvs = sort { $a->{low} <=> $b->{low} } @$snvs_a;
-
-		my $prev_snv = $sorted_snvs[0];
-		my $high = $prev_snv->{high};
-		push my @snv_cluster => $prev_snv;
-
-		for (my $i = 1; $i < @sorted_snvs; $i++) {
-			my $next_snv = $sorted_snvs[$i];
-
-			# If not overlapping
-			if ($next_snv->{low} > $high) {
-				my $valid_snvs = $self->_validate_indexed_snv_cluster($seq_id, \@snv_cluster);
-				push @{ $indexed_snv->{$seq_id} } => @$valid_snvs;
-				@snv_cluster = ();
-			}
-
-			push @snv_cluster => $next_snv;
-			$high = max $high, $next_snv->{high};
-			$prev_snv = $next_snv;
-		}
-
-		my $valid_snvs = $self->_validate_indexed_snv_cluster($seq_id, \@snv_cluster);
-		push @{ $indexed_snv->{$seq_id} } => @$valid_snvs;
-	}
-}
-
-sub _validate_indexed_snv_cluster {
-	my ($self, $seq_id, $snvs) = @_;
-	my $snv_file = $self->snv_file;
-
-	# My rules:
-	# The biggest structural variation gains precedence.
-	# If occurs an overlapping, I search to the biggest variation among
-	# the saved alterations and compare it with the actual entry:
-	#    *** Remove all overlapping variations if actual entry is bigger;
-	#    *** Skip actual entry if it is lower than the biggest variation
-	#    *** Insertionw can be before any alterations
-
-	my @saved_snvs;
-	my %blacklist;
-
-	OUTER: for (my $i = 0; $i < @$snvs; $i++) {
-		my $prev_snv = $snvs->[$i];
-
-		if ($blacklist{refaddr($prev_snv)}) {
-			next OUTER;
-		}
-
-		INNER: for (my $j = 0; $j < @$snvs; $j++) {
-			my $next_snv = $snvs->[$j];
-
-			if (($i == $j) || $blacklist{refaddr($next_snv)}) {
-				next INNER;
-			}
-
-			# Insertion after insertion
-			if ($next_snv->{ref} eq '-' && $prev_snv->{ref} eq '-' && $next_snv->{pos} != $prev_snv->{pos}) {
-				next INNER;
-
-			# Insertion before alteration
-			} elsif ($next_snv->{ref} eq '-' && $prev_snv->{ref} ne '-' && $next_snv->{pos} < $prev_snv->{pos}) {
-				next INNER;
-
-			# In this case, it gains the biggest one
-			} else {
-				my $prev_size = $prev_snv->{high} - $prev_snv->{low} + 1;
-				my $next_size = $next_snv->{high} - $next_snv->{low} + 1;
-
-				if ($prev_size >= $next_size) {
-					log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d\n"
-						=> $seq_id, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
-						$seq_id, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
-						$snv_file, $next_snv->{line};
-
-					$blacklist{refaddr($next_snv)} = 1;
-					next INNER;
-				} else {
-					log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d\n"
-						=> $seq_id, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
-						$seq_id, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
-						$snv_file, $prev_snv->{line};
-
-					$blacklist{refaddr($prev_snv)} = 1;
-					next OUTER;
-				}
-			}
-		}
-
-		push @saved_snvs => $prev_snv;
-	}
-
-	return \@saved_snvs;
-}
-
-sub _index_snv {
-	my $self = shift;
-
-	my $snv_file = $self->snv_file;
-	my $fh = $self->with_open_r($snv_file);
-
-	my %indexed_snv;
-	my $line = 0;
-
-	# chr pos ref @obs he
-	while (<$fh>) {
-		$line++;
-
-		# Skip coments and blank lines
-		next if /^#/;
-		next if /^\s*$/;
-
-		chomp;
-		my @fields = split;
-
-		die "Not found all fields (SEQID, POSITION, ID, REFERENCE, OBSERVED, PLOIDY) into file '$snv_file' at line $line\n"
-			unless scalar @fields >= 6;
-
-		die "Second column, position, does not seem to be a number into file '$snv_file' at line $line\n"
-			unless looks_like_number($fields[1]);
-
-		die "Second column, position, has a value lesser or equal to zero into file '$snv_file' at line $line\n"
-			if $fields[1] <= 0;
-
-		die "Fourth column, reference, does not seem to be a valid entry: '$fields[3]' into file '$snv_file' at line $line\n"
-			unless $fields[3] =~ /^(\w+|-)$/;
-
-		die "Fifth column, alteration, does not seem to be a valid entry: '$fields[4]' into file '$snv_file' at line $line\n"
-			unless $fields[4] =~ /^(\w+|-)$/;
-
-		die "Sixth column, ploidy, has an invalid entry: '$fields[5]' into file '$snv_file' at line $line. Valid ones are 'HE' or 'HO'\n"
-			unless $fields[5] =~ /^(HE|HO)$/;
-
-		if ($fields[3] eq $fields[4]) {
-			warn "There is an alteration equal to the reference at '$snv_file' line $line. I will ignore it\n";
-			next;
-		}
-
-		# Sequence inside perl begins at 0
-		my $position = int($fields[1] - 1);
-
-		# Compare the alterations and reference to guess the max variation on sequence
-		my $size_of_variation = max map { length } $fields[3], $fields[4];
-		my $high = $position + $size_of_variation - 1;
-
-		my %variation = (
-			id   => $fields[2],
-			ref  => $fields[3],
-			alt  => $fields[4],
-			plo  => $fields[5],
-			pos  => $position,
-			low  => $position,
-			high => $high,
-			line => $line
-		);
-
-		push @{ $indexed_snv{$fields[0]} } => \%variation;
-	}
-
-	close $fh
-		or die "Cannot close snv file '$snv_file': $!\n";
-
-	return \%indexed_snv;
 }
 
 sub _calculate_number_of_reads {

@@ -19,3 +19,13 @@ CREATE TABLE IF NOT EXISTS "expression_matrix" (
 	"date" DATE DEFAULT CURRENT_DATE,
 	UNIQUE ("name")
 );
+
+CREATE TABLE IF NOT EXISTS "structural_variation" (
+	"id" INTEGER PRIMARY KEY,
+	"name" TEXT NOT NULL,
+	"source" TEXT DEFAULT "not defined",
+	"is_user_provided" INTEGER DEFAULT 1,
+	"matrix" BLOB NOT NULL,
+	"date" DATE DEFAULT CURRENT_DATE,
+	UNIQUE ("name")
+);
