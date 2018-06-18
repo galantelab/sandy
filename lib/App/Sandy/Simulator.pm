@@ -703,13 +703,13 @@ sub _validate_indexed_snv_against_fasta {
 	my ($self, $indexed_snv) = @_;
 
 	my $indexed_fasta = $self->_fasta;
-	my $snv_file = $self->snv_file;
+	my $structural_variation = $self->structural_variation;
 
 	for my $seq_id (keys %$indexed_snv) {
 		my $snvs = delete $indexed_snv->{$seq_id};
+		next if not exists $indexed_fasta->{$seq_id};
 
-		my $seq = \$indexed_fasta->{$seq_id}{seq}
-			or next;
+		my $seq = \$indexed_fasta->{$seq_id}{seq};
 		my $size = $indexed_fasta->{$seq_id}{size};
 
 		my @saved_snvs;
@@ -719,7 +719,7 @@ sub _validate_indexed_snv_against_fasta {
 			# end of the sequence, not more
 			if ($snv->{ref} eq '-' && $snv->{pos} > $size) {
 				log_msg sprintf ":: In validating '%s': Insertion position, %s at %s:%d, outside fasta sequence",
-					$snv_file, $snv->{alt}, $seq_id, $snv->{pos} + 1;
+					$structural_variation, $snv->{alt}, $seq_id, $snv->{pos} + 1;
 
 				# Next snv
 				next;
@@ -729,7 +729,7 @@ sub _validate_indexed_snv_against_fasta {
 
 				if (uc($ref) ne uc($snv->{ref})) {
 					log_msg sprintf ":: In validating '%s': Not found reference '%s' at fasta position %s:%d",
-						$snv_file, $snv->{ref}, $seq_id, $snv->{pos} + 1;
+						$structural_variation, $snv->{ref}, $seq_id, $snv->{pos} + 1;
 
 					# Next snv
 					next;
