@@ -29,7 +29,7 @@ sub insertdb {
 	my $indexed_file = $self->_index_snv($file);
 
 	log_msg ":: Removing overlapping entries in structural variation file '$file', if any ...";
-	$self->_validate_indexed_snv($indexed_file);
+	$self->_validate_indexed_snv($indexed_file, $file);
 
 	log_msg ":: Converting data to bytes ...";
 	my $bytes = nfreeze $indexed_file;
@@ -52,8 +52,8 @@ sub insertdb {
 }
 
 sub _index_snv {
-	my ($self, $snv_file) = @_;
-	my $fh = $self->with_open_r($snv_file);
+	my ($self, $variation_file) = @_;
+	my $fh = $self->with_open_r($variation_file);
 
 	my %indexed_snv;
 	my $line = 0;
@@ -69,26 +69,26 @@ sub _index_snv {
 		chomp;
 		my @fields = split;
 
-		die "Not found all fields (SEQID, POSITION, ID, REFERENCE, OBSERVED, PLOIDY) into file '$snv_file' at line $line\n"
+		die "Not found all fields (SEQID, POSITION, ID, REFERENCE, OBSERVED, PLOIDY) into file '$variation_file' at line $line\n"
 			unless scalar @fields >= 6;
 
-		die "Second column, position, does not seem to be a number into file '$snv_file' at line $line\n"
+		die "Second column, position, does not seem to be a number into file '$variation_file' at line $line\n"
 			unless looks_like_number($fields[1]);
 
-		die "Second column, position, has a value lesser or equal to zero into file '$snv_file' at line $line\n"
+		die "Second column, position, has a value lesser or equal to zero into file '$variation_file' at line $line\n"
 			if $fields[1] <= 0;
 
-		die "Fourth column, reference, does not seem to be a valid entry: '$fields[3]' into file '$snv_file' at line $line\n"
+		die "Fourth column, reference, does not seem to be a valid entry: '$fields[3]' into file '$variation_file' at line $line\n"
 			unless $fields[3] =~ /^(\w+|-)$/;
 
-		die "Fifth column, alteration, does not seem to be a valid entry: '$fields[4]' into file '$snv_file' at line $line\n"
+		die "Fifth column, alteration, does not seem to be a valid entry: '$fields[4]' into file '$variation_file' at line $line\n"
 			unless $fields[4] =~ /^(\w+|-)$/;
 
-		die "Sixth column, ploidy, has an invalid entry: '$fields[5]' into file '$snv_file' at line $line. Valid ones are 'HE' or 'HO'\n"
+		die "Sixth column, ploidy, has an invalid entry: '$fields[5]' into file '$variation_file' at line $line. Valid ones are 'HE' or 'HO'\n"
 			unless $fields[5] =~ /^(HE|HO)$/;
 
 		if ($fields[3] eq $fields[4]) {
-			warn "There is an alteration equal to the reference at '$snv_file' line $line. I will ignore it\n";
+			warn "There is an alteration equal to the reference at '$variation_file' line $line. I will ignore it\n";
 			next;
 		}
 
@@ -114,13 +114,13 @@ sub _index_snv {
 	}
 
 	close $fh
-		or die "Cannot close snv file '$snv_file': $!\n";
+		or die "Cannot close structural variation file '$variation_file': $!\n";
 
 	return \%indexed_snv;
 }
 
 sub _validate_indexed_snv {
-	my ($self, $indexed_snv) = @_;
+	my ($self, $indexed_snv, $variation_file) = @_;
 
 	for my $seq_id (keys %$indexed_snv) {
 		my $snvs_a = delete $indexed_snv->{$seq_id};
@@ -135,7 +135,7 @@ sub _validate_indexed_snv {
 
 			# If not overlapping
 			if ($next_snv->{low} > $high) {
-				my $valid_snvs = $self->_validate_indexed_snv_cluster($seq_id, \@snv_cluster);
+				my $valid_snvs = $self->_validate_indexed_snv_cluster($seq_id, \@snv_cluster, $variation_file);
 				push @{ $indexed_snv->{$seq_id} } => @$valid_snvs;
 				@snv_cluster = ();
 			}
@@ -145,14 +145,13 @@ sub _validate_indexed_snv {
 			$prev_snv = $next_snv;
 		}
 
-		my $valid_snvs = $self->_validate_indexed_snv_cluster($seq_id, \@snv_cluster);
+		my $valid_snvs = $self->_validate_indexed_snv_cluster($seq_id, \@snv_cluster, $variation_file);
 		push @{ $indexed_snv->{$seq_id} } => @$valid_snvs;
 	}
 }
 
 sub _validate_indexed_snv_cluster {
-	my ($self, $seq_id, $snvs) = @_;
-	my $snv_file = $self->snv_file;
+	my ($self, $seq_id, $snvs, $variation_file) = @_;
 
 	# My rules:
 	# The biggest structural variation gains precedence.
@@ -196,7 +195,7 @@ sub _validate_indexed_snv_cluster {
 					log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d\n"
 						=> $seq_id, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
 						$seq_id, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
-						$snv_file, $next_snv->{line};
+						$variation_file, $next_snv->{line};
 
 					$blacklist{refaddr($next_snv)} = 1;
 					next INNER;
@@ -204,7 +203,7 @@ sub _validate_indexed_snv_cluster {
 					log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d\n"
 						=> $seq_id, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
 						$seq_id, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
-						$snv_file, $prev_snv->{line};
+						$variation_file, $prev_snv->{line};
 
 					$blacklist{refaddr($prev_snv)} = 1;
 					next OUTER;
