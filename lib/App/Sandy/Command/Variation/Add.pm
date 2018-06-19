@@ -25,7 +25,7 @@ sub validate_args {
 
 	# Mandatory file
 	if (not defined $file) {
-		die "Missing an structural variation file\n";
+		die "Missing a structural variation file\n";
 	}
 
 	# Is it really a file?
