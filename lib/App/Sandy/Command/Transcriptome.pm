@@ -32,7 +32,8 @@ sub default_opt {
 sub rm_opt {
 	'strand-bias',
 	'coverage',
-	'seqid-weight'
+	'seqid-weight',
+	'structural-variation'
 }
 
 __END__
@@ -118,35 +119,50 @@ A string B<Format> is a combination of literal and escape characters similar to 
 That way, the user has the freedom to customize the fastq sequence identifier to fit her needs. Valid
 escape characteres are:
 
-Common escape characters
+B<Common escape characters>
 
-	Escape       Meaning
-	------       ------------------------------------------
-	%i   	     instrument id composed by SR + PID
-	%I           job slot number
-	%q           quality profile
-	%e           sequencing error
-	%x           sequencing error position
-	%R           read 1, or 2 if it is the paired-end mate
-	%U           read number
-	%r           read size
-	%c           sequence id as chromossome, ref
-	%s           read or fragment strand
-	%t           read start position
-	%n           read end position
+	----------------------------------------------------------------------------
+	 Escape       Meaning
+	----------------------------------------------------------------------------
+	 %i   	      instrument id composed by SR + PID
+	 %I           job slot number
+	 %q           quality profile
+	 %e           sequencing error
+	 %x           sequencing error position
+	 %R           read 1, or 2 if it is the paired-end mate
+	 %U           read number
+	 %r           read size
+	 %c           sequence id as chromossome, gene/transcript id
+	 %C           sequence id type (reference or alternate non reference allele) ***
+	 %s           read strand
+	 %t           read start position
+	 %n           read end position
+	 %a           read start position regarding reference genome ***
+	 %b           read end position regarding reference genome ***
+	 %v           structural variation position ***
+	----------------------------------------------------------------------------
+	*** specific for structural variation (genome simulation only)
 
-Paired-end specific escape characters
+B<Paired-end specific escape characters>
 
-	Escape       Meaning
-	------       ------------------------------------------
-	%T           mate read start position
-	%N           mate read end position
-	%D           distance between the paired-reads
-	%m           fragment mean
-	%d           fragment standard deviation
-	%f           fragment size
-	%S           fragment start position
-	%E           fragment end position
+	----------------------------------------------------------------------------
+	 Escape       Meaning
+	----------------------------------------------------------------------------
+	 %T           mate read start position
+	 %N           mate read end position
+	 %A           mate read start position regarding reference genome ***
+	 %B           mate read end position regarding reference genome ***
+	 %D           distance between the paired-reads
+	 %m           fragment mean
+	 %d           fragment standard deviation
+	 %f           fragment size
+	 %F           fragment strand
+	 %S           fragment start position
+	 %E           fragment end position
+	 %X           fragment start position regarding reference genome ***
+	 %Z           fragment end position regarding reference genome ***
+	----------------------------------------------------------------------------
+	*** specific for structural variation (genome simulation only)
 
 =item B<--jobs>
 
