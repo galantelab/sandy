@@ -142,7 +142,7 @@ sub validate_opts {
 			die "Option 'read-size' requires an integer greater than zero, not $opts->{'read-size'}\n";
 		}
 	} else {
-		if (exists $QUALITY_PROFILE{$opts->{'quality-profile'}}) {
+		if (%QUALITY_PROFILE && exists $QUALITY_PROFILE{$opts->{'quality-profile'}}) {
 			my $entry = $QUALITY_PROFILE{$opts->{'quality-profile'}};
 			# It is necessary for the next validations, so
 			# I set the opts read-size for the value that will be used
@@ -155,9 +155,11 @@ sub validate_opts {
 	}
 
 	# structural-variation
-	if (not exists $STRUCTURAL_VARIATION{$opts->{'structural-variation'}}) {
-		die "Option structural-variation='$opts->{'structural-variation'}' does not exist into the database.\n",
-			"Please check '$progname variation' to see the available structural variations\n";
+	if (exists $opts->{'structural-variation'}) {
+		unless (%STRUCTURAL_VARIATION && exists $STRUCTURAL_VARIATION{$opts->{'structural-variation'}}) {
+			die "Option structural-variation='$opts->{'structural-variation'}' does not exist into the database.\n",
+				"Please check '$progname variation' to see the available structural variations\n";
+		}
 	}
 
 	# strand_bias (STRAND_BIAS_OPT)
@@ -240,7 +242,7 @@ sub validate_opts {
 		}
 
 		# It is defined, but the entry exists?
-		if (not exists $EXPRESSION_MATRIX{$opts->{'expression-matrix'}}) {
+		unless (%EXPRESSION_MATRIX && exists $EXPRESSION_MATRIX{$opts->{'expression-matrix'}}) {
 			die "Option expression-matrix='$opts->{'expression-matrix'}' does not exist into the database.\n",
 				"Please check '$progname expression' to see the available matrices\n";
 		}
