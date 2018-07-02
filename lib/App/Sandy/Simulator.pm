@@ -13,7 +13,7 @@ use List::Util 'min';
 use File::Cat 'cat';
 use Parallel::ForkManager;
 
-with qw/App::Sandy::Role::IO/;
+with qw/App::Sandy::Role::IO App::Sandy::Role::SeqID/;
 
 # VERSION
 
@@ -132,6 +132,17 @@ has '_fasta_rtree' => (
 	}
 );
 
+has '_seqname' => (
+	traits     => ['Hash'],
+	is         => 'ro',
+	isa        => 'HashRef[Str]',
+	default    => sub { {} },
+	handles    => {
+		_set_seqname => 'set',
+		_get_seqname => 'get'
+	}
+);
+
 has '_piece_table' => (
 	is         => 'ro',
 	isa        => 'HashRef[HashRef[My:PieceTable]]',
@@ -212,6 +223,14 @@ sub _index_fasta {
 			$id =~ s/^>//;
 			$id =~ s/^\s+|\s+$//g;
 
+			# Seq ID standardization in order to manage comparations
+			# between chr1, Chr1, CHR1, 1 etc;
+			my $std_id = $self->with_std_seqid($id);
+			$self->_set_seqname(
+				$id     => $std_id,
+				$std_id => $id
+			);
+
 			# It is necessary to catch gene -> transcript relation
 			# # TODO: Make a hash tarit for indexed fasta
 			if (defined $fields[1]) {
@@ -259,8 +278,7 @@ sub _build_fasta {
 			when ('App::Sandy::Fastq::SingleEnd') {
 				my $read_size = $self->fastq->read_size;
 				if ($index_size < $read_size) {
-					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)\n" .
-						"  -> I'm going to include '>$id' in the blacklist\n";
+					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)";
 					delete $indexed_fasta->{$id};
 					push @blacklist => $id;
 				}
@@ -268,8 +286,7 @@ sub _build_fasta {
 			when ('App::Sandy::Fastq::PairedEnd') {
 				my $fragment_mean = $self->fastq->fragment_mean;
 				if ($index_size < $fragment_mean) {
-					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)\n" .
-						"  -> I'm going to include '>$id' in the blacklist\n";
+					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)";
 					delete $indexed_fasta->{$id};
 					push @blacklist => $id;
 				}
@@ -566,7 +583,7 @@ sub _build_piece_table {
 	my $indexed_snv;
 
 	# Retrieve structural variation if the user provided it
-	if (defined $self->structural_variation) {
+	if (defined $structural_variation) {
 		$indexed_snv = $self->_retrieve_structural_variation;
 		log_msg ":: Validate structural variation '$structural_variation' against indexed fasta ...";
 		$self->_validate_indexed_snv_against_fasta($indexed_snv);
@@ -581,13 +598,14 @@ sub _build_piece_table {
 	# Let's construct the piece_table
 	while (my ($seq_id, $fasta_h) = each %$indexed_fasta) {
 		my $seq = \$fasta_h->{seq};
+		my $std_seq_id = $self->_get_seqname($seq_id);
 
 		# Initialize piece tables for $seq_id ref
 		$piece_table{$seq_id}{ref}{table} = App::Sandy::PieceTable->new(orig => $seq);
 
 		# If there is indexed_snv for seq_id, then construct the piece table with it
-		if (defined $indexed_snv && defined $indexed_snv->{$seq_id}) {
-			my $snvs = $indexed_snv->{$seq_id};
+		if (defined $indexed_snv && defined $indexed_snv->{$std_seq_id}) {
+			my $snvs = $indexed_snv->{$std_seq_id};
 
 			# Filter only the homozygotic snvs to feed reference seq_id
 			my @snvs_homo = grep { $_->{plo} eq 'HO' } @$snvs;
@@ -705,8 +723,9 @@ sub _validate_indexed_snv_against_fasta {
 	my $indexed_fasta = $self->_fasta;
 	my $structural_variation = $self->structural_variation;
 
-	for my $seq_id (keys %$indexed_snv) {
-		my $snvs = delete $indexed_snv->{$seq_id};
+	for my $std_seq_id (keys %$indexed_snv) {
+		my $seq_id = $self->_get_seqname($std_seq_id);
+		my $snvs = delete $indexed_snv->{$std_seq_id};
 		next if not exists $indexed_fasta->{$seq_id};
 
 		my $seq = \$indexed_fasta->{$seq_id}{seq};
@@ -740,7 +759,7 @@ sub _validate_indexed_snv_against_fasta {
 		}
 
 		if (@saved_snvs) {
-			$indexed_snv->{$seq_id} = [@saved_snvs];
+			$indexed_snv->{$std_seq_id} = [@saved_snvs];
 		}
 	}
 }

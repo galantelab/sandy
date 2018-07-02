@@ -9,7 +9,7 @@ use Storable qw/nfreeze thaw/;
 use Scalar::Util qw/looks_like_number refaddr/;
 use List::Util 'max';
 
-with 'App::Sandy::Role::IO';
+with qw/App::Sandy::Role::IO App::Sandy::Role::SeqID/;
 
 # VERSION
 
@@ -100,17 +100,18 @@ sub _index_snv {
 		my $high = $position + $size_of_variation - 1;
 
 		my %variation = (
-			id   => $fields[2],
-			ref  => $fields[3],
-			alt  => $fields[4],
-			plo  => $fields[5],
-			pos  => $position,
-			low  => $position,
-			high => $high,
-			line => $line
+			seq_id => $fields[0],
+			id     => $fields[2],
+			ref    => $fields[3],
+			alt    => $fields[4],
+			plo    => $fields[5],
+			pos    => $position,
+			low    => $position,
+			high   => $high,
+			line   => $line
 		);
 
-		push @{ $indexed_snv{$fields[0]} } => \%variation;
+		push @{ $indexed_snv{$self->with_std_seqid($fields[0])} } => \%variation;
 	}
 
 	close $fh
@@ -135,7 +136,7 @@ sub _validate_indexed_snv {
 
 			# If not overlapping
 			if ($next_snv->{low} > $high) {
-				my $valid_snvs = $self->_validate_indexed_snv_cluster($seq_id, \@snv_cluster, $variation_file);
+				my $valid_snvs = $self->_validate_indexed_snv_cluster(\@snv_cluster, $variation_file);
 				push @{ $indexed_snv->{$seq_id} } => @$valid_snvs;
 				@snv_cluster = ();
 			}
@@ -145,13 +146,13 @@ sub _validate_indexed_snv {
 			$prev_snv = $next_snv;
 		}
 
-		my $valid_snvs = $self->_validate_indexed_snv_cluster($seq_id, \@snv_cluster, $variation_file);
+		my $valid_snvs = $self->_validate_indexed_snv_cluster(\@snv_cluster, $variation_file);
 		push @{ $indexed_snv->{$seq_id} } => @$valid_snvs;
 	}
 }
 
 sub _validate_indexed_snv_cluster {
-	my ($self, $seq_id, $snvs, $variation_file) = @_;
+	my ($self, $snvs, $variation_file) = @_;
 
 	# My rules:
 	# The biggest structural variation gains precedence.
@@ -193,16 +194,16 @@ sub _validate_indexed_snv_cluster {
 
 				if ($prev_size >= $next_size) {
 					log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d\n"
-						=> $seq_id, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
-						$seq_id, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
+						=> $prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
+						$next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
 						$variation_file, $next_snv->{line};
 
 					$blacklist{refaddr($next_snv)} = 1;
 					next INNER;
 				} else {
 					log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d\n"
-						=> $seq_id, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
-						$seq_id, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
+						=> $next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
+						$prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
 						$variation_file, $prev_snv->{line};
 
 					$blacklist{refaddr($prev_snv)} = 1;
