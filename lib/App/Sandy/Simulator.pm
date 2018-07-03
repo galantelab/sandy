@@ -739,7 +739,7 @@ sub _validate_indexed_snv_against_fasta {
 		for my $snv (@$snvs) {
 			# Insertions may accur until one base after the
 			# end of the sequence, not more
-			if ($snv->{ref} eq '-' && $snv->{pos} > $size) {
+			if (($snv->{ref} eq '-' && $snv->{pos} > $size) || ($snv->{ref} ne '-' && $snv->{pos} >= $size)) {
 				log_msg sprintf ":: In validating '%s': Insertion position, %s at %s:%d, outside fasta sequence",
 					$structural_variation, $snv->{alt}, $seq_id, $snv->{pos} + 1;
 
