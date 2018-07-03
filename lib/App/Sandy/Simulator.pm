@@ -724,9 +724,12 @@ sub _validate_indexed_snv_against_fasta {
 	my $structural_variation = $self->structural_variation;
 
 	for my $std_seq_id (keys %$indexed_snv) {
-		my $seq_id = $self->_get_seqname($std_seq_id);
 		my $snvs = delete $indexed_snv->{$std_seq_id};
-		next if not exists $indexed_fasta->{$seq_id};
+		my $seq_id = $self->_get_seqname($std_seq_id);
+
+		unless (defined $seq_id && exists $indexed_fasta->{$seq_id}) {
+			next;
+		}
 
 		my $seq = \$indexed_fasta->{$seq_id}{seq};
 		my $size = $indexed_fasta->{$seq_id}{size};
