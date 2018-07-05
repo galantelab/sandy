@@ -10,6 +10,7 @@ use App::Sandy::Fastq::PairedEnd;
 use App::Sandy::Simulator;
 use Path::Class 'file';
 use File::Path 'make_path';
+use List::Util 'uniq';
 
 requires qw/default_opt opt_spec rm_opt/;
 
@@ -27,26 +28,27 @@ override 'opt_spec' => sub {
 	my @rm_opt = $self->rm_opt;
 
 	my %all_opt = (
-		'seed'                 => 'seed|s=i',
-		'prefix'               => 'prefix|p=s',
-		'id'                   => 'id|I=s',
-		'append-id'            => 'append-id|i=s',
-		'verbose'              => 'verbose|v',
-		'output-dir'           => 'output-dir|o=s',
-		'jobs'                 => 'jobs|j=i',
-		'gzip'                 => 'gzip|z!',
-		'coverage'             => 'coverage|c=f',
-		'read-size'            => 'read-size|r=i',
-		'fragment-mean'        => 'fragment-mean|m=i',
-		'fragment-stdd'        => 'fragment-stdd|d=i',
-		'sequencing-error'     => 'sequencing-error|e=f',
-		'sequencing-type'      => 'sequencing-type|t=s',
-		'quality-profile'      => 'quality-profile|q=s',
-		'strand-bias'          => 'strand-bias|b=s',
-		'seqid-weight'         => 'seqid-weight|w=s',
-		'number-of-reads'      => 'number-of-reads|n=i',
-		'expression-matrix'    => 'expression-matrix|f=s',
-		'structural-variation' => 'structural-variation|a=s'
+		'seed'                       => 'seed|s=i',
+		'prefix'                     => 'prefix|p=s',
+		'id'                         => 'id|I=s',
+		'append-id'                  => 'append-id|i=s',
+		'verbose'                    => 'verbose|v',
+		'output-dir'                 => 'output-dir|o=s',
+		'jobs'                       => 'jobs|j=i',
+		'gzip'                       => 'gzip|z!',
+		'coverage'                   => 'coverage|c=f',
+		'read-size'                  => 'read-size|r=i',
+		'fragment-mean'              => 'fragment-mean|m=i',
+		'fragment-stdd'              => 'fragment-stdd|d=i',
+		'sequencing-error'           => 'sequencing-error|e=f',
+		'sequencing-type'            => 'sequencing-type|t=s',
+		'quality-profile'            => 'quality-profile|q=s',
+		'strand-bias'                => 'strand-bias|b=s',
+		'seqid-weight'               => 'seqid-weight|w=s',
+		'number-of-reads'            => 'number-of-reads|n=i',
+		'expression-matrix'          => 'expression-matrix|f=s',
+		'structural-variation'       => 'structural-variation|a=s@',
+		'structural-variation-regex' => 'structural-variation-regex|A=s@'
 	);
 
 	for my $opt (@rm_opt) {
@@ -61,7 +63,13 @@ sub _log_msg_opt {
 	while (my ($key, $value) = each %$opts) {
 		next if ref($value) =~ /Fastq/;
 		next if not defined $value;
+
 		$key =~ s/_/ /g;
+
+		if (ref $value eq 'ARRAY') {
+			$value = join ', ' => @$value;
+		}
+
 		log_msg "  => $key $value";
 	}
 }
@@ -156,9 +164,30 @@ sub validate_opts {
 
 	# structural-variation
 	if (exists $opts->{'structural-variation'}) {
-		unless (%STRUCTURAL_VARIATION && exists $STRUCTURAL_VARIATION{$opts->{'structural-variation'}}) {
-			die "Option structural-variation='$opts->{'structural-variation'}' does not exist into the database.\n",
-				"Please check '$progname variation' to see the available structural variations\n";
+		for my $sv (split(/,/ => join(',', @{ $opts->{'structural-variation'} }))) {
+			unless (%STRUCTURAL_VARIATION && exists $STRUCTURAL_VARIATION{$sv}) {
+				die "Option structural-variation='$sv' does not exist into the database.\n",
+					"Please check '$progname variation' to see the available structural variations\n";
+			}
+		}
+	}
+
+	# structural-variation-regex
+	if (exists $opts->{'structural-variation-regex'}) {
+		for my $sv_pattern (split(/,/ => join(',', @{ $opts->{'structural-variation-regex'} }))) {
+			my $pattern = qr/$sv_pattern/;
+			my $fail = 1;
+			for my $sv (keys %STRUCTURAL_VARIATION) {
+				if ($sv =~ /$pattern/)	 {
+					$fail = 0;
+					last;
+				}
+			}
+
+			if ($fail) {
+				die "Option structural-variation-regex='$sv_pattern' does not exist into the database.\n",
+					"Please check '$progname variation' to see the available structural variations\n";
+			}
 		}
 	}
 
@@ -278,11 +307,44 @@ sub execute {
 	}
 
 	# Sequence identifier
-	$opts->{'id'} ||= $opts->{'sequencing-type'} eq 'paired-end' ?
-		$opts->{'paired-end-id'} :
-		$opts->{'single-end-id'};
+	$opts->{'id'} ||= $opts->{'sequencing-type'} eq 'paired-end'
+		? $opts->{'paired-end-id'}
+		: $opts->{'single-end-id'};
 
 	$opts->{id} .= " $opts->{'append-id'}" if defined $opts->{'append-id'};
+
+	# Structural Variation
+	if ($opts->{'structural-variation'}) {
+		my @svs = split(/,/ => join(',', @{ $opts->{'structural-variation'} }));
+		@svs = uniq sort @svs;
+		$opts->{'structural-variation'} = \@svs;
+	}
+
+	# Structural Variation Regex
+	if ($opts->{'structural-variation-regex'}) {
+		my @sv_list = keys %{ $self->_structural_variation_report };
+		my @sv_patterns = split(/,/ => join(',', @{ $opts->{'structural-variation-regex'} }));
+		my @svs_rg;
+
+		for my $sv_pattern (@sv_patterns) {
+			my $pattern = qr/$sv_pattern/;
+			for (@sv_list) {
+				if (/$pattern/)	{
+					push @svs_rg => $_;
+				}
+			}
+		}
+
+		my @svs;
+
+		if ($opts->{'structural-variation'}) {
+			push @svs => @{ $opts->{'structural-variation'} };
+		}
+
+		push @svs => @svs_rg;
+		@svs = uniq sort @svs;
+		$opts->{'structural-variation'} = \@svs;
+	}
 
 	# Create output directory if it not exist
 	make_path($opts->{'output-dir'}, {error => \my $err_list});

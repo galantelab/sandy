@@ -85,8 +85,15 @@ has 'expression_matrix' => (
 
 has 'structural_variation' => (
 	is         => 'ro',
-	isa        => 'Str',
+	isa        => 'ArrayRef[Str]',
 	required   => 0
+);
+
+has '_structural_variation_names' => (
+	is         => 'ro',
+	isa        => 'Str',
+	builder    => '_build_structural_variation_names',
+	lazy_build => 1
 );
 
 has 'fastq' => (
@@ -570,6 +577,11 @@ sub _populate_key_weight {
 	return (\@keys, \@weights);
 }
 
+sub _build_structural_variation_names {
+	my $self = shift;
+	return sprintf "[%s]", => join ", ", @{ $self->structural_variation };
+}
+
 sub _retrieve_structural_variation {
 	my $self = shift;
 	my $variation = App::Sandy::DB::Handle::Variation->new;
@@ -579,7 +591,7 @@ sub _retrieve_structural_variation {
 sub _build_piece_table {
 	my $self = shift;
 
-	my $structural_variation = $self->structural_variation;
+	my $structural_variation = $self->_structural_variation_names;
 	my $indexed_snv;
 
 	# Retrieve structural variation if the user provided it
@@ -721,7 +733,7 @@ sub _validate_indexed_snv_against_fasta {
 	my ($self, $indexed_snv) = @_;
 
 	my $indexed_fasta = $self->_fasta;
-	my $structural_variation = $self->structural_variation;
+	my $structural_variation = $self->_structural_variation_names;
 
 	for my $std_seq_id (keys %$indexed_snv) {
 		my $snvs = delete $indexed_snv->{$std_seq_id};
@@ -934,7 +946,7 @@ sub run_simulation {
 				@fastq_entry = $self->sprint_fastq($tid, $i, $id->{seq_id}, $id->{type},
 					$ptable->{table}, $ptable->{size}, $strand->());
 			} catch {
-				die "Not defined entry for seqid '>$id' at job $tid: $_";
+				die "Not defined entry for seqid '>$id->{seq_id}' at job $tid: $_";
 			} finally {
 				unless (@_) {
 					for my $fh_idx (0..$#fhs) {

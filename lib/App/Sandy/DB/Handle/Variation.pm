@@ -193,18 +193,30 @@ sub _validate_indexed_snv_cluster {
 				my $next_size = $next_snv->{high} - $next_snv->{low} + 1;
 
 				if ($prev_size >= $next_size) {
-					log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d\n"
-						=> $prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
-						$next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
-						$variation_file, $next_snv->{line};
+					if ($variation_file) {
+						log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d"
+							=> $prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
+							$next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
+							$variation_file, $next_snv->{line};
+					} else {
+						log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s]"
+							=> $prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
+							$next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo};
+					}
 
 					$blacklist{refaddr($next_snv)} = 1;
 					next INNER;
 				} else {
-					log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d\n"
-						=> $next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
-						$prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
-						$variation_file, $prev_snv->{line};
+					if ($variation_file) {
+						log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d"
+							=> $next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
+							$prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
+							$variation_file, $prev_snv->{line};
+					} else {
+						log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s]"
+							=> $next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
+							$prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo};
+					}
 
 					$blacklist{refaddr($prev_snv)} = 1;
 					next OUTER;
@@ -222,16 +234,31 @@ sub retrievedb {
 	my ($self, $structural_variation) = @_;
 	my $schema = App::Sandy::DB->schema;
 
-	my $rs = $schema->resultset('StructuralVariation')->find({ name => $structural_variation });
-	die "'$structural_variation' not found into database\n" unless defined $rs;
+	my %all_matrix;
 
-	my $compressed = $rs->matrix;
-	die "structural variation entry '$structural_variation' exists, but the related data is missing\n"
-		unless defined $compressed;
+	for my $sv (@$structural_variation) {
+		my $rs = $schema->resultset('StructuralVariation')->find({ name => $sv });
+		die "'$sv' not found into database\n" unless defined $rs;
 
-	gunzip \$compressed => \my $bytes;
-	my $matrix = thaw $bytes;
-	return $matrix;
+		my $compressed = $rs->matrix;
+		die "structural variation entry '$sv' exists, but the related data is missing\n"
+			unless defined $compressed;
+
+		gunzip \$compressed => \my $bytes;
+		my $matrix = thaw $bytes;
+
+		while (my ($seq_id, $data) = each %$matrix) {
+			push @{ $all_matrix{$seq_id} } => @$data;
+		}
+	}
+
+	if (scalar @$structural_variation > 1) {
+		log_msg sprintf ":: Removing overlapping entries from '[%s]'. If any ..."
+			=> join(', ', @$structural_variation);
+		$self->_validate_indexed_snv(\%all_matrix);
+	}
+
+	return \%all_matrix;
 }
 
 sub deletedb {
