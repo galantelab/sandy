@@ -91,7 +91,7 @@ has 'structural_variation' => (
 
 has '_structural_variation_names' => (
 	is         => 'ro',
-	isa        => 'Str',
+	isa        => 'Maybe[Str]',
 	builder    => '_build_structural_variation_names',
 	lazy_build => 1
 );
@@ -579,7 +579,9 @@ sub _populate_key_weight {
 
 sub _build_structural_variation_names {
 	my $self = shift;
-	return sprintf "[%s]", => join ", ", @{ $self->structural_variation };
+	if ($self->structural_variation) {
+		return sprintf "[%s]", => join ", ", @{ $self->structural_variation };
+	}
 }
 
 sub _retrieve_structural_variation {
@@ -608,6 +610,8 @@ sub _build_piece_table {
 	my %piece_table;
 
 	# Let's construct the piece_table
+	log_msg ":: Build piece table ...";
+
 	while (my ($seq_id, $fasta_h) = each %$indexed_fasta) {
 		my $seq = \$fasta_h->{seq};
 		my $std_seq_id = $self->_get_seqname($seq_id);
