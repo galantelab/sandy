@@ -192,16 +192,23 @@ sub _validate_indexed_snv_cluster {
 				my $prev_size = $prev_snv->{high} - $prev_snv->{low} + 1;
 				my $next_size = $next_snv->{high} - $next_snv->{low} + 1;
 
+				my ($prev_ref, $prev_alt, $next_ref, $next_alt) =
+					map {
+						length($_) > 25
+							? substr($_, 0, 25) . "..."
+							: $_
+					} ($prev_snv->{ref}, $prev_snv->{alt}, $next_snv->{ref}, $next_snv->{alt});
+
 				if ($prev_size >= $next_size) {
 					if ($variation_file) {
 						log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d"
-							=> $prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
-							$next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
+							=> $prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_ref, $prev_alt, $prev_snv->{plo},
+							$next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_ref, $next_alt, $next_snv->{plo},
 							$variation_file, $next_snv->{line};
 					} else {
 						log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s]"
-							=> $prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
-							$next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo};
+							=> $prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_ref, $prev_alt, $prev_snv->{plo},
+							$next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_ref, $next_alt, $next_snv->{plo};
 					}
 
 					$blacklist{refaddr($next_snv)} = 1;
@@ -209,13 +216,13 @@ sub _validate_indexed_snv_cluster {
 				} else {
 					if ($variation_file) {
 						log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s] at '%s' line %d"
-							=> $next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
-							$prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo},
+							=> $next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_ref, $next_alt, $next_snv->{plo},
+							$prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_ref, $prev_alt, $prev_snv->{plo},
 							$variation_file, $prev_snv->{line};
 					} else {
 						log_msg sprintf ":: Alteration [%s %d %s %s %s %s] masks [%s %d %s %s %s %s]"
-							=> $next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_snv->{ref}, $next_snv->{alt}, $next_snv->{plo},
-							$prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_snv->{ref}, $prev_snv->{alt}, $prev_snv->{plo};
+							=> $next_snv->{seq_id}, $next_snv->{pos}+1, $next_snv->{id}, $next_ref, $next_alt, $next_snv->{plo},
+							$prev_snv->{seq_id}, $prev_snv->{pos}+1, $prev_snv->{id}, $prev_ref, $prev_alt, $prev_snv->{plo};
 					}
 
 					$blacklist{refaddr($prev_snv)} = 1;
