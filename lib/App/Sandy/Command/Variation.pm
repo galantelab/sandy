@@ -14,7 +14,7 @@ has 'db' => (
 	isa        => 'App::Sandy::DB::Handle::Variation',
 	builder    => '_build_db',
 	lazy_build => 1,
-	handles    => [qw/insertdb restoredb deletedb make_report/]
+	handles    => [qw/insertdb restoredb deletedb make_report retrievedb/]
 );
 
 sub _build_db {
@@ -28,7 +28,8 @@ override 'opt_spec' => sub {
 sub subcommand_map {
 	add     => 'App::Sandy::Command::Variation::Add',
 	remove  => 'App::Sandy::Command::Variation::Remove',
-	restore => 'App::Sandy::Command::Variation::Restore'
+	restore => 'App::Sandy::Command::Variation::Restore',
+	dump    => 'App::Sandy::Command::Variation::Dump'
 }
 
 sub validate_args {
@@ -69,6 +70,7 @@ __END__
  
  Commands:
   add                      add a new structural variation to database
+  dump                     dump structural variation from database
   remove                   remove an user structural variation from database
   restore                  restore the database
 
