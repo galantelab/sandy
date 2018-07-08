@@ -384,7 +384,7 @@ sub _piece_at {
 					$new_index = $i;
 				}
 
-				break;
+				last;
 			}
 		}
 
@@ -397,7 +397,7 @@ sub _piece_at {
 						$new_index = $i;
 					}
 
-					break;
+					last;
 				}
 			}
 
