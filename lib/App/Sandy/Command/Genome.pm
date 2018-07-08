@@ -47,33 +47,38 @@ __END__
   a fasta-file 
 
  Options:
-  -h, --help                     brief help message
-  -M, --man                      full documentation
-  -v, --verbose                  print log messages
-  -p, --prefix                   prefix output [default:"out"]	
-  -o, --output-dir               output directory [default:"."]
-  -i, --append-id                append to the defined template id [Format]
-  -I, --id                       overlap the default template id [Format]
-  -j, --jobs                     number of jobs [default:"1"; Integer]
-  -z, --gzip                     compress output file
-  -s, --seed                     set the seed of the base generator
-                                 [default:"time()"; Integer]
-  -c, --coverage                 fastq-file coverage [default:"8", Number]
-  -t, --sequencing-type          single-end or paired-end reads
-                                 [default:"paired-end"]
-  -q, --quality-profile          sequencing system profiles from quality
-                                 database [default:"poisson"]
-  -e, --sequencing-error         sequencing error rate
-                                 [default:"0.005"; Number]
-  -r, --read-size                the read size [default:"100"; Integer]
-                                 the quality_profile from database overrides
-                                 this value
-  -m, --fragment-mean            the fragment mean size for paired-end reads
-                                 [default:"300"; Integer]
-  -d, --fragment-stdd            the fragment standard deviation size for
-                                 paired-end reads [default:"50"; Integer]
-  -a, --structural-variation     a structural variation entry from variation
-                                 database [default:"none"]
+  -h, --help                         brief help message
+  -M, --man                          full documentation
+  -v, --verbose                      print log messages
+  -p, --prefix                       prefix output [default:"out"]
+  -o, --output-dir                   output directory [default:"."]
+  -i, --append-id                    append to the defined template id [Format]
+  -I, --id                           overlap the default template id [Format]
+  -j, --jobs                         number of jobs [default:"1"; Integer]
+  -z, --gzip                         compress output file
+  -s, --seed                         set the seed of the base generator
+                                     [default:"time()"; Integer]
+  -c, --coverage                     fastq-file coverage [default:"8", Number]
+  -t, --sequencing-type              single-end or paired-end reads
+                                     [default:"paired-end"]
+  -q, --quality-profile              sequencing system profiles from quality
+                                     database [default:"poisson"]
+  -e, --sequencing-error             sequencing error rate
+                                     [default:"0.005"; Number]
+  -r, --read-size                    the read size [default:"100"; Integer]
+                                     the quality_profile from database overrides
+                                     this value
+  -m, --fragment-mean                the fragment mean size for paired-end reads
+                                     [default:"300"; Integer]
+  -d, --fragment-stdd                the fragment standard deviation size for
+                                     paired-end reads [default:"50"; Integer]
+  -a, --structural-variation         a list of structural variation entries from
+                                     variation database. This option may be passed
+                                     multiple times [default:"none"]
+  -A, --structural-variation-regex   a list of perl-like regex to match structural
+                                     variation entries in variation database.
+                                     This option may be passed multiple times
+                                     [default:"none"]
 
 =head1 OPTIONS
 
@@ -221,9 +226,22 @@ See B<quality> command for more details
 
 Sets the structural variation to be applied on the genome feeded. By
 default no variation is included to the simulation, but the user has
-the power to point some entry from B<variation> database or index his
-own data.
-See B<variation> command for more details
+the power to point some entries from B<variation> database or index his
+own data. This option accepts a list with comma separated values
+and can be passed multiple times, which is useful in order to join
+various types of structural variation into the same simulation. It is
+possible to combine this option with B<--structural-variation-regex>
+See B<variation> command for the available list of structural variation
+entries
+
+=item B<--structural-variation-regex>
+
+Applies perl-regex in the variation database and selects all entryes
+that match the pattern. This option accepts a list with comma separated
+values and can be passed multiple times. It is possible to combine this
+option with B<--structural-variation>
+See B<variation> command for the available list of structural variation
+entries
 
 =back
 
