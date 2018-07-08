@@ -8,7 +8,6 @@ extends 'App::Sandy::CLI::App';
 # VERSION
 
 sub command_map {
-	custom        => 'App::Sandy::Command::Custom',
 	genome        => 'App::Sandy::Command::Genome',
 	transcriptome => 'App::Sandy::Command::Transcriptome',
 	quality       => 'App::Sandy::Command::Quality',
@@ -46,7 +45,6 @@ __END__
  Main commands:
   genome                   simulate genome sequencing
   transcriptome            simulate transcriptome sequencing
-  custom                   simulate custom sequencing
 
 =head1 DESCRIPTION
 
