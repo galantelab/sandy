@@ -3,7 +3,7 @@ package App::Sandy::Command::Quality;
 
 use App::Sandy::Base 'class';
 use App::Sandy::DB::Handle::Quality;
-use Text::SimpleTable::AutoWidth;
+use Text::ASCIITable;
 
 extends 'App::Sandy::CLI::Command';
 
@@ -43,16 +43,15 @@ sub execute {
 	my $report_ref = $self->make_report;
 
 	if (%$report_ref) {
-		my $t1 = Text::SimpleTable::AutoWidth->new;
-
-		$t1->captions(['quality profile', 'size', 'source', 'provider', 'date']);
+		my $t1 = Text::ASCIITable->new;
+		$t1->setCols('quality profile', 'size', 'source', 'provider', 'date');
 
 		for my $quality_profile (sort keys %$report_ref) {
 			my $attr = $report_ref->{$quality_profile};
-			$t1->row($quality_profile, $attr->{size}, $attr->{source}, $attr->{provider}, $attr->{date});
+			$t1->addRow($quality_profile, $attr->{size}, $attr->{source}, $attr->{provider}, $attr->{date});
 		}
 
-		print $t1->draw;
+		print $t1;
 	}
 }
 

@@ -3,7 +3,7 @@ package App::Sandy::Command::Variation;
 
 use App::Sandy::Base 'class';
 use App::Sandy::DB::Handle::Variation;
-use Text::SimpleTable::AutoWidth;
+use Text::ASCIITable;
 
 extends 'App::Sandy::CLI::Command';
 
@@ -43,16 +43,15 @@ sub execute {
 	my $report_ref = $self->make_report;
 
 	if (%$report_ref) {
-		my $t1 = Text::SimpleTable::AutoWidth->new;
-
-		$t1->captions(['structural variation', 'source', 'provider', 'date']);
+		my $t1 = Text::ASCIITable->new;
+		$t1->setCols('structural variation', 'source', 'provider', 'date');
 
 		for my $structural_variation (sort keys %$report_ref) {
 			my $attr = $report_ref->{$structural_variation};
-			$t1->row($structural_variation, $attr->{source}, $attr->{provider}, $attr->{date});
+			$t1->addRow($structural_variation, $attr->{source}, $attr->{provider}, $attr->{date});
 		}
 
-		print $t1->draw;
+		print $t1;
 	}
 }
 
@@ -67,7 +66,7 @@ __END__
  Options:
   -h, --help               brief help message
   -M, --man                full documentation
- 
+
  Commands:
   add                      add a new structural variation to database
   dump                     dump structural variation from database

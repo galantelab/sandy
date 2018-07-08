@@ -3,7 +3,7 @@ package App::Sandy::Command::Expression;
 
 use App::Sandy::Base 'class';
 use App::Sandy::DB::Handle::Expression;
-use Text::SimpleTable::AutoWidth;
+use Text::ASCIITable;
 
 extends 'App::Sandy::CLI::Command';
 
@@ -43,16 +43,15 @@ sub execute {
 	my $report_ref = $self->make_report;
 
 	if (%$report_ref) {
-		my $t1 = Text::SimpleTable::AutoWidth->new;
-
-		$t1->captions([qw/expression-matrix source provider date/]);
+		my $t1 = Text::ASCIITable->new;
+		$t1->setCols('expression-matrix', 'source', 'provider', 'date');
 
 		for my $expression_matrix (sort keys %$report_ref) {
 			my $attr = $report_ref->{$expression_matrix};
-			$t1->row($expression_matrix, $attr->{source}, $attr->{provider}, $attr->{date});
+			$t1->addRow($expression_matrix, $attr->{source}, $attr->{provider}, $attr->{date});
 		}
 
-		print $t1->draw;
+		print $t1;
 	}
 }
 
