@@ -85,49 +85,46 @@ sub _index_quality_type {
 
 	my $getter;
 
-	given ($type) {
-		when ('fastq') {
-			log_msg ":: Setting fastq validation and getter";
-			$num_left = int($num_lines / 4);
+	if ($type eq 'fastq') {
+		log_msg ":: Setting fastq validation and getter";
+		$num_left = int($num_lines / 4);
 
-			$getter = sub {
-				my @stack;
+		$getter = sub {
+			my @stack;
 
-				for (1..4) {
-					$line++;
-					defined(my $entry = <$fh>)
-						or die "Truncated fastq entry in '$file' at line $line\n";
-					push @stack => $entry;
-				}
-
-				chomp @stack;
-
-				if ($stack[0] !~ /^\@/ || $stack[2] !~ /^\+/) {
-					die "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read\n";
-				}
-
-				if (length $stack[3] != $size) {
-					die "Fastq entry in '$file' at line '$line' do not have length $size\n";
-				}
-
-				return $stack[3];
-			}
-		}
-		default {
-			log_msg ":: Setting raw validation and getter";
-			$num_left = $num_lines;
-
-			$getter = sub {
+			for (1..4) {
 				$line++;
-				chomp(my $entry = <$fh>);
-
-				if (length $entry != $size) {
-					die "Error parsing '$file': Line $line do not have length $size\n";
-				}
-
-				return $entry;
+				defined(my $entry = <$fh>)
+					or die "Truncated fastq entry in '$file' at line $line\n";
+				push @stack => $entry;
 			}
-		}
+
+			chomp @stack;
+
+			if ($stack[0] !~ /^\@/ || $stack[2] !~ /^\+/) {
+				die "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read\n";
+			}
+
+			if (length $stack[3] != $size) {
+				die "Fastq entry in '$file' at line '$line' do not have length $size\n";
+			}
+
+			return $stack[3];
+		};
+	} else {
+		log_msg ":: Setting raw validation and getter";
+		$num_left = $num_lines;
+
+		$getter = sub {
+			$line++;
+			chomp(my $entry = <$fh>);
+
+			if (length $entry != $size) {
+				die "Error parsing '$file': Line $line do not have length $size\n";
+			}
+
+			return $entry;
+		};
 	}
 
 	log_msg ":: Calculating the  number of entries to pick ...";

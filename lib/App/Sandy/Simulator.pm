@@ -198,11 +198,14 @@ sub _build_strand {
 	my $self = shift;
 	my $strand_sub;
 
-	given ($self->strand_bias) {
-		when ('plus')   { $strand_sub = sub {1} }
-		when ('minus')  { $strand_sub = sub {0} }
-		when ('random') { $strand_sub = sub { int(rand(2)) }}
-		default         { die "Unknown option '$_' for strand bias\n" }
+	if ($self->strand_bias eq 'plus') {
+		$strand_sub = sub {1};
+	} elsif ($self->strand_bias eq 'minus') {
+		$strand_sub = sub {0};
+	} elsif ($self->strand_bias eq 'random') {
+		$strand_sub = sub { int(rand(2)) };
+	} else {
+		die "Unknown option '$_' for strand bias\n";
 	}
 
 	return $strand_sub;
@@ -281,26 +284,24 @@ sub _build_fasta {
 
 	for my $id (keys %$indexed_fasta) {
 		my $index_size = $indexed_fasta->{$id}{size};
-		given (ref $self->fastq) {
-			when ('App::Sandy::Fastq::SingleEnd') {
-				my $read_size = $self->fastq->read_size;
-				if ($index_size < $read_size) {
-					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)";
-					delete $indexed_fasta->{$id};
-					push @blacklist => $id;
-				}
+		my $class = ref $self->fastq;
+
+		if ($class eq 'App::Sandy::Fastq::SingleEnd') {
+			my $read_size = $self->fastq->read_size;
+			if ($index_size < $read_size) {
+				log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)";
+				delete $indexed_fasta->{$id};
+				push @blacklist => $id;
 			}
-			when ('App::Sandy::Fastq::PairedEnd') {
-				my $fragment_mean = $self->fastq->fragment_mean;
-				if ($index_size < $fragment_mean) {
-					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)";
-					delete $indexed_fasta->{$id};
-					push @blacklist => $id;
-				}
+		} elsif ($class eq 'App::Sandy::Fastq::PairedEnd') {
+			my $fragment_mean = $self->fastq->fragment_mean;
+			if ($index_size < $fragment_mean) {
+				log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)";
+				delete $indexed_fasta->{$id};
+				push @blacklist => $id;
 			}
-			default {
-				die "Unknown option '$_' for sequencing type\n";
-			}
+		} else {
+			die "Unknown option '$_' for sequencing type\n";
 		}
 	}
 
@@ -350,174 +351,169 @@ sub _build_seqid_raffle {
 	# The builded function
 	my $seqid_sub;
 
-	given ($self->seqid_weight) {
-		when ('same') {
-			my ($keys, $weights) = $self->_populate_key_weight($piece_table, sub { 1 });
+	if ($self->seqid_weight eq 'same') {
+		my ($keys, $weights) = $self->_populate_key_weight($piece_table, sub { 1 });
 
-			# If weight == 1 means that there are 2 keys for
-			# the same seq_id.
-			# If weight == 2 means that there is only one key
-			# for the seq_id, so I double that key
-			for (my $i = 0; $i < @$weights; $i++) {
-				if ($weights->[$i] > 1) {
-					push @$keys => $keys->[$i];
-				}
+		# If weight == 1 means that there are 2 keys for
+		# the same seq_id.
+		# If weight == 2 means that there is only one key
+		# for the seq_id, so I double that key
+		for (my $i = 0; $i < @$weights; $i++) {
+			if ($weights->[$i] > 1) {
+				push @$keys => $keys->[$i];
 			}
-
-			my $keys_size = scalar @$keys;
-			$seqid_sub = sub { $keys->[int(rand($keys_size))] };
 		}
-		when ('count') {
-			# Catch expression-matrix entry from database
-			my $indexed_file = $self->_retrieve_expression_matrix;
 
-			# Catch indexed fasta
-			my $indexed_fasta = $self->_fasta;
+		my $keys_size = scalar @$keys;
+		$seqid_sub = sub { $keys->[int(rand($keys_size))] };
+	} elsif ($self->seqid_weight eq 'count') {
+		# Catch expression-matrix entry from database
+		my $indexed_file = $self->_retrieve_expression_matrix;
 
-			# Validate expression_matrix
-			for my $id (keys %$indexed_file) {
-				# If not exists into indexed_fasta, it must then exist into fasta_tree
-				unless (exists $piece_table->{$id} || $self->_exists_fasta_tree($id)) {
-					log_msg sprintf ":: Ignoring seqid '%s' from expression-matrix '%s': It is not found into the indexed fasta"
-						=> $id, $self->expression_matrix;
-					delete $indexed_file->{$id};
+		# Catch indexed fasta
+		my $indexed_fasta = $self->_fasta;
+
+		# Validate expression_matrix
+		for my $id (keys %$indexed_file) {
+			# If not exists into indexed_fasta, it must then exist into fasta_tree
+			unless (exists $piece_table->{$id} || $self->_exists_fasta_tree($id)) {
+				log_msg sprintf ":: Ignoring seqid '%s' from expression-matrix '%s': It is not found into the indexed fasta"
+					=> $id, $self->expression_matrix;
+				delete $indexed_file->{$id};
+			}
+		}
+
+		unless (%$indexed_file) {
+			die sprintf "No valid seqid entry of the expression-matrix '%s' is recorded into the indexed fasta\n"
+				=> $self->expression_matrix;
+		}
+
+		my (%ptable_ind, %ptable_cluster);
+
+		# Split indexed_file seq_ids between those
+		# into piece_table and those that represents a cluster
+		# of seq_ids as in gene -> transcript relationship
+		for my $seq_id (keys %$indexed_file) {
+			if (exists $piece_table->{$seq_id}) {
+				$ptable_ind{$seq_id} = $piece_table->{$seq_id};
+
+			} else {
+				my $ids = $self->_get_fasta_tree($seq_id);
+
+				# Bug catcher
+				unless (@$ids) {
+					croak "seq_id '$seq_id' not found into piece_table";
+				}
+
+				$ptable_cluster{$seq_id} = $ids;
+			}
+		}
+
+		# Let's calculate the weight taking in acount
+		# the size  increase/decrease
+		my $calc_ind_weight = sub {
+			my ($seq_id, $type) = @_;
+
+			my $counts = $indexed_file->{$seq_id};
+			my $size = $piece_table->{$seq_id}{$type}{size};
+			my $fasta_size = $indexed_fasta->{$seq_id}{size};
+
+			# Correct the weight according to the
+			# structural variation change by the ratio
+			# between the table size and fasta size
+			my $factor = $size / $fasta_size;
+
+			return $counts * $factor;
+		};
+
+		my ($keys, $weights);
+
+		if (%ptable_ind) {
+			($keys, $weights) = $self->_populate_key_weight(\%ptable_ind,
+				$calc_ind_weight);
+		}
+
+		# If there are seq_id cluster like, then its is
+		# time to calculate these weights
+		for my $seq_id (sort keys %ptable_cluster) {
+			my %ptable;
+
+			# Slice piece_table hash
+			my $ids = $ptable_cluster{$seq_id};
+			@ptable{@$ids} = @$piece_table{@$ids};
+
+			# total size among all ids of cluster
+			my %total;
+
+			# Calculate the total size by type
+			for my $type_h (values %ptable) {
+				for my $type (keys %$type_h) {
+					$total{$type} += $type_h->{$type}{size};
 				}
 			}
 
-			unless (%$indexed_file) {
-				die sprintf "No valid seqid entry of the expression-matrix '%s' is recorded into the indexed fasta\n"
-					=> $self->expression_matrix;
-			}
-
-			my (%ptable_ind, %ptable_cluster);
-
-			# Split indexed_file seq_ids between those
-			# into piece_table and those that represents a cluster
-			# of seq_ids as in gene -> transcript relationship
-			for my $seq_id (keys %$indexed_file) {
-				if (exists $piece_table->{$seq_id}) {
-					$ptable_ind{$seq_id} = $piece_table->{$seq_id};
-
-				} else {
-					my $ids = $self->_get_fasta_tree($seq_id);
-
-					# Bug catcher
-					unless (@$ids) {
-						croak "seq_id '$seq_id' not found into piece_table";
-					}
-
-					$ptable_cluster{$seq_id} = $ids;
-				}
-			}
-
-			# Let's calculate the weight taking in acount
-			# the size  increase/decrease
-			my $calc_ind_weight = sub {
-				my ($seq_id, $type) = @_;
+			# Calculate the weight taking in acount the size increase/decrease
+			# and the ratio between the total size by type and the table size.
+			# The problem here is that I must divide the 'counts' for some 'seq_id'
+			# among all ids that belong to it
+			my $calc_cluster_weight = sub {
+				my ($id, $type) = @_;
 
 				my $counts = $indexed_file->{$seq_id};
-				my $size = $piece_table->{$seq_id}{$type}{size};
-				my $fasta_size = $indexed_fasta->{$seq_id}{size};
+				my $size = $piece_table->{$id}{$type}{size};
+				my $fasta_size = $indexed_fasta->{$id}{size};
 
-				# Correct the weight according to the
-				# structural variation change by the ratio
-				# between the table size and fasta size
+				# Divide the counts among all ids
+				my $ratio = $size / $total{$type};
+
+				# Correct the weight according to the size
 				my $factor = $size / $fasta_size;
 
-				return $counts * $factor;
+				return $counts * $factor * $ratio;
 			};
 
-			my ($keys, $weights);
+			my ($k, $w) = $self->_populate_key_weight(\%ptable,
+				$calc_cluster_weight);
 
-			if (%ptable_ind) {
-				($keys, $weights) = $self->_populate_key_weight(\%ptable_ind,
-					$calc_ind_weight);
-			}
-
-			# If there are seq_id cluster like, then its is
-			# time to calculate these weights
-			for my $seq_id (sort keys %ptable_cluster) {
-				my %ptable;
-
-				# Slice piece_table hash
-				my $ids = $ptable_cluster{$seq_id};
-				@ptable{@$ids} = @$piece_table{@$ids};
-
-				# total size among all ids of cluster
-				my %total;
-
-				# Calculate the total size by type
-				for my $type_h (values %ptable) {
-					for my $type (keys %$type_h) {
-						$total{$type} += $type_h->{$type}{size};
-					}
-				}
-
-				# Calculate the weight taking in acount the size increase/decrease
-				# and the ratio between the total size by type and the table size.
-				# The problem here is that I must divide the 'counts' for some 'seq_id'
-				# among all ids that belong to it
-				my $calc_cluster_weight = sub {
-					my ($id, $type) = @_;
-
-					my $counts = $indexed_file->{$seq_id};
-					my $size = $piece_table->{$id}{$type}{size};
-					my $fasta_size = $indexed_fasta->{$id}{size};
-
-					# Divide the counts among all ids
-					my $ratio = $size / $total{$type};
-
-					# Correct the weight according to the size
-					my $factor = $size / $fasta_size;
-
-					return $counts * $factor * $ratio;
-				};
-
-				my ($k, $w) = $self->_populate_key_weight(\%ptable,
-					$calc_cluster_weight);
-
-				push @$keys => @$k;
-				push @$weights => @$w;
-			}
-
-			unless (@$keys && @$weights) {
-				croak "No keys weights have been set";
-			}
-
-			# It is very necessary in order
-			# to avoid truncation of numbers
-			# between zero and one
-			$self->_round_weight($weights);
-
-			my $raffler = App::Sandy::WeightedRaffle->new(
-				'weights' => $weights,
-				'keys'    => $keys
-			);
-
-			$seqid_sub = sub { $raffler->weighted_raffle };
+			push @$keys => @$k;
+			push @$weights => @$w;
 		}
-		when ('length') {
-			my $calc_weight = sub {
-				my ($seq_id, $type) = @_;
-				return $piece_table->{$seq_id}{$type}{size};
-			};
 
-			my ($keys, $weights) = $self->_populate_key_weight($piece_table,
-				$calc_weight);
-
-			# Just in case ...
-			$self->_round_weight($weights);
-
-			my $raffler = App::Sandy::WeightedRaffle->new(
-				weights => $weights,
-				keys    => $keys
-			);
-
-			$seqid_sub = sub { $raffler->weighted_raffle };
+		unless (@$keys && @$weights) {
+			croak "No keys weights have been set";
 		}
-		default {
-			die "Unknown option '$_' for seqid-raffle\n";
-		}
+
+		# It is very necessary in order
+		# to avoid truncation of numbers
+		# between zero and one
+		$self->_round_weight($weights);
+
+		my $raffler = App::Sandy::WeightedRaffle->new(
+			'weights' => $weights,
+			'keys'    => $keys
+		);
+
+		$seqid_sub = sub { $raffler->weighted_raffle };
+	} elsif ($self->seqid_weight eq 'length') {
+		my $calc_weight = sub {
+			my ($seq_id, $type) = @_;
+			return $piece_table->{$seq_id}{$type}{size};
+		};
+
+		my ($keys, $weights) = $self->_populate_key_weight($piece_table,
+			$calc_weight);
+
+		# Just in case ...
+		$self->_round_weight($weights);
+
+		my $raffler = App::Sandy::WeightedRaffle->new(
+			weights => $weights,
+			keys    => $keys
+		);
+
+		$seqid_sub = sub { $raffler->weighted_raffle };
+	} else {
+		die "Unknown option '$_' for seqid-raffle\n";
 	}
 
 	return $seqid_sub;
@@ -657,22 +653,20 @@ sub _build_piece_table {
 			# Get the new size
 			my $new_size = $table->logical_len;
 
-			given (ref $self->fastq) {
-				when ('App::Sandy::Fastq::SingleEnd') {
-					if ($new_size < $self->fastq->read_size) {
-						log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required read-size";
-						next;
-					}
+			my $class = ref $self->fastq;
+
+			if ($class eq 'App::Sandy::Fastq::SingleEnd') {
+				if ($new_size < $self->fastq->read_size) {
+					log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required read-size";
+					next;
 				}
-				when ('App::Sandy::Fastq::PairedEnd') {
-					if ($new_size < $self->fastq->fragment_mean) {
-						log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required fragment mean";
-						next;
-					}
+			} elsif ($class eq 'App::Sandy::Fastq::PairedEnd') {
+				if ($new_size < $self->fastq->fragment_mean) {
+					log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required fragment mean";
+					next;
 				}
-				default {
-					die "No valid options for 'fastq'";
-				}
+			} else {
+				die "No valid options for 'fastq'";
 			}
 
 			# If all's right
@@ -786,20 +780,17 @@ sub _validate_indexed_snv_against_fasta {
 sub _calculate_number_of_reads {
 	my $self = shift;
 	my $number_of_reads;
-	given($self->count_loops_by) {
-		when ('coverage') {
-			# It is needed to calculate the genome size
-			my $fasta = $self->_fasta;
-			my $fasta_size = 0;
-			$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
-			$number_of_reads = int(($fasta_size * $self->coverage) / $self->fastq->read_size);
-		}
-		when ('number-of-reads') {
-			$number_of_reads = $self->number_of_reads;
-		}
-		default {
-			die "Unknown option '$_' for calculating the number of reads\n";
-		}
+
+	if ($self->count_loops_by eq 'coverage') {
+		# It is needed to calculate the genome size
+		my $fasta = $self->_fasta;
+		my $fasta_size = 0;
+		$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
+		$number_of_reads = int(($fasta_size * $self->coverage) / $self->fastq->read_size);
+	} elsif ($self->count_loops_by eq 'number-of-reads') {
+		$number_of_reads = $self->number_of_reads;
+	} else {
+		die "Unknown option '$_' for calculating the number of reads\n";
 	}
 
 	# In case it is paired-end read, divide the number of reads by 2 because App::Sandy::Fastq::PairedEnd class

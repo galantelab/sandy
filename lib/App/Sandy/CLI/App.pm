@@ -215,21 +215,16 @@ sub run {
 
 	$self->_help_text unless scalar @argv;
 
-	given ($argv[0]) {
-		when (%command_map_bultin) {
-			my $command_name = shift @argv;
-			my $command_method = $command_map_bultin{$command_name};
-			$self->$command_method(\@argv);
-		}
-		when (%command_map) {
-			$self->run_command(\@argv);
-		}
-		when (/^-/) {
-			$self->run_no_command(\@argv);
-		}
-		default {
-			$self->error("Unknown command '$argv[0]'\n" . $self->_try_msg);
-		}
+	if ($command_map_bultin{$argv[0]}) {
+		my $command_name = shift @argv;
+		my $command_method = $command_map_bultin{$command_name};
+		$self->$command_method(\@argv);
+	} elsif ($command_map{$argv[0]}) {
+		$self->run_command(\@argv);
+	} elsif ($argv[0] =~ /^-/) {
+		$self->run_no_command(\@argv);
+	} else {
+		$self->error("Unknown command '$argv[0]'\n" . $self->_try_msg);
 	}
 }
 

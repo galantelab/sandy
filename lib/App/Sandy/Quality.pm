@@ -54,13 +54,10 @@ sub _build_gen_quality {
 	my $self = shift;
 	my $fun;
 
-	given ($self->quality_profile) {
-		when ('poisson') {
-			$fun = sub { $self->_gen_quality_by_poisson_dist };
-		}
-		default {
-			$fun = sub { $self->_gen_quality_by_system };
-		}
+	if ($self->quality_profile eq 'poisson') {
+		$fun = sub { $self->_gen_quality_by_poisson_dist };
+	} else {
+		$fun = sub { $self->_gen_quality_by_system };
 	}
 
 	return $fun;
