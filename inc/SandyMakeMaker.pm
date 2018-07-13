@@ -1,5 +1,5 @@
 package inc::SandyMakeMaker;
-# ABSTRACT: Install bash completion for sandy
+# ABSTRACT: Install bash/zsh completion for sandy
 
 use Moose;
 
@@ -38,11 +38,13 @@ SHELL := /bin/bash
 support_files_install :
 	$(NOECHO) [ `id -u` = 0 ] \
 		&& $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)'\'')' -- \
-			'completion/sandy-completion.bash' '/etc/bash_completion.d/sandy' \
-				&& source '/etc/bash_completion.d/sandy'
+			'completions/sandy-completion.bash' '/usr/share/bash-completion/completions/sandy' \
+		&& $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)'\'')' -- \
+			'completions/sandy-completion.zsh' '/usr/share/zsh/site-functions/_sandy'
 
 support_files_uninstall :
-	$(NOECHO) rm -f '/etc/bash_completion.d/sandy'
+	$(NOECHO) rm -f '/usr/share/bash-completion/completions/sandy' \
+		'/usr/share/zsh/site-functions/_sandy'
 };
 
 	push @ret, $cmd;
