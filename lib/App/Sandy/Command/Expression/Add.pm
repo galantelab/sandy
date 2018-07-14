@@ -78,7 +78,7 @@ __END__
   an expression-matrix file
 
  Mandatory options:
-  -f, --expression-matrix    an expression-matrix entry
+  -f, --expression-matrix    an expression-matrix name
 
  Options:
   -h, --help                 brief help message

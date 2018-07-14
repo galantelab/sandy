@@ -78,7 +78,7 @@ __END__
   a structural variation file
 
  Mandatory options:
-  -a, --structural-variation    a structural variation entry
+  -a, --structural-variation    a structural variation name
 
  Options:
   -h, --help                    brief help message

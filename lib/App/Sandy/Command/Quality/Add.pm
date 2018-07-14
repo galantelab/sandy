@@ -99,14 +99,14 @@ __END__
   a file (fastq or a matrix with only quality entries)
 
  Mandatory options:
-  -q, --quality-profile    quality-profile name for the database [required]
-  -r, --read-size          the read-size to be used for the quality [required, Integer]
+  -q, --quality-profile    a quality-profile name
+  -r, --read-size          the read-size to be used for the quality [Integer]
 
  Options:
   -h, --help               brief help message
   -M, --man                full documentation
   -v, --verbose            print log messages
-  -s, --source             qaulity-profile source detail for database
+  -s, --source             quality-profile source detail for database
 
 =head1 DESCRIPTION
 
