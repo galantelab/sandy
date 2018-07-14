@@ -34,7 +34,9 @@ sub _handle_signal {
 	my $self = shift;
 	return sub {
 		my $signame = shift;
-		$self->_add_signal($signame);
-		my $cnt = kill 'TERM' => @{ $self->foreign_pid };
+		unless ($self->signal_catched) {
+			$self->_add_signal($signame);
+			my $cnt = kill 'TERM' => @{ $self->foreign_pid };
+		}
 	};
 }
