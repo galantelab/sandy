@@ -1,20 +1,14 @@
-package App::Sandy::Fastq::PairedEnd;
-# ABSTRACT: App::Sandy::Fastq subclass for simulate paired-end fastq entries.
+package App::Sandy::Seq::PairedEnd;
+# ABSTRACT: App::Sandy::Seq subclass for simulate paired-end entries.
 
 use App::Sandy::Base 'class';
 use App::Sandy::Read::PairedEnd;
 
-extends 'App::Sandy::Fastq';
+extends 'App::Sandy::Seq';
 
 with 'App::Sandy::Role::RunTimeTemplate';
 
 # VERSION
-
-has 'template_id' => (
-	is         => 'ro',
-	isa        => 'Str',
-	required   => 1
-);
 
 has 'fragment_mean' => (
 	is         => 'ro',
@@ -28,37 +22,12 @@ has 'fragment_stdd' => (
 	required   => 1
 );
 
-has 'sequencing_error' => (
-	is         => 'ro',
-	isa        => 'My:NumHS',
-	required   => 1
-);
-
 has '_read' => (
 	is         => 'ro',
 	isa        => 'App::Sandy::Read::PairedEnd',
 	builder    => '_build_read',
 	lazy_build => 1,
 	handles    => [qw{ gen_read }]
-);
-
-has '_gen_header' => (
-	is         => 'ro',
-	isa        => 'CodeRef',
-	builder    => '_build_gen_header',
-	lazy_build => 1
-);
-
-has '_info' => (
-	traits     => ['Hash'],
-	is         => 'ro',
-	isa        => 'HashRef[Str]',
-	builder    => '_build_info',
-	lazy_build => 1,
-	handles    => {
-		_set_info => 'set',
-		_get_info => 'get'
-	}
 );
 
 sub BUILD {
@@ -77,13 +46,11 @@ sub _build_read {
 	);
 }
 
-sub _build_gen_header {
+override '_build_sym_table' => sub {
 	my $self = shift;
+	my $sym_table = super();
 
-	my %sym_table = (
-		'%q' => '$info->{quality_profile}',
-		'%r' => '$info->{read_size}',
-		'%e' => '$info->{sequencing_error}',
+	my %sym_table_paired_end = (
 		'%m' => '$info->{fragment_mean}',
 		'%d' => '$info->{fragment_stdd}',
 		'%f' => '$info->{fragment_size}',
@@ -92,44 +59,29 @@ sub _build_gen_header {
 		'%X' => '$info->{fragment_start_ref}',
 		'%Z' => '$info->{fragment_end_ref}',
 		'%F' => '$info->{fragment_strand}',
-		'%c' => '$info->{seq_id}',
-		'%C' => '$info->{seq_id_type}',
-		'%a' => '$info->{start_ref}',
-		'%b' => '$info->{end_ref}',
-		'%t' => '$info->{start}',
-		'%n' => '$info->{end}',
 		'%A' => '$info->{mate_start_ref}',
 		'%B' => '$info->{mate_end_ref}',
 		'%T' => '$info->{mate_start}',
 		'%N' => '$info->{mate_end}',
 		'%D' => '$info->{tlen}',
-		'%i' => '$info->{instrument}',
-		'%I' => '$info->{id}',
-		'%R' => '$info->{read}',
-		'%U' => '$info->{num}',
-		'%s' => '$info->{strand}',
-		'%x' => '$info->{error}',
-		'%v' => '$info->{var}'
 	);
 
-#	return  $self->with_compile_template('%i.%U %U simulation_read length=%r position=%c:%t-%n distance=%D', 'info', \%sym_table);
-	return  $self->with_compile_template($self->template_id, 'info', \%sym_table);
-}
+	@$sym_table{keys %sym_table_paired_end} = values %sym_table_paired_end;
+	return $sym_table;
+};
 
-sub _build_info {
+override '_build_info' => sub {
 	my $self = shift;
+	my $info = super();
 
-	my %info = (
-		instrument       => 'SR',
-		quality_profile  => $self->quality_profile,
-		read_size        => $self->read_size,
-		sequencing_error => $self->sequencing_error,
-		fragment_mean    => $self->fragment_mean,
-		fragment_stdd    => $self->fragment_stdd
+	my %info_paired_end = (
+		fragment_mean => $self->fragment_mean,
+		fragment_stdd => $self->fragment_stdd
 	);
 
-	return \%info;
-}
+	@$info{keys %info_paired_end} = values %info_paired_end;
+	return $info;
+};
 
 sub sprint_fastq {
 	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;

@@ -5,8 +5,8 @@ use App::Sandy::Base 'role';
 use App::Sandy::DB::Handle::Quality;
 use App::Sandy::DB::Handle::Expression;
 use App::Sandy::DB::Handle::Variation;
-use App::Sandy::Fastq::SingleEnd;
-use App::Sandy::Fastq::PairedEnd;
+use App::Sandy::Seq::SingleEnd;
+use App::Sandy::Seq::PairedEnd;
 use App::Sandy::Simulator;
 use Path::Class 'file';
 use File::Path 'make_path';
@@ -61,7 +61,7 @@ override 'opt_spec' => sub {
 sub _log_msg_opt {
 	my ($self, $opts) = @_;
 	while (my ($key, $value) = each %$opts) {
-		next if ref($value) =~ /Fastq/;
+		next if ref($value) =~ /Seq/;
 		next if not defined $value;
 
 		$key =~ s/_/ /g;
@@ -399,11 +399,11 @@ HEADER
 	if ($opts->{'sequencing-type'} eq 'paired-end') {
 		log_msg ":: Creating paired-end fastq generator ...";
 		$self->_log_msg_opt(\%paired_end_param);
-		$fastq = App::Sandy::Fastq::PairedEnd->new(%paired_end_param);
+		$fastq = App::Sandy::Seq::PairedEnd->new(%paired_end_param);
 	} else {
 		log_msg ":: Creating single-end fastq generator ...";
 		$self->_log_msg_opt(\%single_end_param);
-		$fastq = App::Sandy::Fastq::SingleEnd->new(%single_end_param);
+		$fastq = App::Sandy::Seq::SingleEnd->new(%single_end_param);
 	}
 
 	my %simulator_param = (

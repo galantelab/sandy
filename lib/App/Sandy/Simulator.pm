@@ -2,8 +2,8 @@ package App::Sandy::Simulator;
 # ABSTRACT: Class responsible to make the simulation
 
 use App::Sandy::Base 'class';
-use App::Sandy::Fastq::SingleEnd;
-use App::Sandy::Fastq::PairedEnd;
+use App::Sandy::Seq::SingleEnd;
+use App::Sandy::Seq::PairedEnd;
 use App::Sandy::InterlaceProcesses;
 use App::Sandy::WeightedRaffle;
 use App::Sandy::PieceTable;
@@ -98,7 +98,7 @@ has '_structural_variation_names' => (
 
 has 'fastq' => (
 	is         => 'ro',
-	isa        => 'App::Sandy::Fastq::SingleEnd | App::Sandy::Fastq::PairedEnd',
+	isa        => 'App::Sandy::Seq::SingleEnd | App::Sandy::Seq::PairedEnd',
 	required   => 1,
 	handles    => [ qw{ sprint_fastq } ]
 );
@@ -286,14 +286,14 @@ sub _build_fasta {
 		my $index_size = $indexed_fasta->{$id}{size};
 		my $class = ref $self->fastq;
 
-		if ($class eq 'App::Sandy::Fastq::SingleEnd') {
+		if ($class eq 'App::Sandy::Seq::SingleEnd') {
 			my $read_size = $self->fastq->read_size;
 			if ($index_size < $read_size) {
 				log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)";
 				delete $indexed_fasta->{$id};
 				push @blacklist => $id;
 			}
-		} elsif ($class eq 'App::Sandy::Fastq::PairedEnd') {
+		} elsif ($class eq 'App::Sandy::Seq::PairedEnd') {
 			my $fragment_mean = $self->fastq->fragment_mean;
 			if ($index_size < $fragment_mean) {
 				log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)";
@@ -655,12 +655,12 @@ sub _build_piece_table {
 
 			my $class = ref $self->fastq;
 
-			if ($class eq 'App::Sandy::Fastq::SingleEnd') {
+			if ($class eq 'App::Sandy::Seq::SingleEnd') {
 				if ($new_size < $self->fastq->read_size) {
 					log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required read-size";
 					next;
 				}
-			} elsif ($class eq 'App::Sandy::Fastq::PairedEnd') {
+			} elsif ($class eq 'App::Sandy::Seq::PairedEnd') {
 				if ($new_size < $self->fastq->fragment_mean) {
 					log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required fragment mean";
 					next;
@@ -793,14 +793,14 @@ sub _calculate_number_of_reads {
 		die "Unknown option '$_' for calculating the number of reads\n";
 	}
 
-	# In case it is paired-end read, divide the number of reads by 2 because App::Sandy::Fastq::PairedEnd class
+	# In case it is paired-end read, divide the number of reads by 2 because App::Sandy::Seq::PairedEnd class
 	# returns 2 reads at time
 	my $class = ref $self->fastq;
-	my $read_type_factor = $class eq 'App::Sandy::Fastq::PairedEnd' ? 2 : 1;
+	my $read_type_factor = $class eq 'App::Sandy::Seq::PairedEnd' ? 2 : 1;
 	$number_of_reads = int($number_of_reads / $read_type_factor);
 
 	# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or fasta_file size
-	if ($number_of_reads <= 0 || ($class eq 'App::Sandy::Fastq::PairedEnd' && $number_of_reads == 1)) {
+	if ($number_of_reads <= 0 || ($class eq 'App::Sandy::Seq::PairedEnd' && $number_of_reads == 1)) {
 		die "The computed number of reads is equal to zero.\n" .
 			"It may occur due to the low coverage, fasta-file sequence size or number of reads directly passed by the user\n";
 	}
@@ -845,10 +845,10 @@ sub run_simulation {
 
 	# Fastq files to be generated
 	my %files = (
-		'App::Sandy::Fastq::SingleEnd' => [
+		'App::Sandy::Seq::SingleEnd' => [
 			$self->prefix . '_R1_001.fastq'
 		],
-		'App::Sandy::Fastq::PairedEnd' => [
+		'App::Sandy::Seq::PairedEnd' => [
 			$self->prefix . '_R1_001.fastq',
 			$self->prefix . '_R2_001.fastq'
 		],
