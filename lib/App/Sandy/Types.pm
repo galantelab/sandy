@@ -97,7 +97,12 @@ subtype 'My:Piece'
 
 subtype 'My:PieceTable'
 	=> as      'HashRef'
-	=> where   {exists $_->{size} && exists $_->{table} && ref $_->{table} eq 'App::Sandy::PieceTable'}
+	=> where   { exists $_->{size} && exists $_->{table} && ref $_->{table} eq 'App::Sandy::PieceTable' }
 	=> message { "Invalid piece table entry" };
+
+subtype 'My:Format'
+	=> as      'Str'
+	=> where   { $_ eq 'fastq' || $_ eq 'fastq.gz' || $_ eq 'bam' || $_ eq 'sam' }
+	=> message { "Invalid output format: '$_': 'fastq', 'fastq.gz', 'bam', 'sam'" };
 
 1; ## --- end class App::Sandy::Types

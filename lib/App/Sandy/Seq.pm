@@ -8,6 +8,12 @@ with qw/App::Sandy::Role::RunTimeTemplate App::Sandy::Role::Template::Fastq/;
 
 # VERSION
 
+has 'format' => (
+	is         => 'ro',
+	isa        => 'My:Format',
+	required   => 1
+);
+
 has 'template_id' => (
 	is         => 'ro',
 	isa        => 'Str',
@@ -20,11 +26,26 @@ has 'sequencing_error' => (
 	required   => 1
 );
 
-has '_gen_header' => (
+has '_template_id' => (
+	traits     => ['Code'],
 	is         => 'ro',
 	isa        => 'CodeRef',
-	builder    => '_build_gen_header',
-	lazy_build => 1
+	builder    => '_build_template_id',
+	lazy_build => 1,
+	handles    => {
+		_gen_id => 'execute'
+	}
+);
+
+has '_template_seq' => (
+	traits     => ['Code'],
+	is         => 'ro',
+	isa        => 'CodeRef',
+	builder    => '_build_template_seq',
+	lazy_build => 1,
+	handles    => {
+		_gen_seq => 'execute'
+	}
 );
 
 has '_info' => (
@@ -57,7 +78,9 @@ has '_quality' => (
 	isa        => 'App::Sandy::Quality',
 	builder    => '_build_quality',
 	lazy_build => 1,
-	handles    => [qw{ gen_quality }]
+	handles    => {
+		_gen_quality => 'gen_quality'
+	}
 );
 
 has '_sym_table' => (
@@ -96,10 +119,27 @@ sub _build_sym_table {
 	return $sym_table;
 }
 
-sub _build_gen_header {
+sub _build_template_id {
 	my $self = shift;
 	my $sym_table = $self->_sym_table;
 	return $self->with_compile_template($self->template_id, 'info', $sym_table);
+}
+
+sub _build_template_seq {
+	my $self = shift;
+
+	my $format = $self->format;
+	my $gen_seq;
+
+	if ($format =~ 'fastq') {
+		$gen_seq = sub { $self->with_fastq_template(@_) };
+	} elsif ($format =~ '(bam|sam)') {
+		$gen_seq = sub { $self->with_bam_align_template(@_) };
+	} else {
+		croak "No valid format: '$format'";
+	}
+
+	return $gen_seq;
 }
 
 sub _build_info {

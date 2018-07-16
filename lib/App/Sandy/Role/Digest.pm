@@ -381,6 +381,7 @@ HEADER
 	#-------------------------------------------------------------------------------
 	my %paired_end_param = (
 		template_id       => $opts->{'id'},
+		format            => 'fastq.gz',
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
 		read_size         => $opts->{'read-size'},
@@ -390,6 +391,7 @@ HEADER
 
 	my %single_end_param = (
 		template_id       => $opts->{'id'},
+		format            => 'fastq.gz',
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
 		read_size         => $opts->{'read-size'}

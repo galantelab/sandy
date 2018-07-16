@@ -151,9 +151,8 @@ sub _sprint_seq {
 		);
 	}
 
-	my $gen_header = $self->_gen_header;
-	my $header = $gen_header->($self->_info);
-	my $quality_ref = $self->gen_quality;
+	my $seqid = $self->_gen_id($self->_info);
+	my $quality_ref = $self->_gen_quality;
 
-	return $self->with_fastq_template(\$header, $read_ref, $quality_ref);
+	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref);
 }
