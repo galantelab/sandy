@@ -16,7 +16,6 @@ sub default_opt {
 	'prefix'           => 'out',
 	'output-dir'       => '.',
 	'jobs'             => 1,
-	'gzip'             => 1,
 	'count-loops-by'   => 'number-of-reads',
 	'number-of-reads'  => 1000000,
 	'strand-bias'      => 'minus',
@@ -26,7 +25,10 @@ sub default_opt {
 	'fragment-stdd'    => 50,
 	'sequencing-error' => 0.005,
 	'read-size'        => 100,
-	'quality-profile'  => 'poisson'
+	'join-paired-ends' => 0,
+	'quality-profile'  => 'poisson',
+	'output-format'    => 'fastq.gz',
+	'read-group'       => "PID$$"
 }
 
 sub rm_opt {

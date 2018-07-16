@@ -4,7 +4,11 @@ package App::Sandy::Seq;
 use App::Sandy::Base 'class';
 use App::Sandy::Quality;
 
-with qw/App::Sandy::Role::RunTimeTemplate App::Sandy::Role::Template::Fastq/;
+with qw{
+	App::Sandy::Role::RunTimeTemplate
+	App::Sandy::Role::Template::Fastq
+	App::Sandy::Role::Template::Sam
+};
 
 # VERSION
 
@@ -24,6 +28,18 @@ has 'sequencing_error' => (
 	is         => 'ro',
 	isa        => 'My:NumHS',
 	required   => 1
+);
+
+has 'read_group' => (
+	is         => 'ro',
+	isa        => 'Str',
+	required   => 1
+);
+
+has 'sample_name' => (
+	is        => 'ro',
+	isa       => 'Str',
+	required  => 1
 );
 
 has '_template_id' => (
@@ -98,6 +114,8 @@ sub BUILD {
 
 sub _build_sym_table {
 	my $sym_table = {
+		'%G' => '$info->{read_group}',
+		'%M' => '$info->{sample_name}',
 		'%q' => '$info->{quality_profile}',
 		'%r' => '$info->{read_size}',
 		'%e' => '$info->{sequencing_error}',
@@ -134,7 +152,7 @@ sub _build_template_seq {
 	if ($format =~ 'fastq') {
 		$gen_seq = sub { $self->with_fastq_template(@_) };
 	} elsif ($format =~ '(bam|sam)') {
-		$gen_seq = sub { $self->with_bam_align_template(@_) };
+		$gen_seq = sub { $self->with_sam_align_template(@_) };
 	} else {
 		croak "No valid format: '$format'";
 	}
@@ -149,7 +167,9 @@ sub _build_info {
 		instrument       => 'SR',
 		quality_profile  => $self->quality_profile,
 		read_size        => $self->read_size,
-		sequencing_error => $self->sequencing_error
+		sequencing_error => $self->sequencing_error,
+		read_group       => $self->read_group,
+		sample_name      => $self->sample_name
 	};
 
 	return $info;
@@ -161,4 +181,9 @@ sub _build_quality {
 		quality_profile => $self->quality_profile,
 		read_size       => $self->read_size
 	);
+}
+
+sub gen_sam_head {
+	my ($self, $argv) = @_;
+	return $self->with_sam_header_template($self->sample_name, $self->read_group, $argv);
 }

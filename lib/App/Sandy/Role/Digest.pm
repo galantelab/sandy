@@ -20,7 +20,8 @@ use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
 	STRAND_BIAS_OPT       => ['random', 'plus', 'minus'],
 	SEQID_WEIGHT_OPT      => ['length', 'same', 'count'],
-	SEQUENCING_TYPE_OPT   => ['single-end', 'paired-end']
+	SEQUENCING_TYPE_OPT   => ['single-end', 'paired-end'],
+	OUTPUT_FORMAT_OPT     => ['fastq', 'fastq.gz', 'sam', 'bam']
 };
 
 override 'opt_spec' => sub {
@@ -32,10 +33,13 @@ override 'opt_spec' => sub {
 		'prefix'                     => 'prefix|p=s',
 		'id'                         => 'id|I=s',
 		'append-id'                  => 'append-id|i=s',
+		'sample-name'                => 'sample-name|M=s',
+		'read-group'                 => 'read-group|G=s',
+		'output-format'              => 'output-format|F=s',
+		'join-paired-ends'           => 'join-paired-ends|0',
 		'verbose'                    => 'verbose|v',
 		'output-dir'                 => 'output-dir|o=s',
 		'jobs'                       => 'jobs|j=i',
-		'gzip'                       => 'gzip|z!',
 		'coverage'                   => 'coverage|c=f',
 		'read-size'                  => 'read-size|r=i',
 		'fragment-mean'              => 'fragment-mean|m=i',
@@ -122,6 +126,7 @@ sub validate_opts {
 	my %SEQID_WEIGHT         = map { $_ => 1 } @{ &SEQID_WEIGHT_OPT    };
 	my %SEQUENCING_TYPE      = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT };
 	my %COUNT_LOOPS_BY       = map { $_ => 1 } @{ &COUNT_LOOPS_BY_OPT  };
+	my %OUTPUT_FORMAT        = map { $_ => 1 } @{ &OUTPUT_FORMAT_OPT   };
 	my %QUALITY_PROFILE      = %{ $self->_quality_profile_report };
 	my %EXPRESSION_MATRIX    = %{ $self->_expression_matrix_report };
 	my %STRUCTURAL_VARIATION = %{ $self->_structural_variation_report };
@@ -258,6 +263,11 @@ sub validate_opts {
 		}
 	}
 
+	if (not exists $OUTPUT_FORMAT{$opts->{'output-format'}}) {
+		my $opt = join ', ' => keys %OUTPUT_FORMAT;
+		die "Option 'output-format' requires one of these arguments: $opt not $opts->{'output-format'}\n";
+	}
+
 	# seqid-weight (SEQID_WEIGHT_OPT)
 	if (not exists $SEQID_WEIGHT{$opts->{'seqid-weight'}}) {
 		my $opt = join ', ' => keys %SEQID_WEIGHT;
@@ -311,7 +321,17 @@ sub execute {
 		? $opts->{'paired-end-id'}
 		: $opts->{'single-end-id'};
 
-	$opts->{id} .= " $opts->{'append-id'}" if defined $opts->{'append-id'};
+	# Append extra id
+	if (defined $opts->{'append-id'} && $opts->{'output-format'} !~ /(bam|sam)/) {
+		$opts->{id} .= " $opts->{'append-id'}";
+	}
+
+	# In this case, try to make simulation less redundant
+	if ($opts->{'output-format'} =~ /fastq/ && $opts->{'sequencing-type'} eq 'paired-end'
+		&& $opts->{'join-paired-ends'}) {
+		# Try to guess if the user passed a char to distinguish single/paired-end reads
+		$opts->{'id'} =~ /%R/ || $opts->{'id'} =~ s/(\S+)/$1\/\%R/;
+	}
 
 	# Structural Variation
 	if ($opts->{'structural-variation'}) {
@@ -357,6 +377,11 @@ sub execute {
 		die "$err_dir\n";
 	}
 
+	# Set sample-name if it's not set
+	if (not exists $opts->{'sample-name'}) {
+		$opts->{'sample-name'} = (split(/_/, $opts->{prefix}))[0];
+	}
+
 	# Concatenate output-dir to prefix
 	my $prefix = file($opts->{'output-dir'}, $opts->{prefix});
 	$opts->{prefix} = "$prefix";
@@ -381,7 +406,9 @@ HEADER
 	#-------------------------------------------------------------------------------
 	my %paired_end_param = (
 		template_id       => $opts->{'id'},
-		format            => 'fastq.gz',
+		read_group        => $opts->{'read-group'},
+		sample_name       => $opts->{'sample-name'},
+		format            => $opts->{'output-format'},
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
 		read_size         => $opts->{'read-size'},
@@ -391,7 +418,9 @@ HEADER
 
 	my %single_end_param = (
 		template_id       => $opts->{'id'},
-		format            => 'fastq.gz',
+		read_group        => $opts->{'read-group'},
+		sample_name       => $opts->{'sample-name'},
+		format            => $opts->{'output-format'},
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
 		read_size         => $opts->{'read-size'}
@@ -404,15 +433,17 @@ HEADER
 		$seq = App::Sandy::Seq::PairedEnd->new(%paired_end_param);
 	} else {
 		log_msg ":: Creating single-end seq generator ...";
-		$self->_log_msg_opt(\%single_end_param);
-		$seq = App::Sandy::Seq::SingleEnd->new(%single_end_param);
+#		$self->_log_msg_opt(\%single_end_param);
+#		$seq = App::Sandy::Seq::SingleEnd->new(%single_end_param);
 	}
 
 	my %simulator_param = (
+		argv                 => $argv,
 		seq                  => $seq,
 		fasta_file           => $fasta_file,
 		prefix               => $opts->{'prefix'},
-		output_gzip          => $opts->{'gzip'},
+		output_format        => $opts->{'output-format'},
+		join_paired_ends     => $opts->{'join-paired-ends'},
 		seed                 => $opts->{'seed'},
 		count_loops_by       => $opts->{'count-loops-by'},
 		number_of_reads      => $opts->{'number-of-reads'},

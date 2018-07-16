@@ -3,6 +3,7 @@ package App::Sandy::Role::IO;
 
 use App::Sandy::Base 'role';
 use PerlIO::gzip;
+use Compress::BGZF::Writer;
 
 # VERSION
 
@@ -13,7 +14,7 @@ sub with_open_r {
 	my $mode = $file =~ /\.gz$/ ? "<:gzip" : "<";
 
 	open $fh, $mode => $file
-		or die "Not possible to read $file: $!";
+		or die "Not possible to read $file: $!\n";
 
 	return $fh;
 }
@@ -31,7 +32,16 @@ sub with_open_w {
 	}
 
 	open $fh, $mode => $file
-		or die "Not possible to create $file: $!";
+		or die "Not possible to create $file: $!\n";
+
+	return $fh;
+}
+
+sub with_open_bam_w {
+	my ($self, $file) = @_;
+
+	my $fh = Compress::BGZF::Writer->new_filehandle($file)
+		or die "Not possible to create $file: $!\n";
 
 	return $fh;
 }

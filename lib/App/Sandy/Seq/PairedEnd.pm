@@ -6,8 +6,6 @@ use App::Sandy::Read::PairedEnd;
 
 extends 'App::Sandy::Seq';
 
-with 'App::Sandy::Role::RunTimeTemplate';
-
 # VERSION
 
 has 'fragment_mean' => (
@@ -154,5 +152,5 @@ sub _sprint_seq {
 	my $seqid = $self->_gen_id($self->_info);
 	my $quality_ref = $self->_gen_quality;
 
-	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref);
+	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref, $read_num, $self->read_group);
 }

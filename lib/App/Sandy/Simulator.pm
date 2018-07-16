@@ -17,6 +17,12 @@ with qw/App::Sandy::Role::IO App::Sandy::Role::SeqID/;
 
 # VERSION
 
+has 'argv' => (
+	is       => 'ro',
+	isa      => 'ArrayRef[Str]',
+	required => 1
+);
+
 has 'seed' => (
 	is        => 'ro',
 	isa       => 'Int',
@@ -35,10 +41,16 @@ has 'prefix' => (
 	required   => 1
 );
 
-has 'output_gzip' => (
+has 'join_paired_ends' => (
 	is         => 'ro',
 	isa        => 'Bool',
 	required   => 1
+);
+
+has 'output_format' => (
+	is          => 'ro',
+	isa         => 'My:Format',
+	required    => 1
 );
 
 has 'fasta_file' => (
@@ -843,22 +855,64 @@ sub run_simulation {
 	# Function that returns seqid by seqid_weight
 	my $seqid = $self->_seqid_raffle;
 
-	# Fastq files to be generated
-	my %files = (
-		'App::Sandy::Seq::SingleEnd' => [
-			$self->prefix . '_R1_001.fastq'
-		],
-		'App::Sandy::Seq::PairedEnd' => [
-			$self->prefix . '_R1_001.fastq',
-			$self->prefix . '_R2_001.fastq'
-		],
-	);
-
 	# Count file to be generated
 	my $count_file = $self->prefix . '_counts.tsv';
 
-	# Is it single-end or paired-end?
+	# Main files
+	my %files = (
+		bam                  => [
+			$self->prefix . '.bam'
+		],
+		sam                  => [
+			$self->prefix . '.sam'
+		],
+		single_fastq         => [
+			$self->prefix . '_R1_001.fastq'
+		],
+		single_fastq_gz      => [
+			$self->prefix . '_R1_001.fastq.gz'
+		],
+		join_paired_fastq    => [
+			$self->prefix . '.fastq'
+		],
+		join_paired_fastq_gz => [
+			$self->prefix . '.fastq.gz'
+		],
+		paired_fastq         => [
+			$self->prefix . '_R1_001.fastq',
+			$self->prefix . '_R2_001.fastq'
+		],
+		paired_fastq_gz      => [
+			$self->prefix . '_R1_001.fastq.gz',
+			$self->prefix . '_R2_001.fastq.gz'
+		]
+	);
+
+	# Set the file class in order to know
+	# how to deal with all files options
 	my $seq_class = ref $self->seq;
+	my $output_format = $self->output_format;
+	my $file_class;
+
+	# This mess is necessary to catch the
+	# right value into the %files hash
+	if ($output_format =~ /(sam|bam)/) {
+		$file_class = $output_format;
+	} elsif ($output_format =~ /fastq/) {
+		if ($seq_class eq 'App::Sandy::Seq::SingleEnd') {
+			$file_class = 'single_fastq';
+		} elsif ($seq_class eq 'App::Sandy::Seq::PairedEnd') {
+			$file_class = 'paired_fastq';
+			$file_class = "join_$file_class" if $self->join_paired_ends;
+		} else {
+			croak "Something wrong with the seq class: $seq_class";
+		}
+		if ($output_format eq 'fastq.gz') {
+			$file_class .= '_gz';
+		}
+	} else {
+		croak "Something wrong with the output format: $output_format";
+	}
 
 	# Forks
 	my $number_of_jobs = $self->jobs;
@@ -900,7 +954,7 @@ sub run_simulation {
 		# Inside parent
 		#-------------------------------------------------------------------------------
 		log_msg ":: Creating job $tid ...";
-		my @files_t = map { "$_.${parent_pid}_part$tid" } @{ $files{$seq_class} };
+		my @files_t = map { "$_.${parent_pid}.part$tid" } @{ $files{$file_class} };
 		push @tmp_files => @files_t;
 		my $pid = $pm->start and next;
 
@@ -927,7 +981,24 @@ sub run_simulation {
 
 		# Create temporary files
 		log_msg "  => Job $tid: Creating temporary file: @files_t";
-		my @fhs = map { $self->with_open_w($_, $self->output_gzip) } @files_t;
+
+		# And here we go ...
+		my @fhs;
+
+		if ($output_format =~ /^(sam|fastq)$/) {
+			@fhs = map { $self->with_open_w($_, 0) } @files_t;
+		} elsif ($output_format eq 'fastq.gz') {
+			@fhs = map { $self->with_open_w($_, 1) } @files_t;
+		} elsif ($output_format eq 'bam') {
+			@fhs = map { $self->with_open_bam_w($_) } @files_t;
+		} else {
+			croak "Something wrong with the output format: $file_class";
+		}
+
+		# To avoid more tests
+		if (not defined $fhs[1]) {
+			$fhs[1] = $fhs[0];
+		}
 
 		# Count the cumulative number of reads for each seqid
 		my %counter;
@@ -955,7 +1026,7 @@ sub run_simulation {
 
 		log_msg "  => Job $tid: Writing and closing file: @files_t";
 		# Close temporary files
-		for my $fh_idx (0..$#fhs) {
+		for my $fh_idx (0..$#files_t) {
 			$fhs[$fh_idx]->close
 				or die "Cannot write file $files_t[$fh_idx]: $!\n";
 		}
@@ -978,18 +1049,18 @@ sub run_simulation {
 
 	# Concatenate all temporary files
 	log_msg ":: Concatenating all temporary files ...";
-	my @fh = map { $self->with_open_w($self->output_gzip ? "$_.gz" : $_, 0) } @{ $files{$seq_class} };
+	my @fh = map { $self->with_open_w($_, 0) } @{ $files{$file_class} };
 	for my $i (0..$#tmp_files) {
 		my $fh_idx = $i % scalar @fh;
 		cat $tmp_files[$i] => $fh[$fh_idx]
-			or die "Cannot concatenate $tmp_files[$i] to $files{$seq_class}[$fh_idx]: $!\n";
+			or die "Cannot concatenate $tmp_files[$i] to $files{$file_class}[$fh_idx]: $!\n";
 	}
 
 	# Close files
-	log_msg ":: Writing and closing output file: @{ $files{$seq_class} }";
+	log_msg ":: Writing and closing output file: @{ $files{$file_class} }";
 	for my $fh_idx (0..$#fh) {
 		$fh[$fh_idx]->close
-			or die "Cannot write file $files{$seq_class}[$fh_idx]: $!\n";
+			or die "Cannot write file $files{$file_class}[$fh_idx]: $!\n";
 	}
 
 	# Save counts
