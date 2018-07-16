@@ -6,8 +6,6 @@ use App::Sandy::Read::SingleEnd;
 
 extends 'App::Sandy::Seq';
 
-with 'App::Sandy::Role::RunTimeTemplate';
-
 # VERSION
 
 has '_read' => (
@@ -32,7 +30,7 @@ sub _build_read {
 	);
 }
 
-sub sprint_fastq {
+sub sprint_seq {
 	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;
 
 	my ($read_ref, $attr) = $self->gen_read($ptable, $ptable_size, $is_leader);
@@ -72,6 +70,7 @@ sub sprint_fastq {
 
 	my $gen_header = $self->_gen_header;
 	my $header = $gen_header->($self->_info);
+	my $quality_ref = $self->gen_quality;
 
-	return $self->fastq_template(\$header, $read_ref);
+	return $self->with_fastq_template(\$header, $read_ref, $quality_ref);
 }

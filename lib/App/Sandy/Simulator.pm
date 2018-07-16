@@ -96,11 +96,11 @@ has '_structural_variation_names' => (
 	lazy_build => 1
 );
 
-has 'fastq' => (
+has 'seq' => (
 	is         => 'ro',
 	isa        => 'App::Sandy::Seq::SingleEnd | App::Sandy::Seq::PairedEnd',
 	required   => 1,
-	handles    => [ qw{ sprint_fastq } ]
+	handles    => [ qw{ sprint_seq } ]
 );
 
 has '_fasta' => (
@@ -284,17 +284,17 @@ sub _build_fasta {
 
 	for my $id (keys %$indexed_fasta) {
 		my $index_size = $indexed_fasta->{$id}{size};
-		my $class = ref $self->fastq;
+		my $class = ref $self->seq;
 
 		if ($class eq 'App::Sandy::Seq::SingleEnd') {
-			my $read_size = $self->fastq->read_size;
+			my $read_size = $self->seq->read_size;
 			if ($index_size < $read_size) {
 				log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)";
 				delete $indexed_fasta->{$id};
 				push @blacklist => $id;
 			}
 		} elsif ($class eq 'App::Sandy::Seq::PairedEnd') {
-			my $fragment_mean = $self->fastq->fragment_mean;
+			my $fragment_mean = $self->seq->fragment_mean;
 			if ($index_size < $fragment_mean) {
 				log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)";
 				delete $indexed_fasta->{$id};
@@ -653,20 +653,20 @@ sub _build_piece_table {
 			# Get the new size
 			my $new_size = $table->logical_len;
 
-			my $class = ref $self->fastq;
+			my $class = ref $self->seq;
 
 			if ($class eq 'App::Sandy::Seq::SingleEnd') {
-				if ($new_size < $self->fastq->read_size) {
+				if ($new_size < $self->seq->read_size) {
 					log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required read-size";
 					next;
 				}
 			} elsif ($class eq 'App::Sandy::Seq::PairedEnd') {
-				if ($new_size < $self->fastq->fragment_mean) {
+				if ($new_size < $self->seq->fragment_mean) {
 					log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required fragment mean";
 					next;
 				}
 			} else {
-				die "No valid options for 'fastq'";
+				die "No valid options for 'seq'";
 			}
 
 			# If all's right
@@ -786,7 +786,7 @@ sub _calculate_number_of_reads {
 		my $fasta = $self->_fasta;
 		my $fasta_size = 0;
 		$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
-		$number_of_reads = int(($fasta_size * $self->coverage) / $self->fastq->read_size);
+		$number_of_reads = int(($fasta_size * $self->coverage) / $self->seq->read_size);
 	} elsif ($self->count_loops_by eq 'number-of-reads') {
 		$number_of_reads = $self->number_of_reads;
 	} else {
@@ -795,7 +795,7 @@ sub _calculate_number_of_reads {
 
 	# In case it is paired-end read, divide the number of reads by 2 because App::Sandy::Seq::PairedEnd class
 	# returns 2 reads at time
-	my $class = ref $self->fastq;
+	my $class = ref $self->seq;
 	my $read_type_factor = $class eq 'App::Sandy::Seq::PairedEnd' ? 2 : 1;
 	$number_of_reads = int($number_of_reads / $read_type_factor);
 
@@ -858,7 +858,7 @@ sub run_simulation {
 	my $count_file = $self->prefix . '_counts.tsv';
 
 	# Is it single-end or paired-end?
-	my $fastq_class = ref $self->fastq;
+	my $seq_class = ref $self->seq;
 
 	# Forks
 	my $number_of_jobs = $self->jobs;
@@ -900,7 +900,7 @@ sub run_simulation {
 		# Inside parent
 		#-------------------------------------------------------------------------------
 		log_msg ":: Creating job $tid ...";
-		my @files_t = map { "$_.${parent_pid}_part$tid" } @{ $files{$fastq_class} };
+		my @files_t = map { "$_.${parent_pid}_part$tid" } @{ $files{$seq_class} };
 		push @tmp_files => @files_t;
 		my $pid = $pm->start and next;
 
@@ -936,9 +936,9 @@ sub run_simulation {
 		for (my $i = $idx; $i <= $last_read_idx and not $sig->signal_catched; $i++) {
 			my $id = $seqid->();
 			my $ptable = $piece_table->{$id->{seq_id}}{$id->{type}};
-			my @fastq_entry;
+			my @seq_entry;
 			try {
-				@fastq_entry = $self->sprint_fastq($tid, $i, $id->{seq_id}, $id->{type},
+				@seq_entry = $self->sprint_seq($tid, $i, $id->{seq_id}, $id->{type},
 					$ptable->{table}, $ptable->{size}, $strand->());
 			} catch {
 				die "Not defined entry for seqid '>$id->{seq_id}' at job $tid: $_";
@@ -946,7 +946,7 @@ sub run_simulation {
 				unless (@_) {
 					for my $fh_idx (0..$#fhs) {
 						$counter{$id->{seq_id}}++;
-						$fhs[$fh_idx]->say(${$fastq_entry[$fh_idx]})
+						$fhs[$fh_idx]->say(${$seq_entry[$fh_idx]})
 							or die "Cannot write to $files_t[$fh_idx]: $!\n";
 					}
 				}
@@ -978,18 +978,18 @@ sub run_simulation {
 
 	# Concatenate all temporary files
 	log_msg ":: Concatenating all temporary files ...";
-	my @fh = map { $self->with_open_w($self->output_gzip ? "$_.gz" : $_, 0) } @{ $files{$fastq_class} };
+	my @fh = map { $self->with_open_w($self->output_gzip ? "$_.gz" : $_, 0) } @{ $files{$seq_class} };
 	for my $i (0..$#tmp_files) {
 		my $fh_idx = $i % scalar @fh;
 		cat $tmp_files[$i] => $fh[$fh_idx]
-			or die "Cannot concatenate $tmp_files[$i] to $files{$fastq_class}[$fh_idx]: $!\n";
+			or die "Cannot concatenate $tmp_files[$i] to $files{$seq_class}[$fh_idx]: $!\n";
 	}
 
 	# Close files
-	log_msg ":: Writing and closing output file: @{ $files{$fastq_class} }";
+	log_msg ":: Writing and closing output file: @{ $files{$seq_class} }";
 	for my $fh_idx (0..$#fh) {
 		$fh[$fh_idx]->close
-			or die "Cannot write file $files{$fastq_class}[$fh_idx]: $!\n";
+			or die "Cannot write file $files{$seq_class}[$fh_idx]: $!\n";
 	}
 
 	# Save counts

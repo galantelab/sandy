@@ -377,7 +377,7 @@ Date $time_stamp
 HEADER
 
 	#-------------------------------------------------------------------------------
-	#  Construct the Fastq and Simulator classes
+	#  Construct the Seq and Simulator classes
 	#-------------------------------------------------------------------------------
 	my %paired_end_param = (
 		template_id       => $opts->{'id'},
@@ -395,19 +395,19 @@ HEADER
 		read_size         => $opts->{'read-size'}
 	);
 
-	my $fastq;
+	my $seq;
 	if ($opts->{'sequencing-type'} eq 'paired-end') {
-		log_msg ":: Creating paired-end fastq generator ...";
+		log_msg ":: Creating paired-end seq generator ...";
 		$self->_log_msg_opt(\%paired_end_param);
-		$fastq = App::Sandy::Seq::PairedEnd->new(%paired_end_param);
+		$seq = App::Sandy::Seq::PairedEnd->new(%paired_end_param);
 	} else {
-		log_msg ":: Creating single-end fastq generator ...";
+		log_msg ":: Creating single-end seq generator ...";
 		$self->_log_msg_opt(\%single_end_param);
-		$fastq = App::Sandy::Seq::SingleEnd->new(%single_end_param);
+		$seq = App::Sandy::Seq::SingleEnd->new(%single_end_param);
 	}
 
 	my %simulator_param = (
-		fastq                => $fastq,
+		seq                  => $seq,
 		fasta_file           => $fasta_file,
 		prefix               => $opts->{'prefix'},
 		output_gzip          => $opts->{'gzip'},

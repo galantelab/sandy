@@ -83,7 +83,7 @@ override '_build_info' => sub {
 	return $info;
 };
 
-sub sprint_fastq {
+sub sprint_seq {
 	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;
 
 	my ($read1_ref, $read2_ref, $attr) = $self->gen_read($ptable, $ptable_size,
@@ -106,11 +106,11 @@ sub sprint_fastq {
 	);
 
 	return $is_leader
-		? ($self->_sprint_fastq($read1_ref, 1, $attr, 1), $self->_sprint_fastq($read2_ref, 2, $attr, 0))
-		: ($self->_sprint_fastq($read2_ref, 1, $attr, 0), $self->_sprint_fastq($read1_ref, 2, $attr, 1));
+		? ($self->_sprint_seq($read1_ref, 1, $attr, 1), $self->_sprint_seq($read2_ref, 2, $attr, 0))
+		: ($self->_sprint_seq($read2_ref, 1, $attr, 0), $self->_sprint_seq($read1_ref, 2, $attr, 1));
 }
 
-sub _sprint_fastq {
+sub _sprint_seq {
 	my ($self, $read_ref, $read_num, $attr, $is_leader) = @_;
 
 	if ($is_leader) {
@@ -153,6 +153,7 @@ sub _sprint_fastq {
 
 	my $gen_header = $self->_gen_header;
 	my $header = $gen_header->($self->_info);
+	my $quality_ref = $self->gen_quality;
 
-	return $self->fastq_template(\$header, $read_ref);
+	return $self->with_fastq_template(\$header, $read_ref, $quality_ref);
 }

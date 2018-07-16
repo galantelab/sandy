@@ -4,6 +4,8 @@ package App::Sandy::Seq;
 use App::Sandy::Base 'class';
 use App::Sandy::Quality;
 
+with qw/App::Sandy::Role::RunTimeTemplate App::Sandy::Role::Template::Fastq/;
+
 # VERSION
 
 has 'template_id' => (
@@ -119,16 +121,4 @@ sub _build_quality {
 		quality_profile => $self->quality_profile,
 		read_size       => $self->read_size
 	);
-}
-
-sub fastq_template {
-	my ($self, $header_ref, $seq_ref) = @_;
-	my $quality_ref = $self->gen_quality;
-
-	my $fastq = "\@$$header_ref\n";
-	$fastq .= "$$seq_ref\n";
-	$fastq .= "+\n";
-	$fastq .= "$$quality_ref";
-
-	return \$fastq;
 }
