@@ -71,5 +71,5 @@ sub sprint_seq {
 	my $seqid = $self->_gen_id($self->_info);
 	my $quality_ref = $self->_gen_quality;
 
-	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref, 0, $self->read_group);
+	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref, 0);
 }

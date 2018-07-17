@@ -40,22 +40,24 @@ sub _build_flags {
 }
 
 sub with_sam_header_template {
-	my ($self, $sample_name, $read_group, $argv) = @_;
-	my $cl = "@$argv";
+	my ($self, $argv) = @_;
+	my $cl = "sandy @$argv";
 
 	## no critic
 	my $vn = do { no strict 'vars'; $VERSION || "dev" };
 	## use critic
 
-	my $header = sprintf "\@HD\tVN:%f\tSO:unsorted\n\@RG\tID:%s\tSM:%s\n\@PG\tID:%s\tPN:%s\tCL:%s\tDS:%s\tVN:%s"
-		=> SAM_VERSION, $read_group, $sample_name, 'SANDY', 'sandy', $cl, 'simulation', $vn;
+	my $header = sprintf "\@HD\tVN:%s\tSO:unsorted\n\@PG\tID:%s\tPN:%s\tVN:%s\tCL:%s"
+		=> SAM_VERSION, 'sandy', 'sandy', $vn, $cl;
 
 	return \$header;
 }
 
 sub with_sam_align_template {
-	my ($self, $seqid_ref, $read_ref, $quality_ref, $read_flag, $read_group) = @_;
-	my $bam = sprintf "%s\t%d\t*\t0\t0\t*\t*\t0\t0\t%s\t%s\tRG:Z:%s"
-		=> $$seqid_ref, $self->_get_flag($read_flag), $$read_ref, $$quality_ref, $read_group;
-	return \$bam;
+	my ($self, $seqid_ref, $read_ref, $quality_ref, $read_flag) = @_;
+
+	my $sam = sprintf "%s\t%d\t*\t0\t0\t*\t*\t0\t0\t%s\t%s"
+		=> $$seqid_ref, $self->_get_flag($read_flag), $$read_ref, $$quality_ref;
+
+	return \$sam;
 }

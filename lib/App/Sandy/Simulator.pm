@@ -112,7 +112,7 @@ has 'seq' => (
 	is         => 'ro',
 	isa        => 'App::Sandy::Seq::SingleEnd | App::Sandy::Seq::PairedEnd',
 	required   => 1,
-	handles    => [ qw{ sprint_seq } ]
+	handles    => [ qw{ sprint_seq gen_sam_header } ]
 );
 
 has '_fasta' => (
@@ -985,6 +985,7 @@ sub run_simulation {
 		# And here we go ...
 		my @fhs;
 
+		# Set the right filehandle format
 		if ($output_format =~ /^(sam|fastq)$/) {
 			@fhs = map { $self->with_open_w($_, 0) } @files_t;
 		} elsif ($output_format eq 'fastq.gz') {
@@ -995,13 +996,24 @@ sub run_simulation {
 			croak "Something wrong with the output format: $file_class";
 		}
 
-		# To avoid more tests
-		if (not defined $fhs[1]) {
+		# sprint_seq gives two entries for paired-emd, so
+		# if it is a bam|sam|join-paired-ends, it is necessary
+		# to copy the filehandle in order to print both entries
+		# to the same file
+		if ($seq_class eq 'App::Sandy::Seq::PairedEnd'
+			&& $file_class =~ /(sam|bam|join)/) {
 			$fhs[1] = $fhs[0];
 		}
 
 		# Count the cumulative number of reads for each seqid
 		my %counter;
+
+		# If the output format is 'bam|sam' and it is the first job, then
+		# write the header
+		if ($output_format =~ /^(sam|bam)$/ && $tid == 1) {
+			my $header_ref = $self->gen_sam_header($self->argv);
+			print {$fhs[0]} "$$header_ref\n";
+		}
 
 		# Run simualtion in child
 		for (my $i = $idx; $i <= $last_read_idx and not $sig->signal_catched; $i++) {
@@ -1017,18 +1029,20 @@ sub run_simulation {
 				unless (@_) {
 					for my $fh_idx (0..$#fhs) {
 						$counter{$id->{seq_id}}++;
-						$fhs[$fh_idx]->say(${$seq_entry[$fh_idx]})
-							or die "Cannot write to $files_t[$fh_idx]: $!\n";
+						print {$fhs[$fh_idx]} "${$seq_entry[$fh_idx]}\n";
 					}
 				}
 			};
 		}
 
 		log_msg "  => Job $tid: Writing and closing file: @files_t";
+
 		# Close temporary files
+		# Get index from @files_t in order to avoid
+		# close the same filehandle twice - When the
+		# position 1-N is a copy
 		for my $fh_idx (0..$#files_t) {
-			$fhs[$fh_idx]->close
-				or die "Cannot write file $files_t[$fh_idx]: $!\n";
+			close $fhs[$fh_idx];
 		}
 
 		# Child exit
@@ -1059,7 +1073,7 @@ sub run_simulation {
 	# Close files
 	log_msg ":: Writing and closing output file: @{ $files{$file_class} }";
 	for my $fh_idx (0..$#fh) {
-		$fh[$fh_idx]->close
+		close $fh[$fh_idx]
 			or die "Cannot write file $files{$file_class}[$fh_idx]: $!\n";
 	}
 
@@ -1069,7 +1083,7 @@ sub run_simulation {
 
 	log_msg ":; Wrinting counts to $count_file ...";
 	while (my ($id, $count) = each %counters) {
-		$count_fh->say("$id\t$count");
+		print {$count_fh} "$id\t$count\n";
 	}
 
 	# Just in case, calculate 'gene' like expression
@@ -1077,13 +1091,13 @@ sub run_simulation {
 
 	if (defined $parent_count) {
 		while (my ($id, $count) = each %$parent_count) {
-			$count_fh->say("$id\t$count");
+			print {$count_fh} "$id\t$count\n";
 		}
 	}
 
 	# Close $count_file
 	log_msg ":; Writing and closing $count_file ...";
-	$count_fh->close
+	close $count_fh
 		or die "Cannot write file $count_file: $!\n";
 
 	# Clean up the mess

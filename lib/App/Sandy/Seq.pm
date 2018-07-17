@@ -30,18 +30,6 @@ has 'sequencing_error' => (
 	required   => 1
 );
 
-has 'read_group' => (
-	is         => 'ro',
-	isa        => 'Str',
-	required   => 1
-);
-
-has 'sample_name' => (
-	is        => 'ro',
-	isa       => 'Str',
-	required  => 1
-);
-
 has '_template_id' => (
 	traits     => ['Code'],
 	is         => 'ro',
@@ -114,8 +102,6 @@ sub BUILD {
 
 sub _build_sym_table {
 	my $sym_table = {
-		'%G' => '$info->{read_group}',
-		'%M' => '$info->{sample_name}',
 		'%q' => '$info->{quality_profile}',
 		'%r' => '$info->{read_size}',
 		'%e' => '$info->{sequencing_error}',
@@ -167,9 +153,7 @@ sub _build_info {
 		instrument       => 'SR',
 		quality_profile  => $self->quality_profile,
 		read_size        => $self->read_size,
-		sequencing_error => $self->sequencing_error,
-		read_group       => $self->read_group,
-		sample_name      => $self->sample_name
+		sequencing_error => $self->sequencing_error
 	};
 
 	return $info;
@@ -183,7 +167,7 @@ sub _build_quality {
 	);
 }
 
-sub gen_sam_head {
+sub gen_sam_header {
 	my ($self, $argv) = @_;
-	return $self->with_sam_header_template($self->sample_name, $self->read_group, $argv);
+	return $self->with_sam_header_template($argv);
 }

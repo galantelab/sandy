@@ -33,10 +33,8 @@ override 'opt_spec' => sub {
 		'prefix'                     => 'prefix|p=s',
 		'id'                         => 'id|I=s',
 		'append-id'                  => 'append-id|i=s',
-		'sample-name'                => 'sample-name|M=s',
-		'read-group'                 => 'read-group|G=s',
-		'output-format'              => 'output-format|F=s',
-		'join-paired-ends'           => 'join-paired-ends|0',
+		'output-format'              => 'output-format|O=s',
+		'join-paired-ends'           => 'join-paired-ends|1',
 		'verbose'                    => 'verbose|v',
 		'output-dir'                 => 'output-dir|o=s',
 		'jobs'                       => 'jobs|j=i',
@@ -66,6 +64,7 @@ sub _log_msg_opt {
 	my ($self, $opts) = @_;
 	while (my ($key, $value) = each %$opts) {
 		next if ref($value) =~ /Seq/;
+		next if $key eq 'argv';
 		next if not defined $value;
 
 		$key =~ s/_/ /g;
@@ -377,11 +376,6 @@ sub execute {
 		die "$err_dir\n";
 	}
 
-	# Set sample-name if it's not set
-	if (not exists $opts->{'sample-name'}) {
-		$opts->{'sample-name'} = (split(/_/, $opts->{prefix}))[0];
-	}
-
 	# Concatenate output-dir to prefix
 	my $prefix = file($opts->{'output-dir'}, $opts->{prefix});
 	$opts->{prefix} = "$prefix";
@@ -406,8 +400,6 @@ HEADER
 	#-------------------------------------------------------------------------------
 	my %paired_end_param = (
 		template_id       => $opts->{'id'},
-		read_group        => $opts->{'read-group'},
-		sample_name       => $opts->{'sample-name'},
 		format            => $opts->{'output-format'},
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
@@ -418,8 +410,6 @@ HEADER
 
 	my %single_end_param = (
 		template_id       => $opts->{'id'},
-		read_group        => $opts->{'read-group'},
-		sample_name       => $opts->{'sample-name'},
 		format            => $opts->{'output-format'},
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
@@ -433,8 +423,8 @@ HEADER
 		$seq = App::Sandy::Seq::PairedEnd->new(%paired_end_param);
 	} else {
 		log_msg ":: Creating single-end seq generator ...";
-#		$self->_log_msg_opt(\%single_end_param);
-#		$seq = App::Sandy::Seq::SingleEnd->new(%single_end_param);
+		$self->_log_msg_opt(\%single_end_param);
+		$seq = App::Sandy::Seq::SingleEnd->new(%single_end_param);
 	}
 
 	my %simulator_param = (

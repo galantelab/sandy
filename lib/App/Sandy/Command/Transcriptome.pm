@@ -27,8 +27,7 @@ sub default_opt {
 	'read-size'        => 100,
 	'join-paired-ends' => 0,
 	'quality-profile'  => 'poisson',
-	'output-format'    => 'fastq.gz',
-	'read-group'       => "PID$$"
+	'output-format'    => 'fastq.gz'
 }
 
 sub rm_opt {
