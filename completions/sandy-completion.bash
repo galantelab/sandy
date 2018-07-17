@@ -90,6 +90,8 @@ _sandy_genome() {
 		--verbose
 		--prefix
 		--output-dir
+		--output-format
+		--join-paired-ends
 		--append-id
 		--id
 		--jobs
@@ -106,7 +108,7 @@ _sandy_genome() {
 		--structural-variation-regex
 	"
 
-	local short_opts="-h -M -v -p -o -i -I -j -z -s -t -q -e -r -m -d -A -a -c"
+	local short_opts="-h -M -v -p -o -O -1 -i -I -j -z -s -t -q -e -r -m -d -A -a -c"
 
 	case "$prev" in
 		--structural-variation|-a)
@@ -117,6 +119,9 @@ _sandy_genome() {
 			;;
 		--sequencing-type|-t)
 			COMPREPLY=($(compgen -W "single-end paired-end" -- "$cur"))
+			;;
+		--output-format|-O)
+			COMPREPLY=($(compgen -W "bam sam fastq.gz fastq" -- "$cur"))
 			;;
 		*)
 			case "$cur" in
@@ -146,6 +151,8 @@ _sandy_transcriptome() {
 		--verbose
 		--prefix
 		--output-dir
+		--output-format
+		--join-paired-ends
 		--append-id
 		--id
 		--jobs
@@ -160,7 +167,7 @@ _sandy_transcriptome() {
 		--fragment-stdd
 	"
 
-	local short_opts="-f -h -M -v -p -o -i -I -j -z -s -n -t -q -e -r -m -d"
+	local short_opts="-f -h -M -v -p -o -O -1 -i -I -j -z -s -n -t -q -e -r -m -d"
 
 	case "$prev" in
 		--expression-matrix|-f)
@@ -171,6 +178,9 @@ _sandy_transcriptome() {
 			;;
 		--sequencing-type|-t)
 			COMPREPLY=($(compgen -W "single-end paired-end" -- "$cur"))
+			;;
+		--output-format|-O)
+			COMPREPLY=($(compgen -W "bam sam fastq.gz fastq" -- "$cur"))
 			;;
 		*)
 			case "$cur" in
