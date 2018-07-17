@@ -95,7 +95,6 @@ _sandy_genome() {
 		--append-id
 		--id
 		--jobs
-		--gzip
 		--seed
 		--coverage
 		--sequencing-type
@@ -108,7 +107,7 @@ _sandy_genome() {
 		--structural-variation-regex
 	"
 
-	local short_opts="-h -M -v -p -o -O -1 -i -I -j -z -s -t -q -e -r -m -d -A -a -c"
+	local short_opts="-h -M -v -p -o -O -1 -i -I -j -s -t -q -e -r -m -d -A -a -c"
 
 	case "$prev" in
 		--structural-variation|-a)
@@ -156,7 +155,6 @@ _sandy_transcriptome() {
 		--append-id
 		--id
 		--jobs
-		--gzip
 		--seed
 		--number-of-reads
 		--sequencing-type
@@ -167,7 +165,7 @@ _sandy_transcriptome() {
 		--fragment-stdd
 	"
 
-	local short_opts="-f -h -M -v -p -o -O -1 -i -I -j -z -s -n -t -q -e -r -m -d"
+	local short_opts="-f -h -M -v -p -o -O -1 -i -I -j -s -n -t -q -e -r -m -d"
 
 	case "$prev" in
 		--expression-matrix|-f)

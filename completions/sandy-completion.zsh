@@ -119,7 +119,6 @@ _sandy_simulation() {
 		{'(--append-id)-i','(-i)--append-id'}'[append to the defined template id]:str:'
 		{'(--id)-I','(-I)--id'}'[overlap the default template id]:str:'
 		{'(--jobs)-j','(-j)--jobs'}'[number of jobs]:int:'
-		{'(--gzip)-z','(-z)--gzip'}'[compress output file]'
 		{'(--seed)-s','(-s)--seed'}'[set the seed of the base generator]:int:'
 		{'(--sequencing-type)-t','(-t)--sequencing-type'}'[single-end or paired-end reads]:str:(single-end paired-end)'
 		{'(--quality-profile)-q','(-q)--quality-profile'}'[quality-profile from database]:str:->quality'
