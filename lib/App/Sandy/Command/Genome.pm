@@ -53,6 +53,8 @@ __END__
   -v, --verbose                      print log messages
   -p, --prefix                       prefix output [default:"out"]
   -o, --output-dir                   output directory [default:"."]
+  -O, --output-format                bam, sam, fastq.gz, fastq [default:"fastq.gz"]
+  -1, --join-paired-ends             merge R1 and R2 outputs in one file
   -i, --append-id                    append to the defined template id [Format]
   -I, --id                           overlap the default template id [Format]
   -j, --jobs                         number of jobs [default:"1"; Integer]
@@ -105,6 +107,25 @@ Concatenates the prefix to the output-file name.
 
 Creates output-file inside output-dir. If output-dir
 does not exist, it is created recursively
+
+=item B<--output-format>
+
+Choose the output format. Available options are:
+I<bam>, I<sam>, I<fastq.gz>, I<fastq>.
+For I<bam> option, B<--append-id> is ignored, considering
+that the sequence identifier is splitted by blank character, so
+just the first field is included into the query name column
+(first column).
+
+=item B<--join-paired-ends>
+
+By default, paired-end reads are put into two different files,
+I<prefix_R[12]_001.fastq(\.gz)?>. If the user wants both outputs
+together, she can pass this option.
+If the B<--id> does not have the escape character %R, it is
+automatically included right after the first field (blank separated values)
+as in I<id/%R> - which resolves to I<id/1> or I<id/2>.
+It is necessary to distinguish which read is R1/R2
 
 =item B<--append-id>
 
