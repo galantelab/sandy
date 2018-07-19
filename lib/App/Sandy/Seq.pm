@@ -137,8 +137,10 @@ sub _build_template_seq {
 
 	if ($format =~ 'fastq') {
 		$gen_seq = sub { $self->with_fastq_template(@_) };
-	} elsif ($format =~ '(bam|sam)') {
+	} elsif ($format eq 'sam') {
 		$gen_seq = sub { $self->with_sam_align_template(@_) };
+	} elsif ($format eq 'bam') {
+		$gen_seq = sub { $self->with_bam_align_template(@_) };
 	} else {
 		croak "No valid format: '$format'";
 	}
@@ -169,5 +171,31 @@ sub _build_quality {
 
 sub gen_sam_header {
 	my ($self, $argv) = @_;
-	return $self->with_sam_header_template($argv);
+	my $format = $self->format;
+	my $header;
+
+	if ($format eq 'sam') {
+		$header = $self->with_sam_header_template($argv);
+	} elsif ($format eq 'bam') {
+		$header = $self->with_bam_header_template($argv);
+	} else {
+		croak "No valid format: '$format'";
+	}
+
+	return $header;
+}
+
+sub gen_eof_marker {
+	my ($self, $file) = @_;
+
+	open my $fh, ">>" => $file
+		or croak "Cannot open '$file': $!";
+
+	binmode $fh;
+
+	my $eof_ref = $self->with_eof_marker;
+	print {$fh} $$eof_ref;
+
+	close $fh
+		or croak "Cannot write to '$file': $!";
 }

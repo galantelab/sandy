@@ -112,7 +112,7 @@ has 'seq' => (
 	is         => 'ro',
 	isa        => 'App::Sandy::Seq::SingleEnd | App::Sandy::Seq::PairedEnd',
 	required   => 1,
-	handles    => [ qw{ sprint_seq gen_sam_header } ]
+	handles    => [ qw{ sprint_seq gen_sam_header gen_eof_marker } ]
 );
 
 has '_fasta' => (
@@ -1012,7 +1012,7 @@ sub run_simulation {
 		# write the header
 		if ($output_format =~ /^(sam|bam)$/ && $tid == 1) {
 			my $header_ref = $self->gen_sam_header($self->argv);
-			print {$fhs[0]} "$$header_ref\n";
+			print {$fhs[0]} "$$header_ref";
 		}
 
 		# Run simualtion in child
@@ -1029,7 +1029,7 @@ sub run_simulation {
 				unless (@_) {
 					for my $fh_idx (0..$#fhs) {
 						$counter{$id->{seq_id}}++;
-						print {$fhs[$fh_idx]} "${$seq_entry[$fh_idx]}\n";
+						print {$fhs[$fh_idx]} "${$seq_entry[$fh_idx]}";
 					}
 				}
 			};
@@ -1043,6 +1043,12 @@ sub run_simulation {
 		# position 1-N is a copy
 		for my $fh_idx (0..$#files_t) {
 			close $fhs[$fh_idx];
+		}
+
+		# If it is a bam and it is the last loop, then
+		# write a eof marker
+		if ($output_format =~ /^bam$/ && $tid == $number_of_jobs) {
+			$self->gen_eof_marker($files_t[0]);
 		}
 
 		# Child exit

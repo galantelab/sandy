@@ -321,8 +321,11 @@ sub execute {
 		: $opts->{'single-end-id'};
 
 	# Append extra id
-	if (defined $opts->{'append-id'} && $opts->{'output-format'} !~ /(bam|sam)/) {
-		$opts->{id} .= " $opts->{'append-id'}";
+	$opts->{'id'} .= " $opts->{'append-id'}" if defined $opts->{'append-id'};
+
+	# If bam, leave only the first field;
+	if ($opts->{'output-format'} =~ /^(bam|sam)$/) {
+		$opts->{'id'} = (split ' ' => $opts->{'id'})[0];
 	}
 
 	# In this case, try to make simulation less redundant
