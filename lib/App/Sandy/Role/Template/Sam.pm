@@ -2,7 +2,6 @@ package App::Sandy::Role::Template::Sam;
 # ABSTRACT: Sam template role
 
 use App::Sandy::Base 'role';
-use List::Util 'pairs';
 
 use constant {
 	PAIRED        => 0x1,
@@ -17,7 +16,7 @@ use constant {
 	QCFAIL        => 0x200,
 	DUP           => 0x400,
 	SUPPLEMENTARY => 0x800,
-	SAM_VERSION   => 1.0
+	SAM_VERSION   => '1.0'
 };
 
 # VERSION
@@ -33,36 +32,11 @@ has '_flags' => (
 	}
 );
 
-has '_base_encoding' => (
-	traits     => ['Hash'],
-	is         => 'ro',
-	isa        => 'HashRef',
-	builder    => '_build_base_encoding',
-	lazy_build => 1,
-	handles    => {
-		_get_base_encoding => 'get'
-	}
-);
-
 sub _build_flags {
 	my $single_end = UNMAP;
 	my $read1 = PAIRED|UNMAP|MUNMAP|READ1;
 	my $read2 = PAIRED|UNMAP|MUNMAP|READ2;
 	return [$single_end, $read1, $read2];
-}
-
-sub _build_base_encoding {
-	my $bases = {
-		'=' => 0,  'A' => 1,  'C' => 2,  'M' => 3,
-		'G' => 4,  'R' => 5,  'S' => 6,  'V' => 7,
-		'T' => 8,  'W' => 9,  'Y' => 10, 'H' => 11,
-		'K' => 12, 'D' => 13, 'B' => 14, 'N' => 15,
-		'a' => 1,  'c' => 2,  'm' => 3,  '0' => 0,
-		'g' => 4,  'r' => 5,  's' => 6,  'v' => 7,
-		't' => 8,  'w' => 9,  'y' => 10, 'h' => 11,
-		'k' => 12, 'd' => 13, 'b' => 14, 'n' => 15
-	};
-	return $bases;
 }
 
 sub with_eof_marker {
@@ -83,7 +57,7 @@ sub with_sam_header_template {
 	my $vn = do { no strict 'vars'; $VERSION || "dev" };
 	## use critic
 
-	my $header = sprintf "\@HD\tVN:%s\tSO:unsorted\n\@PG\tID:%s\tPN:%s\tVN:%s\tCL:%s\n"
+	my $header = sprintf "\@HD\tVN:%s\tSO:queryname\n\@PG\tID:%s\tPN:%s\tVN:%s\tCL:%s\n"
 		=> SAM_VERSION, 'sandy', 'sandy', $vn, $cl;
 
 	return \$header;
@@ -114,17 +88,16 @@ sub with_bam_align_template {
 	# Catch the seqid size nul padded
 	my $seqid_size = length($$seqid_ref) + 1;
 
-	# Pack the read
-	my ($packed_read, $pack_size) = $self->_pack_read($read_ref, $read_size);
+	# Encode all bases in 4 bits 0-15 (hex 0x0-0xf) and
+	# pack the codes to high level nibbles
+	my $packed_read = pack("H*",
+		$$read_ref =~ tr [=ACMGRSVTWYHKDBNacmgrsvtwyhkdbn\x00-\xff] [\x00-\x0f\x01-\x0f]r);
 
-	# quality to ascii and calculate the phred score
-	my @ascii = unpack("C*", $$quality_ref);
-	for my $phred (@ascii) {
-		$phred -= 33;
-	}
+	# quality to ascii and calculate the phred score [!-~]
+	my $packed_quality = $$quality_ref =~ tr [\x21-\x7e\x00-\xff] [\x00-\x5d\x00]r;
 
 	# Calculate the total block size in bytes
-	my $block_size = (32 * 2 + 8 * 2 + 16 * 3 + 32 * 4 + $seqid_size * 8 + $pack_size * 8 + $read_size * 8) / 8;
+	my $block_size = $seqid_size + $read_size + int(($read_size + 1) / 2) + 32;
 
 	# Lets set this align block
 	my $block = pack("l<3C2S<3l<4",
@@ -139,31 +112,10 @@ sub with_bam_align_template {
 		$read_size,
 		-1,
 		-1,
-		0,
+		0
 	);
 
 	# Cat the seqid, read and quality packs to block
-	$block .= $$seqid_ref . pack("x") . $$packed_read . pack("c*", @ascii);
+	$block .= $$seqid_ref . pack("x") . $packed_read . $packed_quality;
 	return \$block;
-}
-
-sub _pack_read {
-	my ($self, $read_ref, $read_size) = @_;
-
-	my @base_codes =
-		map { $self->_get_base_encoding($_) || 15 }
-		unpack("(A)*", $$read_ref);
-
-	push @base_codes => 0 if $read_size % 2;
-
-	my @bytes;
-	for my $pair (pairs @base_codes) {
-		my ($code1, $code2) = @$pair;
-		$code1 <<= 4;
-		$code1 |= $code2;
-		push @bytes => $code1;
-	}
-
-	my $packed_read = pack("C*", @bytes);
-	return (\$packed_read, int(($read_size + 1) / 2));
 }
