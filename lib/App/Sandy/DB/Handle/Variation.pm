@@ -14,7 +14,7 @@ with qw/App::Sandy::Role::IO App::Sandy::Role::SeqID/;
 # VERSION
 
 sub insertdb {
-	my ($self, $file, $name, $source, $is_user_provided) = @_;
+	my ($self, $file, $name, $source, $is_user_provided, $type, @args) = @_;
 	my $schema = App::Sandy::DB->schema;
 
 	log_msg ":: Checking if there is already a structural variation '$name' ...";
@@ -25,8 +25,17 @@ sub insertdb {
 		log_msg ":: structural variation '$name' not found";
 	}
 
-	log_msg ":: Indexing '$file' ...";
-	my $indexed_file = $self->_index_snv($file);
+	log_msg ":: Indexing '$file'";
+	log_msg ":: It may take a while ...";
+	my $indexed_file;
+
+	if ($type eq 'raw') {
+		$indexed_file = $self->_index_snv($file);
+	} elsif ($type eq 'vcf') {
+		$indexed_file = $self->_index_vcf($file, @args);
+	} else {
+		croak "No type '$type'";
+	}
 
 	log_msg ":: Removing overlapping entries in structural variation file '$file', if any ...";
 	$self->_validate_indexed_snv($indexed_file, $file);
@@ -53,6 +62,7 @@ sub insertdb {
 
 sub _index_snv {
 	my ($self, $variation_file) = @_;
+
 	my $fh = $self->with_open_r($variation_file);
 
 	my %indexed_snv;
@@ -69,7 +79,7 @@ sub _index_snv {
 		chomp;
 		my @fields = split;
 
-		die "Not found all fields (SEQID, POSITION, ID, REFERENCE, OBSERVED, PLOIDY) into file '$variation_file' at line $line\n"
+		die "Not found all fields (SEQID, POSITION, ID, REFERENCE, OBSERVED, GENOTYPE) into file '$variation_file' at line $line\n"
 			unless scalar @fields >= 6;
 
 		die "Second column, position, does not seem to be a number into file '$variation_file' at line $line\n"
@@ -84,7 +94,7 @@ sub _index_snv {
 		die "Fifth column, alteration, does not seem to be a valid entry: '$fields[4]' into file '$variation_file' at line $line\n"
 			unless $fields[4] =~ /^(\w+|-)$/;
 
-		die "Sixth column, ploidy, has an invalid entry: '$fields[5]' into file '$variation_file' at line $line. Valid ones are 'HE' or 'HO'\n"
+		die "Sixth column, genotype, has an invalid entry: '$fields[5]' into file '$variation_file' at line $line. Valid ones are 'HE' or 'HO'\n"
 			unless $fields[5] =~ /^(HE|HO)$/;
 
 		if ($fields[3] eq $fields[4]) {
@@ -116,6 +126,162 @@ sub _index_snv {
 
 	close $fh
 		or die "Cannot close structural variation file '$variation_file': $!\n";
+
+	return \%indexed_snv;
+}
+
+sub _index_vcf {
+	my ($self, $vcf_file, $sample_name) = @_;
+
+	my $fh = $self->with_open_r($vcf_file);
+
+	my $magic = <$fh>;
+	chomp $magic;
+
+	if ($magic !~ /^##fileformat=VCFv\d+(\.\d+)?$/) {
+		log_msg ":: Putative VCF file '$vcf_file' does not have the required 'fileformat=VCFv{VERSION}' field\n";
+		log_msg ":: Continue anyway ...\n";
+	}
+
+	my $sample_i = 9;
+	my $has_header = 0;
+	my $line = 1;
+	my %indexed_snv;
+
+	while (<$fh>) {
+		$line ++;
+
+		next if /^##/;
+		next if /^\s*$/;
+
+		chomp;
+		my @fields = split /\t/;
+
+		if (/^#/) {
+			my $number_of_fields = scalar @fields;
+
+			if ($number_of_fields < 8) {
+				die "Invalid header: Less than 8 columns at line $line\n";
+			} elsif ($number_of_fields == 8) {
+				die "No genotype data found in the header at line $line\n";
+			} elsif ($number_of_fields == 9) {
+				die "Invalid header: Missing sample data at line $line\n";
+			}
+
+			my @samples = splice @fields, 9;
+
+			if (defined $sample_name) {
+				my %columns;
+
+				for my $i (0..$#samples) {
+					$columns{$samples[$i]} = $i;
+				}
+
+				if (not exists $columns{$sample_name}) {
+					die "Not found sample named '$sample_name' at file '$vcf_file'\n";
+				}
+
+				$sample_i += $columns{$sample_name};
+			} else {
+				$sample_name = $samples[$sample_i];
+			}
+
+			$has_header = 1;
+			next;
+		}
+
+		unless ($has_header) {
+			die "No header found in file '$vcf_file'\n";
+		}
+
+		die "Not found all columns into file '$vcf_file' at line $line\n"
+			unless scalar @fields > 9;
+
+		die "Second column, position, does not seem to be a number into file '$vcf_file' at line $line\n"
+			unless looks_like_number($fields[1]);
+
+		die "Second column, position, has a value lesser or equal to zero into file '$vcf_file' at line $line\n"
+			if $fields[1] <= 0;
+
+		die "Fourth column, reference, does not seem to be a valid entry: '$fields[3]' into file '$vcf_file' at line $line\n"
+			unless $fields[3] =~ /^(<\w+(:\w+)*>|\w+|-)$/;
+
+		die "Fifth column, alternate, does not seem to be a valid entry: '$fields[4]' into file '$vcf_file' at line $line\n"
+			unless $fields[4] =~ /^(\w+|<\w+(:\w+)*>|-|\*)(,(\w+|<\w+(:\w+)*>|-|\*))*$/;
+
+		die "No genotype field found in format column at line $line\n"
+			unless $fields[8] =~ /^GT:?/;
+
+		die "Sample '$sample_name', column '$sample_i', does not seem to be a valid entry: '$fields[$sample_i]' into file '$vcf_file' at line $line\n"
+			unless $fields[$sample_i] =~ /^[0-9.]+([\/\|][0-9.])?:*/;
+
+		if ($fields[3] eq $fields[4]) {
+			log_msg ":: There is an alternate equal to the reference at '$vcf_file' line $line. I will ignore it\n";
+			next;
+		}
+
+		# No support for structural variation <VAR>
+		# So ignore it
+		if ($fields[3] =~ /<\w+>/ || $fields[4] =~ /<\w+>/) {
+			next;
+		}
+
+		# Ignore missing alleles
+		if ($fields[4] =~ /\*/) {
+			next;
+		}
+
+		my @alternates = split /,/ => $fields[4];
+		my $genotype = (split /:/ => $fields[$sample_i])[0];
+
+		my ($plo, $alternate);
+		my ($g1, $g2) = split /\|/ => $genotype;
+
+
+		if ($g1 eq '.' || (defined $g2 && $g2 eq '.')) {
+			next;
+		}
+
+		# Homozygosity or haploid chromossome
+		if (! defined($g2) || ($g1 == $g2)) {
+			# No variation
+			next if $g1 == 0;
+			$alternate = $alternates[$g1 - 1];
+			$plo = 'HO';
+		} else {
+			# The alternate is the one with the max index, in the case
+			# of a variation with the two alleles been alterations
+			my $i = $g1 > $g2
+				? $g1 - 1
+				: $g2 - 1;
+			$alternate = $alternates[$i];
+			$plo = 'HE';
+		}
+
+		# Sequence inside perl begins at 0
+		my $position = int($fields[1] - 1);
+
+		# Compare the alterations and reference to guess the max variation on sequence
+		my $size_of_variation = max map { length } $fields[3], $alternate;
+		my $high = $position + $size_of_variation - 1;
+
+		my %variation = (
+			seq_id => $fields[0],
+			id     => $fields[2],
+			ref    => $fields[3],
+			alt    => $alternate,
+			plo    => $plo,
+			pos    => $position,
+			low    => $position,
+			high   => $high,
+			line   => $line
+		);
+
+		push @{ $indexed_snv{$self->with_std_seqid($fields[0])} } => \%variation;
+	}
+
+	close $fh
+		or die "Cannot close vcf file '$vcf_file': $!\n";
 
 	return \%indexed_snv;
 }
