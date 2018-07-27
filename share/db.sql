@@ -3,8 +3,11 @@ CREATE TABLE IF NOT EXISTS "quality_profile" (
 	"name" TEXT NOT NULL,
 	"source" TEXT DEFAULT "not defined",
 	"is_user_provided" INTEGER DEFAULT 1,
-	"size" INTEGER NOT NULL,
+	"mean" INTEGER NOT NULL,
+	"stddev" INTEGER NOT NULL,
+	"error" REAL NOT NULL,
 	"deepth" INTEGER NOT NULL,
+	"partil" INTEGER NOT NULL,
 	"matrix" BLOB NOT NULL,
 	"date" DATE DEFAULT CURRENT_DATE,
 	UNIQUE ("name")

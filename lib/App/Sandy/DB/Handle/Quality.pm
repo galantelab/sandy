@@ -7,12 +7,18 @@ use IO::Compress::Gzip 'gzip';
 use IO::Uncompress::Gunzip 'gunzip';
 use Storable qw/nfreeze thaw/;
 
-with 'App::Sandy::Role::IO';
+use constant PARTIL => 10;
+
+with qw{
+	App::Sandy::Role::IO
+	App::Sandy::Role::Statistic
+	App::Sandy::Role::Counter
+};
 
 # VERSION
 
 sub insertdb {
-	my ($self, $file, $name, $size, $source, $is_user_provided, $type) = @_;
+	my ($self, $file, $name, $source, $is_user_provided, $error, $type) = @_;
 	my $schema = App::Sandy::DB->schema;
 
 	log_msg ":: Checking if there is already a quality-profile '$name' ...";
@@ -28,7 +34,7 @@ sub insertdb {
 	}
 
 	log_msg ":: Indexing '$file'. It may take several minutes ...";
-	my ($arr, $deepth) = $self->_index_quality_type($file, $size, $type);
+	my ($arr, $mean, $stddev, $deepth) = $self->_index_quality_type($file, $type);
 
 	log_msg ":: Converting array to bytes ...";
 	my $bytes = nfreeze $arr;
@@ -40,12 +46,15 @@ sub insertdb {
 
 	log_msg ":: Storing quality matrix entry at '$name' ...";
 	$rs = $schema->resultset('QualityProfile')->create({
-		name             => $name,
-		source           => $source,
-		is_user_provided => $is_user_provided,
-		size             => $size,
-		deepth           => $deepth,
-		matrix           => $compressed
+		'name'             => $name,
+		'source'           => $source,
+		'is_user_provided' => $is_user_provided,
+		'mean'             => $mean,
+		'stddev'           => $stddev,
+		'error'            => $error,
+		'deepth'           => $deepth,
+		'partil'           => PARTIL,
+		'matrix'           => $compressed
 	});
 
 	# End transation
@@ -53,26 +62,45 @@ sub insertdb {
 }
 
 sub _index_quality {
-	my ($self, $quality_ref, $size) = @_;
-	my $deepth = scalar @$quality_ref;
+	my ($self, $quality_ref) = @_;
+	my (@partil, @sizes);
 
-	my @arr;
-	for (@$quality_ref) {
-		my @tmp = split //;
-		for (my $i = 0; $i < $size; $i++) {
-			push @{ $arr[$i] } => $tmp[$i];
+	for my $entry (@$quality_ref) {
+		my @q = split // => $entry;
+
+		my $size = scalar @q;
+		push @sizes => $size;
+
+		my $bin = int($size / PARTIL);
+		my $left = $size % PARTIL;
+
+		my $pos = 0;
+		my $skip = $self->with_make_counter($size, $left);
+
+		for (my $i = 0; $i < PARTIL; $i++) {
+			for (my $j = 0; $j < $bin; $j++) {
+				$pos++ if $skip->();
+				push @{ $partil[$i] } => $q[$pos++];
+			}
 		}
 	}
 
-	return (\@arr, $deepth);
+	my $deepth = scalar @{ $partil[0] };
+	for (my $i = 1; $i < PARTIL; $i++) {
+		if ($deepth != scalar(@{ $partil[$i] })) {
+			croak "deepth differs at partil $i";
+		}
+	}
+
+	# Basic stats
+	my $mean = int($self->with_mean(\@sizes) + 0.5);
+	my $stddev = int($self->with_stddev(\@sizes) + 0.5);
+
+	return (\@partil, $mean, $stddev, $deepth);
 }
 
 sub _index_quality_type {
-	# ALgorithm based in perlfaq:
-	# How do I select a random line from a file?
-	# "The Art of Computer Programming"
-
-	my ($self, $file, $size, $type) = @_;
+	my ($self, $file, $type) = @_;
 	my $fh = $self->with_open_r($file);
 
 	log_msg ":: Counting number of lines in '$file' ...";
@@ -105,8 +133,10 @@ sub _index_quality_type {
 				die "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read\n";
 			}
 
-			if (length $stack[3] != $size) {
-				die "Fastq entry in '$file' at line '$line' do not have length $size\n";
+			if (length $stack[3] < PARTIL) {
+				die sprintf "Fastq entry has length lesser than '%d' in '%s' at line %d\n" .
+					"If you want to use a quality profile with size small then '%d', try --quality-profile=poisson\n",
+					PARTIL, $file, $line, PARTIL;
 			}
 
 			return $stack[3];
@@ -119,8 +149,10 @@ sub _index_quality_type {
 			$line++;
 			chomp(my $entry = <$fh>);
 
-			if (length $entry != $size) {
-				die "Error parsing '$file': Line $line do not have length $size\n";
+			if (length $entry < PARTIL) {
+				die sprintf "Entry has length lesser than '%d' in '%s' at line %d\n" .
+					"If you want to use a quality profile with size small then '%d', try --quality-profile=poisson\n",
+					PARTIL, $file, $line, PARTIL;
 			}
 
 			return $entry;
@@ -132,27 +164,24 @@ sub _index_quality_type {
 	my $picks_left = $picks;
 
 	my @quality;
+	my $do_pick = $self->with_make_counter($num_left, $picks);
 
 	log_msg ":: Picking $picks entries in '$file' ...";
 	while ($picks_left > 0) {
 		my $entry = $getter->();
-
-		my $rand = int(rand($num_left));
-		if ($rand < $picks_left) {
+		if ($do_pick->()) {
 			push @quality => $entry;
 			$picks_left--;
 			if ($picks >= 10 && (++$acm % int($picks/10) == 0)) {
-				log_msg sprintf "   ==> %d%% processed\n", ($acm / $picks) * 100;
+				warn sprintf "   ==> %d%% processed\n", ($acm / $picks) * 100;
 			}
 		}
-
-		$num_left--;
 	}
 
 	$fh->close
 		or die "Cannot close file '$file'\n";
 
-	return $self->_index_quality(\@quality, $size);
+	return $self->_index_quality(\@quality);
 }
 
 sub _wcl {
@@ -245,10 +274,12 @@ sub make_report {
 
 	while (my $quality = $rs->next) {
 		my %hash = (
-			size     => $quality->size,
-			source   => $quality->source,
-			provider => $quality->is_user_provided ? "user" : "vendor",
-			date     => $quality->date
+			'mean'     => $quality->mean,
+			'stddev'   => $quality->stddev,
+			'error'    => $quality->error,
+			'source'   => $quality->source,
+			'provider' => $quality->is_user_provided ? "user" : "vendor",
+			'date'     => $quality->date
 		);
 		$report{$quality->name} = \%hash;
 	}

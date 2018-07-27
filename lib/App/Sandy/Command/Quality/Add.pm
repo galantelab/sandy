@@ -15,14 +15,15 @@ override 'opt_spec' => sub {
 	super,
 	'verbose|v',
 	'quality-profile|q=s',
-	'read-size|r=i',
-	'source|s=s'
+	'source|s=s',
+	'sequencing-error|e=f'
 };
 
 sub _default_opt {
-	'verbose' => 0,
-	'type'    => 'fastq',
-	'source'  => 'not defined'
+	'verbose'          => 0,
+	'type'             => 'fastq',
+	'source'           => 'not defined',
+	'sequencing-error' => 0.001
 }
 
 sub validate_args {
@@ -51,12 +52,8 @@ sub validate_opts {
 		die "Option 'quality-profile' not defined\n";
 	}
 
-	if (not exists $opts->{'read-size'}) {
-		die "Option 'read-size' not defined\n";
-	}
-
-	if ($opts->{'read-size'} <= 0) {
-		die "Option 'read-size' requires an integer greater than zero\n";
+	if (0 > $opts->{'sequencing-error'} || $opts->{'sequencing-error'} > 1)  {
+		die "Option 'sequencing-error' requires a value between zero and one, not $opts->{'sequencing-error'}\n";
 	}
 }
 
@@ -80,9 +77,9 @@ sub execute {
 	$self->insertdb(
 		$file,
 		$opts->{'quality-profile'},
-		$opts->{'read-size'},
 		$opts->{'source'},
 		1,
+		$opts->{'sequencing-error'},
 		$opts->{'type'}
 	);
 
@@ -100,13 +97,14 @@ __END__
 
  Mandatory options:
   -q, --quality-profile    a quality-profile name
-  -r, --read-size          the read-size to be used for the quality [Integer]
 
  Options:
   -h, --help               brief help message
   -M, --man                full documentation
   -v, --verbose            print log messages
   -s, --source             quality-profile source detail for database
+  -e, --sequencing-error   sequencing error rate
+                           [default:"0.001"; Number]
 
 =head1 DESCRIPTION
 

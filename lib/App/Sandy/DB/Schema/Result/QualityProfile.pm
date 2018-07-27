@@ -46,12 +46,27 @@ __PACKAGE__->table("quality_profile");
   default_value: 1
   is_nullable: 1
 
-=head2 size
+=head2 mean
 
   data_type: 'integer'
   is_nullable: 0
 
+=head2 stddev
+
+  data_type: 'integer'
+  is_nullable: 0
+
+=head2 error
+
+  data_type: 'real'
+  is_nullable: 0
+
 =head2 deepth
+
+  data_type: 'integer'
+  is_nullable: 0
+
+=head2 partil
 
   data_type: 'integer'
   is_nullable: 0
@@ -78,9 +93,15 @@ __PACKAGE__->add_columns(
   { data_type => "text", default_value => "not defined", is_nullable => 1 },
   "is_user_provided",
   { data_type => "integer", default_value => 1, is_nullable => 1 },
-  "size",
+  "mean",
   { data_type => "integer", is_nullable => 0 },
+  "stddev",
+  { data_type => "integer", is_nullable => 0 },
+  "error",
+  { data_type => "real", is_nullable => 0 },
   "deepth",
+  { data_type => "integer", is_nullable => 0 },
+  "partil",
   { data_type => "integer", is_nullable => 0 },
   "matrix",
   { data_type => "blob", is_nullable => 0 },
@@ -115,8 +136,8 @@ __PACKAGE__->set_primary_key("id");
 __PACKAGE__->add_unique_constraint("name_unique", ["name"]);
 
 
-# Created by DBIx::Class::Schema::Loader v0.07049 @ 2018-05-05 21:23:49
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lWFnfokFcc/WdefeS5wbnw
+# Created by DBIx::Class::Schema::Loader v0.07049 @ 2018-07-27 02:06:27
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:XYMoF0A0bZO+nDJWYBHmQw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
