@@ -53,7 +53,7 @@ sub sprint_seq {
 		'error'       => $error,
 		'var'         => $var,
 		'seq_id_type' => $seq_id_type,
-		'read_size'   => $read_size
+		'read_size'   => $read_size,
 		$is_leader
 			? (
 				'start'     => $attr->{start},

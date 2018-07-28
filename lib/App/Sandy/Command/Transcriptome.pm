@@ -8,6 +8,7 @@ extends 'App::Sandy::CLI::Command';
 with 'App::Sandy::Role::Digest';
 
 # VERSION
+
 sub default_opt {
 	'paired-end-id'    => '%i.%U:%c %U',
 	'single-end-id'    => '%i.%U:%c %U',

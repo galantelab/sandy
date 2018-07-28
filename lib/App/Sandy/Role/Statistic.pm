@@ -27,7 +27,7 @@ sub with_variance {
 	return $self->with_mean(\@diff);
 }
 
-sub with_stddev {
+sub with_stdd {
 	my ($self, $vet) = @_;
 
 	if (ref $vet ne 'ARRAY') {

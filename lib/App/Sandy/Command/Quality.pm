@@ -44,11 +44,11 @@ sub execute {
 
 	if (%$report_ref) {
 		my $t1 = Text::ASCIITable->new;
-		$t1->setCols('quality profile', 'mean', 'stddev', 'error', 'source', 'provider', 'date');
+		$t1->setCols('quality profile', 'mean', 'stdd', 'error', 'source', 'provider', 'date');
 
 		for my $quality_profile (sort keys %$report_ref) {
 			my $attr = $report_ref->{$quality_profile};
-			$t1->addRow($quality_profile, $attr->{mean}, $attr->{stddev}, $attr->{error}, $attr->{source},
+			$t1->addRow($quality_profile, $attr->{mean}, $attr->{stdd}, $attr->{error}, $attr->{source},
 				$attr->{provider}, $attr->{date});
 		}
 
