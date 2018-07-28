@@ -34,7 +34,7 @@ sub insertdb {
 	}
 
 	log_msg ":: Indexing '$file'. It may take several minutes ...";
-	my ($arr, $mean, $stddev, $deepth) = $self->_index_quality_type($file, $type);
+	my ($arr, $mean, $stdd, $deepth) = $self->_index_quality_type($file, $type);
 
 	log_msg ":: Converting array to bytes ...";
 	my $bytes = nfreeze $arr;
@@ -50,7 +50,7 @@ sub insertdb {
 		'source'           => $source,
 		'is_user_provided' => $is_user_provided,
 		'mean'             => $mean,
-		'stddev'           => $stddev,
+		'stdd'             => $stdd,
 		'error'            => $error,
 		'deepth'           => $deepth,
 		'partil'           => PARTIL,
@@ -94,9 +94,9 @@ sub _index_quality {
 
 	# Basic stats
 	my $mean = int($self->with_mean(\@sizes) + 0.5);
-	my $stddev = int($self->with_stddev(\@sizes) + 0.5);
+	my $stdd = int($self->with_stdd(\@sizes) + 0.5);
 
-	return (\@partil, $mean, $stddev, $deepth);
+	return (\@partil, $mean, $stdd, $deepth);
 }
 
 sub _index_quality_type {
@@ -205,11 +205,11 @@ sub retrievedb {
 		unless defined $compressed;
 
 	my $deepth = $rs->deepth;
-	my $size = $rs->size;
+	my $partil = $rs->partil;
 
 	gunzip \$compressed => \my $bytes;
 	my $matrix = thaw $bytes;
-	return ($matrix, $deepth, $size);
+	return ($matrix, $deepth, $partil);
 }
 
 sub deletedb {
@@ -275,7 +275,7 @@ sub make_report {
 	while (my $quality = $rs->next) {
 		my %hash = (
 			'mean'     => $quality->mean,
-			'stddev'   => $quality->stddev,
+			'stdd'     => $quality->stdd,
 			'error'    => $quality->error,
 			'source'   => $quality->source,
 			'provider' => $quality->is_user_provided ? "user" : "vendor",

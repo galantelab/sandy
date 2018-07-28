@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS "quality_profile" (
 	"source" TEXT DEFAULT "not defined",
 	"is_user_provided" INTEGER DEFAULT 1,
 	"mean" INTEGER NOT NULL,
-	"stddev" INTEGER NOT NULL,
+	"stdd" INTEGER NOT NULL,
 	"error" REAL NOT NULL,
 	"deepth" INTEGER NOT NULL,
 	"partil" INTEGER NOT NULL,

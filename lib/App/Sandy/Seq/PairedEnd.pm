@@ -25,7 +25,7 @@ has '_read' => (
 	isa        => 'App::Sandy::Read::PairedEnd',
 	builder    => '_build_read',
 	lazy_build => 1,
-	handles    => [qw{ gen_read }]
+	handles    => ['gen_read']
 );
 
 sub BUILD {
@@ -38,7 +38,6 @@ sub _build_read {
 	my $self = shift;
 	App::Sandy::Read::PairedEnd->new(
 		sequencing_error => $self->sequencing_error,
-		read_size        => $self->read_size,
 		fragment_mean    => $self->fragment_mean,
 		fragment_stdd    => $self->fragment_stdd
 	);
@@ -49,8 +48,8 @@ override '_build_sym_table' => sub {
 	my $sym_table = super();
 
 	my %sym_table_paired_end = (
-		'%m' => '$info->{fragment_mean}',
-		'%d' => '$info->{fragment_stdd}',
+		'%M' => '$info->{fragment_mean}',
+		'%D' => '$info->{fragment_stdd}',
 		'%f' => '$info->{fragment_size}',
 		'%S' => '$info->{fragment_start}',
 		'%E' => '$info->{fragment_end}',
@@ -61,7 +60,7 @@ override '_build_sym_table' => sub {
 		'%B' => '$info->{mate_end_ref}',
 		'%T' => '$info->{mate_start}',
 		'%N' => '$info->{mate_end}',
-		'%D' => '$info->{tlen}',
+		'%L' => '$info->{tlen}',
 	);
 
 	@$sym_table{keys %sym_table_paired_end} = values %sym_table_paired_end;
@@ -84,8 +83,9 @@ override '_build_info' => sub {
 sub sprint_seq {
 	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;
 
+	my $read_size = $self->_get_read_size;
 	my ($read1_ref, $read2_ref, $attr) = $self->gen_read($ptable, $ptable_size,
-		$is_leader);
+		$read_size, $is_leader);
 
 	my $annot_a = $attr->{annot};
 
@@ -94,6 +94,7 @@ sub sprint_seq {
 		'num'                => $num,
 		'seq_id'             => $seq_id,
 		'seq_id_type'        => $seq_id_type,
+		'read_size'          => $read_size,
 		'fragment_start'     => $attr->{start},
 		'fragment_end'       => $attr->{end},
 		'fragment_start_ref' => $attr->{start_ref},
@@ -104,12 +105,12 @@ sub sprint_seq {
 	);
 
 	return $is_leader
-		? ($self->_sprint_seq($read1_ref, 1, $attr, 1), $self->_sprint_seq($read2_ref, 2, $attr, 0))
-		: ($self->_sprint_seq($read2_ref, 1, $attr, 0), $self->_sprint_seq($read1_ref, 2, $attr, 1));
+		? ($self->_sprint_seq($read1_ref, $read_size, 1, $attr, 1), $self->_sprint_seq($read2_ref, $read_size, 2, $attr, 0))
+		: ($self->_sprint_seq($read2_ref, $read_size, 1, $attr, 0), $self->_sprint_seq($read1_ref, $read_size, 2, $attr, 1));
 }
 
 sub _sprint_seq {
-	my ($self, $read_ref, $read_num, $attr, $is_leader) = @_;
+	my ($self, $read_ref, $read_size, $read_num, $attr, $is_leader) = @_;
 
 	if ($is_leader) {
 		my $error_a = $attr->{error1};
@@ -150,7 +151,7 @@ sub _sprint_seq {
 	}
 
 	my $seqid = $self->_gen_id($self->_info);
-	my $quality_ref = $self->_gen_quality;
+	my $quality_ref = $self->gen_quality($read_size);
 
-	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref, $read_num, $self->read_size);
+	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref, $read_num, $read_size);
 }

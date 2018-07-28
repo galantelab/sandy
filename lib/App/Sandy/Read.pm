@@ -12,12 +12,6 @@ has 'sequencing_error' => (
 	required   => 1
 );
 
-has 'read_size' => (
-	is         => 'ro',
-	isa        => 'My:IntGt0',
-	required   => 1
-);
-
 has '_count_base' => (
 	is         => 'rw',
 	isa        => 'Int',
@@ -116,9 +110,9 @@ sub _build_subseq {
 	# I must to make this mess in order to annotate paired-end reads :(
 	my $start_ref = $pieces->[0]{pos} + $offset;
 	my $end_ref = $start_ref + $len - 1;
-	my $read_end_ref = $start_ref + $self->read_size - 1;
+	my $read_end_ref = $start_ref + $len - 1;
 	my $read_end_piece = first { $self->_is_pos_inside_piece($read_end_ref, $_) } reverse @$pieces;
-	my $read_start_ref = $end_ref - $self->read_size + 1;
+	my $read_start_ref = $end_ref - $len + 1;
 	my $read_start_piece = first { $self->_is_pos_inside_piece($read_start_ref, $_) } @$pieces;
 
 	my $attr = {
@@ -141,14 +135,14 @@ sub _is_pos_inside_piece {
 }
 
 sub insert_sequencing_error {
-	my ($self, $seq_ref) = @_;
+	my ($self, $seq_ref, $read_size) = @_;
 
 	my $err = int($self->_count_base * $self->sequencing_error);
 	my @errors;
 
 	for (my $i = 0; $i < $err; $i++) {
 		$self->update_count_base(-$self->_base);
-		my $pos = $self->read_size - $self->_count_base - 1;
+		my $pos = $read_size - $self->_count_base - 1;
 
 		my $b = substr($$seq_ref, $pos, 1);
 		my $not_b = $self->_randb($b);

@@ -8,6 +8,7 @@ with qw{
 	App::Sandy::Role::RunTimeTemplate
 	App::Sandy::Role::Template::Fastq
 	App::Sandy::Role::Template::Sam
+	App::Sandy::Role::RNorm
 };
 
 # VERSION
@@ -27,6 +28,25 @@ has 'template_id' => (
 has 'sequencing_error' => (
 	is         => 'ro',
 	isa        => 'My:NumHS',
+	required   => 1
+);
+
+has 'quality_profile' => (
+	is         => 'ro',
+	isa        => 'My:QualityP',
+	required   => 1,
+	coerce     => 1
+);
+
+has 'read_mean' => (
+	is         => 'ro',
+	isa        => 'My:IntGt0',
+	required   => 1
+);
+
+has 'read_stdd' => (
+	is         => 'ro',
+	isa        => 'My:IntGe0',
 	required   => 1
 );
 
@@ -64,17 +84,15 @@ has '_info' => (
 	}
 );
 
-has 'quality_profile' => (
+has '_read_size' => (
+	traits     => ['Code'],
 	is         => 'ro',
-	isa        => 'My:QualityP',
-	required   => 1,
-	coerce     => 1
-);
-
-has 'read_size' => (
-	is         => 'ro',
-	isa        => 'My:IntGt0',
-	required   => 1
+	isa        => 'CodeRef',
+	builder    => '_build_read_size',
+	lazy_build => 1,
+	handles    => {
+		_get_read_size => 'execute'
+	}
 );
 
 has '_quality' => (
@@ -82,9 +100,7 @@ has '_quality' => (
 	isa        => 'App::Sandy::Quality',
 	builder    => '_build_quality',
 	lazy_build => 1,
-	handles    => {
-		_gen_quality => 'gen_quality'
-	}
+	handles    => ['gen_quality']
 );
 
 has '_sym_table' => (
@@ -103,6 +119,8 @@ sub BUILD {
 sub _build_sym_table {
 	my $sym_table = {
 		'%q' => '$info->{quality_profile}',
+		'%m' => '$info->{read_mean}',
+		'%d' => '$info->{read_stdd}',
 		'%r' => '$info->{read_size}',
 		'%e' => '$info->{sequencing_error}',
 		'%c' => '$info->{seq_id}',
@@ -154,18 +172,32 @@ sub _build_info {
 	my $info = {
 		instrument       => 'SR',
 		quality_profile  => $self->quality_profile,
-		read_size        => $self->read_size,
-		sequencing_error => $self->sequencing_error
+		sequencing_error => $self->sequencing_error,
+		read_mean        => $self->read_mean,
+		read_stdd        => $self->read_stdd
 	};
 
 	return $info;
 }
 
+sub _build_read_size {
+	my $self = shift;
+	my $fun;
+
+	if ($self->read_stdd == 0) {
+		$fun = sub { $self->read_mean };
+	} else {
+		$fun = sub { $self->with_random_half_normal($self->read_mean,
+				$self->read_stdd) };
+	}
+
+	return $fun;
+}
+
 sub _build_quality {
 	my $self = shift;
 	App::Sandy::Quality->new(
-		quality_profile => $self->quality_profile,
-		read_size       => $self->read_size
+		quality_profile => $self->quality_profile
 	);
 }
 

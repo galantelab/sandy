@@ -58,7 +58,7 @@ coerce 'My:QualityP'
 
 subtype 'My:QualityH'
 	=> as      'HashRef'
-	=> where   { exists $_->{matrix} && exists $_->{deepth} }
+	=> where   { exists $_->{matrix} && exists $_->{deepth} && exists $_->{partil} }
 	=> message { "'$_' is not a valid quality hash" };
 
 subtype 'My:IdFa'

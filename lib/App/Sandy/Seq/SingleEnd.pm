@@ -13,7 +13,7 @@ has '_read' => (
 	isa        => 'App::Sandy::Read::SingleEnd',
 	builder    => '_build_read',
 	lazy_build => 1,
-	handles    => [qw{ gen_read }]
+	handles    => ['gen_read']
 );
 
 sub BUILD {
@@ -25,15 +25,15 @@ sub BUILD {
 sub _build_read {
 	my $self = shift;
 	App::Sandy::Read::SingleEnd->new(
-		sequencing_error => $self->sequencing_error,
-		read_size        => $self->read_size
+		sequencing_error => $self->sequencing_error
 	);
 }
 
 sub sprint_seq {
 	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;
 
-	my ($read_ref, $attr) = $self->gen_read($ptable, $ptable_size, $is_leader);
+	my $read_size = $self->_get_read_size;
+	my ($read_ref, $attr) = $self->gen_read($ptable, $ptable_size, $read_size, $is_leader);
 
 	my $error_a = $attr->{error};
 	my $error = @$error_a
@@ -53,6 +53,7 @@ sub sprint_seq {
 		'error'       => $error,
 		'var'         => $var,
 		'seq_id_type' => $seq_id_type,
+		'read_size'   => $read_size
 		$is_leader
 			? (
 				'start'     => $attr->{start},
@@ -69,7 +70,7 @@ sub sprint_seq {
 	);
 
 	my $seqid = $self->_gen_id($self->_info);
-	my $quality_ref = $self->_gen_quality;
+	my $quality_ref = $self->gen_quality($read_size);
 
-	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref, 0, $self->read_size);
+	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref, 0, $read_size);
 }

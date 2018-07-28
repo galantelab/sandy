@@ -24,8 +24,9 @@ sub default_opt {
 	'sequencing-type'  => 'paired-end',
 	'fragment-mean'    => 300,
 	'fragment-stdd'    => 50,
-	'sequencing-error' => 0.005,
-	'read-size'        => 100,
+	'sequencing-error' => 0.001,
+	'read-mean'        => 100,
+	'read-stdd'        => 0,
 	'quality-profile'  => 'poisson',
 	'join-paired-ends' => 0,
 	'output-format'    => 'fastq.gz'
