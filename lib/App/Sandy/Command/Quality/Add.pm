@@ -16,14 +16,16 @@ override 'opt_spec' => sub {
 	'verbose|v',
 	'quality-profile|q=s',
 	'source|s=s',
-	'sequencing-error|e=f'
+	'sequencing-error|e=f',
+	'single-end|1'
 };
 
 sub _default_opt {
 	'verbose'          => 0,
 	'type'             => 'fastq',
 	'source'           => 'not defined',
-	'sequencing-error' => 0.001
+	'sequencing-error' => 0.001,
+	'single-end'       => 0
 }
 
 sub validate_args {
@@ -80,6 +82,7 @@ sub execute {
 		$opts->{'source'},
 		1,
 		$opts->{'sequencing-error'},
+		$opts->{'single-end'},
 		$opts->{'type'}
 	);
 
@@ -90,10 +93,10 @@ __END__
 
 =head1 SYNOPSIS
 
- sandy quality add -q <entry name> -r <size> [-s <source>] FILE
+ sandy quality add -q <entry name> [-s <source>] [-e <error>] [-1] FILE
 
  Arguments:
-  a file (fastq or a matrix with only quality entries)
+  a file (fastq or a matrix with quality entries only)
 
  Mandatory options:
   -q, --quality-profile    a quality-profile name
@@ -103,6 +106,8 @@ __END__
   -M, --man                full documentation
   -v, --verbose            print log messages
   -s, --source             quality-profile source detail for database
+  -1, --single-end         constraint the sequencing-type to single-end only
+                           when using this quality-profile
   -e, --sequencing-error   sequencing error rate
                            [default:"0.001"; Number]
 

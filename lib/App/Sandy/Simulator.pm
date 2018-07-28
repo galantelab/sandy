@@ -298,10 +298,12 @@ sub _build_fasta {
 		my $index_size = $indexed_fasta->{$id}{size};
 		my $class = ref $self->seq;
 
+		# TODO: To work, I need to rewrite the read-mean
+		# in order to be lesser than index size -> if nnanopore/pacbio
 		if ($class eq 'App::Sandy::Seq::SingleEnd') {
-			my $read_size = $self->seq->read_size;
-			if ($index_size < $read_size) {
-				log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read size ($read_size)";
+			my $read_mean = $self->seq->read_mean;
+			if ($index_size < $read_mean) {
+				log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read mean ($read_mean)";
 				delete $indexed_fasta->{$id};
 				push @blacklist => $id;
 			}
@@ -668,8 +670,8 @@ sub _build_piece_table {
 			my $class = ref $self->seq;
 
 			if ($class eq 'App::Sandy::Seq::SingleEnd') {
-				if ($new_size < $self->seq->read_size) {
-					log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required read-size";
+				if ($new_size < $self->seq->read_mean) {
+					log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required read-mean";
 					next;
 				}
 			} elsif ($class eq 'App::Sandy::Seq::PairedEnd') {
@@ -798,7 +800,7 @@ sub _calculate_number_of_reads {
 		my $fasta = $self->_fasta;
 		my $fasta_size = 0;
 		$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
-		$number_of_reads = int(($fasta_size * $self->coverage) / $self->seq->read_size);
+		$number_of_reads = int(($fasta_size * $self->coverage) / $self->seq->read_mean);
 	} elsif ($self->count_loops_by eq 'number-of-reads') {
 		$number_of_reads = $self->number_of_reads;
 	} else {
@@ -1047,7 +1049,7 @@ sub run_simulation {
 
 		# If it is a bam and it is the last loop, then
 		# write a eof marker
-		if ($output_format =~ /^bam$/ && $tid == $number_of_jobs) {
+		if ($output_format eq 'bam' && $tid == $number_of_jobs) {
 			$self->gen_eof_marker($files_t[0]);
 		}
 
@@ -1107,9 +1109,9 @@ sub run_simulation {
 		or die "Cannot write file $count_file: $!\n";
 
 	# Clean up the mess
-	log_msg ":: Removing temporary files ...";
-	for my $file_t (@tmp_files) {
-		unlink $file_t
-			or die "Cannot remove temporary file: $file_t: $!\n";
-	}
+#	log_msg ":: Removing temporary files ...";
+#	for my $file_t (@tmp_files) {
+#		unlink $file_t
+#			or die "Cannot remove temporary file: $file_t: $!\n";
+#	}
 }

@@ -46,6 +46,11 @@ __PACKAGE__->table("quality_profile");
   default_value: 1
   is_nullable: 1
 
+=head2 is_single_end
+
+  data_type: 'integer'
+  is_nullable: 0
+
 =head2 mean
 
   data_type: 'integer'
@@ -93,6 +98,8 @@ __PACKAGE__->add_columns(
   { data_type => "text", default_value => "not defined", is_nullable => 1 },
   "is_user_provided",
   { data_type => "integer", default_value => 1, is_nullable => 1 },
+  "is_single_end",
+  { data_type => "integer", is_nullable => 0 },
   "mean",
   { data_type => "integer", is_nullable => 0 },
   "stdd",
@@ -136,8 +143,8 @@ __PACKAGE__->set_primary_key("id");
 __PACKAGE__->add_unique_constraint("name_unique", ["name"]);
 
 
-# Created by DBIx::Class::Schema::Loader v0.07049 @ 2018-07-28 05:03:31
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ikroFhB0WJWoqHRACVX9GQ
+# Created by DBIx::Class::Schema::Loader v0.07049 @ 2018-07-28 20:30:41
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:kcqG6JQBcVi8JY8IieJMBg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

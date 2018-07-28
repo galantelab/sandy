@@ -18,7 +18,7 @@ with qw{
 # VERSION
 
 sub insertdb {
-	my ($self, $file, $name, $source, $is_user_provided, $error, $type) = @_;
+	my ($self, $file, $name, $source, $is_user_provided, $error, $single_end, $type) = @_;
 	my $schema = App::Sandy::DB->schema;
 
 	log_msg ":: Checking if there is already a quality-profile '$name' ...";
@@ -49,6 +49,7 @@ sub insertdb {
 		'name'             => $name,
 		'source'           => $source,
 		'is_user_provided' => $is_user_provided,
+		'is_single_end'    => $single_end,
 		'mean'             => $mean,
 		'stdd'             => $stdd,
 		'error'            => $error,
@@ -75,7 +76,7 @@ sub _index_quality {
 		my $left = $size % PARTIL;
 
 		my $pos = 0;
-		my $skip = $self->with_make_counter($size, $left);
+		my $skip = $self->with_make_counter($size - $left, $left);
 
 		for (my $i = 0; $i < PARTIL; $i++) {
 			for (my $j = 0; $j < $bin; $j++) {
@@ -274,12 +275,13 @@ sub make_report {
 
 	while (my $quality = $rs->next) {
 		my %hash = (
-			'mean'     => $quality->mean,
-			'stdd'     => $quality->stdd,
-			'error'    => $quality->error,
-			'source'   => $quality->source,
-			'provider' => $quality->is_user_provided ? "user" : "vendor",
-			'date'     => $quality->date
+			'mean'       => $quality->mean,
+			'stdd'       => $quality->stdd,
+			'error'      => $quality->error,
+			'type'       => $quality->is_single_end ? 'single-end' : 'single/paired-end',
+			'source'     => $quality->source,
+			'provider'   => $quality->is_user_provided ? "user" : "vendor",
+			'date'       => $quality->date
 		);
 		$report{$quality->name} = \%hash;
 	}

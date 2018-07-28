@@ -117,7 +117,7 @@ sub _gen_quality_by_system {
 	my $bin = int($read_size / $partil);
 	my $left = $read_size % $partil;
 
-	my $pick_again = $self->with_make_counter($read_size, $left);
+	my $pick_again = $self->with_make_counter($read_size - $left, $left);
 	my $quality;
 
 	for (my $i = 0; $i < $partil; $i++) {

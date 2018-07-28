@@ -127,8 +127,8 @@ sub validate_opts {
 	my %SEQUENCING_TYPE      = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT };
 	my %COUNT_LOOPS_BY       = map { $_ => 1 } @{ &COUNT_LOOPS_BY_OPT  };
 	my %OUTPUT_FORMAT        = map { $_ => 1 } @{ &OUTPUT_FORMAT_OPT   };
-	my %QUALITY_PROFILE      = %{ $self->_quality_profile_report };
-	my %EXPRESSION_MATRIX    = %{ $self->_expression_matrix_report };
+	my %QUALITY_PROFILE      = %{ $self->_quality_profile_report      };
+	my %EXPRESSION_MATRIX    = %{ $self->_expression_matrix_report    };
 	my %STRUCTURAL_VARIATION = %{ $self->_structural_variation_report };
 
 	#  prefix
@@ -141,18 +141,21 @@ sub validate_opts {
 		die "Option 'jobs' requires an integer greater than zero, not $opts->{jobs}\n";
 	}
 
-	# 0 <= sequencing_error <= 1
-	if (0 > $opts->{'sequencing-error'} || $opts->{'sequencing-error'} > 1)  {
-		die "Option 'sequencing-error' requires a value between zero and one, not $opts->{'sequencing-error'}\n";
-	}
-
 	# quality_profile
-	# If the quality_profile is 'poisson', then check the read-size.
+	# If the quality_profile is 'poisson', then check the read-mean and rad-stdd.
 	# Else look for the quality-profile into the database
 	if ($opts->{'quality-profile'} eq 'poisson') {
-		# 0 < read-size <= 101
-		if (0 > $opts->{'read-size'}) {
-			die "Option 'read-size' requires an integer greater than zero, not $opts->{'read-size'}\n";
+		if (0 >= $opts->{'read-mean'}) {
+			die "Option 'read-mean' requires an integer greater than zero, not $opts->{'read-mean'}\n";
+		}
+
+		if (0 > $opts->{'read-stdd'}) {
+			die "Option 'read-stdd' requires an integer greater or equal to zero, not $opts->{'read-stdd'}\n";
+		}
+
+		# 0 <= sequencing_error <= 1
+		if (0 > $opts->{'sequencing-error'} || $opts->{'sequencing-error'} > 1)  {
+			die "Option 'sequencing-error' requires a value between zero and one, not $opts->{'sequencing-error'}\n";
 		}
 	} else {
 		if (%QUALITY_PROFILE && exists $QUALITY_PROFILE{$opts->{'quality-profile'}}) {
@@ -160,7 +163,10 @@ sub validate_opts {
 			# It is necessary for the next validations, so
 			# I set the opts read-size for the value that will be used
 			# afterwards
-			$opts->{'read-size'} = $entry->{'size'};
+			$opts->{'read-mean'} = $entry->{'mean'};
+			$opts->{'read-stdd'} = $entry->{'stdd'};
+			$opts->{'sequencing-error'} = $entry->{'error'};
+			$opts->{'sequencing-type'} = 'single-end' if $entry->{'type'} eq 'single-end';
 		} else {
 			die "Option quality-profile='$opts->{'quality-profile'}' does not exist into the database.\n",
 				"Please check '$progname quality' to see the available profiles or use '--quality-profile=poisson'\n";
@@ -221,9 +227,9 @@ sub validate_opts {
 			die "Option 'fragment-stdd' requires an integer greater or equal to zero, not $opts->{'fragment-stdd'}\n";
 		}
 
-		# (fragment_mean - fragment_stdd) >= read_size
-		if (($opts->{'fragment-mean'} - $opts->{'fragment-stdd'}) < $opts->{'read-size'}) {
-			die "Option 'fragment-mean' minus 'fragment-stdd' requires a value greater or equal read-size, not " .
+		# (fragment_mean - fragment_stdd) >= read_mean + read_stdd
+		if (($opts->{'fragment-mean'} - $opts->{'fragment-stdd'}) < ($opts->{'read-mean'} + $opts->{'read-stdd'})) {
+			die "Option 'fragment-mean' minus 'fragment-stdd' requires a value greater or equal 'read-mean' plus 'read-stdd', not " .
 				($opts->{'fragment-mean'} - $opts->{'fragment-stdd'}) . "\n";
 		}
 	}
@@ -313,7 +319,10 @@ sub execute {
 		my $report = $self->_quality_profile_report;
 		my $entry = $report->{$opts->{'quality-profile'}};
 		# Override default or user-defined value
-		$opts->{'read-size'} = $entry->{'size'};
+		$opts->{'read-mean'} = $entry->{'mean'};
+		$opts->{'read-stdd'} = $entry->{'stdd'};
+		$opts->{'sequencing-error'} = $entry->{'error'};
+		$opts->{'sequencing-type'} = 'single-end' if $entry->{'type'} eq 'single-end';
 	}
 
 	# Sequence identifier
@@ -407,7 +416,8 @@ HEADER
 		format            => $opts->{'output-format'},
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
-		read_size         => $opts->{'read-size'},
+		read_mean         => $opts->{'read-mean'},
+		read_stdd         => $opts->{'read-stdd'},
 		fragment_mean     => $opts->{'fragment-mean'},
 		fragment_stdd     => $opts->{'fragment-stdd'}
 	);
@@ -417,7 +427,8 @@ HEADER
 		format            => $opts->{'output-format'},
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
-		read_size         => $opts->{'read-size'}
+		read_mean         => $opts->{'read-mean'},
+		read_stdd         => $opts->{'read-stdd'}
 	);
 
 	my $seq;
