@@ -106,6 +106,11 @@ sub _index_quality_type {
 
 	log_msg ":: Counting number of lines in '$file' ...";
 	my $num_lines = $self->_wcl($file);
+
+	if ($num_lines == 0) {
+		die "The file '$file' is empty\n";
+	}
+
 	log_msg ":: Number of lines: $num_lines";
 
 	my $num_left = 0;
@@ -119,6 +124,9 @@ sub _index_quality_type {
 		$num_left = int($num_lines / 4);
 
 		$getter = sub {
+			AGAIN:
+			return if eof($fh);
+
 			my @stack;
 
 			for (1..4) {
@@ -134,10 +142,10 @@ sub _index_quality_type {
 				die "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read\n";
 			}
 
-			if (length $stack[3] < PARTIL) {
-				die sprintf "Fastq entry has length lesser than '%d' in '%s' at line %d\n" .
-					"If you want to use a quality profile with size small then '%d', try --quality-profile=poisson\n",
-					PARTIL, $file, $line, PARTIL;
+			if (length($stack[3]) < PARTIL) {
+				# Catch next read if this one is lesser
+				# than required PARTIL size
+				goto AGAIN;
 			}
 
 			return $stack[3];
@@ -147,13 +155,17 @@ sub _index_quality_type {
 		$num_left = $num_lines;
 
 		$getter = sub {
-			$line++;
-			chomp(my $entry = <$fh>);
+			AGAIN:
+			defined(my $entry = <$fh>)
+				or return;
 
-			if (length $entry < PARTIL) {
-				die sprintf "Entry has length lesser than '%d' in '%s' at line %d\n" .
-					"If you want to use a quality profile with size small then '%d', try --quality-profile=poisson\n",
-					PARTIL, $file, $line, PARTIL;
+			$line++;
+			chomp $entry;
+
+			if (length($entry) < PARTIL) {
+				# Catch next read if this one is lesser
+				# than required PARTIL size
+				goto AGAIN;
 			}
 
 			return $entry;
@@ -168,15 +180,20 @@ sub _index_quality_type {
 	my $do_pick = $self->with_make_counter($num_left, $picks);
 
 	log_msg ":: Picking $picks entries in '$file' ...";
-	while ($picks_left > 0) {
-		my $entry = $getter->();
+	while (my $entry = $getter->()) {
 		if ($do_pick->()) {
 			push @quality => $entry;
-			$picks_left--;
 			if ($picks >= 10 && (++$acm % int($picks/10) == 0)) {
-				warn sprintf "   ==> %d%% processed\n", ($acm / $picks) * 100;
+				log_msg sprintf "   ==> %d%% processed", ($acm / $picks) * 100;
 			}
+			last if --$picks_left == 0;
 		}
+	}
+
+	if (scalar(@quality) == 0) {
+		die "All quality entries have length lesser then 10 in file '$file'.\n" .
+			"quality-profile constraints the quality length to values greater or equal to 10.\n" .
+			"If you need somehow profiles with length lesser than 10. Please use --quality-profile=poisson\n";
 	}
 
 	$fh->close

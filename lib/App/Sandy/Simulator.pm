@@ -1109,9 +1109,9 @@ sub run_simulation {
 		or die "Cannot write file $count_file: $!\n";
 
 	# Clean up the mess
-#	log_msg ":: Removing temporary files ...";
-#	for my $file_t (@tmp_files) {
-#		unlink $file_t
-#			or die "Cannot remove temporary file: $file_t: $!\n";
-#	}
+	log_msg ":: Removing temporary files ...";
+	for my $file_t (@tmp_files) {
+		unlink $file_t
+			or die "Cannot remove temporary file: $file_t: $!\n";
+	}
 }

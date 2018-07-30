@@ -4,6 +4,8 @@ package App::Sandy::Seq;
 use App::Sandy::Base 'class';
 use App::Sandy::Quality;
 
+use constant NUM_TRIES => 1000;
+
 with qw{
 	App::Sandy::Role::RunTimeTemplate
 	App::Sandy::Role::Template::Fastq
@@ -187,8 +189,18 @@ sub _build_read_size {
 	if ($self->read_stdd == 0) {
 		$fun = sub { $self->read_mean };
 	} else {
-		$fun = sub { $self->with_random_half_normal($self->read_mean,
-				$self->read_stdd) };
+		$fun = sub {
+			my $size = 0;
+			my $random_tries = 0;
+			until ($size > 0) {
+				if (++$random_tries > NUM_TRIES) {
+					croak "So many tries to calculate a seq size greater than zero ...";
+				}
+				$size = $self->with_random_half_normal($self->read_mean,
+					$self->read_stdd)
+			}
+			return $size;
+		};
 	}
 
 	return $fun;

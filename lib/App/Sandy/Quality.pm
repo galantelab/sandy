@@ -114,8 +114,19 @@ sub _gen_quality_by_system {
 		qw/matrix deepth partil/
 	);
 
-	my $bin = int($read_size / $partil);
-	my $left = $read_size % $partil;
+	my ($bin, $left);
+
+	# To make this routine more robust.
+	# It is necessary to work on reads
+	# lesser than read_size
+	if ($read_size < $partil) {
+		$partil = $read_size;
+		$bin = 1;
+		$left = 0;
+	} else {
+		$bin = int($read_size / $partil);
+		$left = $read_size % $partil;
+	}
 
 	my $pick_again = $self->with_make_counter($read_size - $left, $left);
 	my $quality;
