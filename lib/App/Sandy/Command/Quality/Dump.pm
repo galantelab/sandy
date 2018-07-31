@@ -22,10 +22,10 @@ sub execute {
 	my ($self, $opts, $args) = @_;
 	my $quality_profile = shift @$args;
 
-	my ($matrix, $deepth, $size) = $self->retrievedb($quality_profile);
+	my ($matrix, $deepth, $partil) = $self->retrievedb($quality_profile);
 
 	for (my $line = 0; $line < $deepth; $line++) {
-		for (my $col = 0; $col < $size; $col++) {
+		for (my $col = 0; $col < $partil; $col++) {
 			print "$matrix->[$col][$line]";
 		}
 		print "\n";

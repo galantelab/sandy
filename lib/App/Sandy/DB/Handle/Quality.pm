@@ -124,7 +124,6 @@ sub _index_quality_type {
 		$num_left = int($num_lines / 4);
 
 		$getter = sub {
-			AGAIN:
 			return if eof($fh);
 
 			my @stack;
@@ -142,12 +141,6 @@ sub _index_quality_type {
 				die "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read\n";
 			}
 
-			if (length($stack[3]) < PARTIL) {
-				# Catch next read if this one is lesser
-				# than required PARTIL size
-				goto AGAIN;
-			}
-
 			return $stack[3];
 		};
 	} else {
@@ -155,18 +148,11 @@ sub _index_quality_type {
 		$num_left = $num_lines;
 
 		$getter = sub {
-			AGAIN:
 			defined(my $entry = <$fh>)
 				or return;
 
 			$line++;
 			chomp $entry;
-
-			if (length($entry) < PARTIL) {
-				# Catch next read if this one is lesser
-				# than required PARTIL size
-				goto AGAIN;
-			}
 
 			return $entry;
 		};
@@ -182,11 +168,11 @@ sub _index_quality_type {
 	log_msg ":: Picking $picks entries in '$file' ...";
 	while (my $entry = $getter->()) {
 		if ($do_pick->()) {
-			push @quality => $entry;
+			push @quality => $entry if length($entry) >= PARTIL;
 			if ($picks >= 10 && (++$acm % int($picks/10) == 0)) {
 				log_msg sprintf "   ==> %d%% processed", ($acm / $picks) * 100;
 			}
-			last if --$picks_left == 0;
+			last if --$picks_left <= 0;
 		}
 	}
 
