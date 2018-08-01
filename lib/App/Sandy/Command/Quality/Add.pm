@@ -17,7 +17,7 @@ override 'opt_spec' => sub {
 	'quality-profile|q=s',
 	'source|s=s',
 	'sequencing-error|e=f',
-	'single-end|1'
+	'single-molecule|1'
 };
 
 sub _default_opt {
@@ -25,7 +25,7 @@ sub _default_opt {
 	'type'             => 'fastq',
 	'source'           => 'not defined',
 	'sequencing-error' => 0.001,
-	'single-end'       => 0
+	'single-molecule'  => 0
 }
 
 sub validate_args {
@@ -82,7 +82,7 @@ sub execute {
 		$opts->{'source'},
 		1,
 		$opts->{'sequencing-error'},
-		$opts->{'single-end'},
+		$opts->{'single-molecule'},
 		$opts->{'type'}
 	);
 
@@ -106,8 +106,8 @@ __END__
   -M, --man                full documentation
   -v, --verbose            print log messages
   -s, --source             quality-profile source detail for database
-  -1, --single-end         constraint the sequencing-type to single-end only
-                           when using this quality-profile
+  -1, --single-molecule    constraint to single-molecule sequencing
+                           (as Pacbio and Nanopore)
   -e, --sequencing-error   sequencing error rate
                            [default:"0.001"; Number]
 

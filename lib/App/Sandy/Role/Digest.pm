@@ -166,7 +166,7 @@ sub validate_opts {
 			$opts->{'read-mean'} = $entry->{'mean'};
 			$opts->{'read-stdd'} = $entry->{'stdd'};
 			$opts->{'sequencing-error'} = $entry->{'error'};
-			$opts->{'sequencing-type'} = 'single-end' if $entry->{'type'} eq 'single-end';
+			$opts->{'sequencing-type'} = 'single-end' if $entry->{'type'} eq 'single-molecule';
 		} else {
 			die "Option quality-profile='$opts->{'quality-profile'}' does not exist into the database.\n",
 				"Please check '$progname quality' to see the available profiles or use '--quality-profile=poisson'\n";
@@ -301,6 +301,9 @@ sub execute {
 	my %default_opt = $self->default_opt;
 	$self->fill_opts($opts, \%default_opt);
 
+	my $report = $self->_quality_profile_report;
+	my $entry = $report->{$opts->{'quality-profile'}};
+
 	# Set if user wants a verbose log
 	$LOG_VERBOSE = $opts->{verbose};
 
@@ -316,13 +319,11 @@ sub execute {
 
 	# Override read-size if quality-profile comes from database
 	if ($opts->{'quality-profile'} ne 'poisson') {
-		my $report = $self->_quality_profile_report;
-		my $entry = $report->{$opts->{'quality-profile'}};
 		# Override default or user-defined value
 		$opts->{'read-mean'} = $entry->{'mean'};
 		$opts->{'read-stdd'} = $entry->{'stdd'};
 		$opts->{'sequencing-error'} = $entry->{'error'};
-		$opts->{'sequencing-type'} = 'single-end' if $entry->{'type'} eq 'single-end';
+		$opts->{'sequencing-type'} = 'single-end' if $entry->{'type'} eq 'single-molecule';
 	}
 
 	# Sequence identifier
@@ -446,6 +447,7 @@ HEADER
 		argv                 => $argv,
 		seq                  => $seq,
 		fasta_file           => $fasta_file,
+		truncate             => $entry->{'type'} && $entry->{'type'} eq 'single-molecule',
 		prefix               => $opts->{'prefix'},
 		output_format        => $opts->{'output-format'},
 		join_paired_ends     => $opts->{'join-paired-ends'},

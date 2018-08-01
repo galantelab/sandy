@@ -23,6 +23,12 @@ has 'argv' => (
 	required => 1
 );
 
+has 'truncate' => (
+	is       => 'ro',
+	isa      => 'Bool',
+	required => 1
+);
+
 has 'seed' => (
 	is        => 'ro',
 	isa       => 'Int',
@@ -294,28 +300,28 @@ sub _build_fasta {
 	# Entries to remove
 	my @blacklist;
 
-	for my $id (keys %$indexed_fasta) {
-		my $index_size = $indexed_fasta->{$id}{size};
-		my $class = ref $self->seq;
+	unless ($self->truncate) {
+		for my $id (keys %$indexed_fasta) {
+			my $index_size = $indexed_fasta->{$id}{size};
+			my $class = ref $self->seq;
 
-		# TODO: To work, I need to rewrite the read-mean
-		# in order to be lesser than index size -> if nnanopore/pacbio
-		if ($class eq 'App::Sandy::Seq::SingleEnd') {
-			my $read_mean = $self->seq->read_mean;
-			if ($index_size < $read_mean) {
-				log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read mean ($read_mean)";
-				delete $indexed_fasta->{$id};
-				push @blacklist => $id;
+			if ($class eq 'App::Sandy::Seq::SingleEnd') {
+				my $read_mean = $self->seq->read_mean;
+				if ($index_size < $read_mean) {
+					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required read mean ($read_mean)";
+					delete $indexed_fasta->{$id};
+					push @blacklist => $id;
+				}
+			} elsif ($class eq 'App::Sandy::Seq::PairedEnd') {
+				my $fragment_mean = $self->seq->fragment_mean;
+				if ($index_size < $fragment_mean) {
+					log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)";
+					delete $indexed_fasta->{$id};
+					push @blacklist => $id;
+				}
+			} else {
+				die "Unknown option '$_' for sequencing type\n";
 			}
-		} elsif ($class eq 'App::Sandy::Seq::PairedEnd') {
-			my $fragment_mean = $self->seq->fragment_mean;
-			if ($index_size < $fragment_mean) {
-				log_msg ":: Parsing fasta file '$fasta': Seqid sequence length (>$id => $index_size) lesser than required fragment mean ($fragment_mean)";
-				delete $indexed_fasta->{$id};
-				push @blacklist => $id;
-			}
-		} else {
-			die "Unknown option '$_' for sequencing type\n";
 		}
 	}
 
@@ -667,20 +673,22 @@ sub _build_piece_table {
 			# Get the new size
 			my $new_size = $table->logical_len;
 
-			my $class = ref $self->seq;
+			unless ($self->truncate) {
+				my $class = ref $self->seq;
 
-			if ($class eq 'App::Sandy::Seq::SingleEnd') {
-				if ($new_size < $self->seq->read_mean) {
-					log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required read-mean";
-					next;
+				if ($class eq 'App::Sandy::Seq::SingleEnd') {
+					if ($new_size < $self->seq->read_mean) {
+						log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required read-mean";
+						next;
+					}
+				} elsif ($class eq 'App::Sandy::Seq::PairedEnd') {
+					if ($new_size < $self->seq->fragment_mean) {
+						log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required fragment mean";
+						next;
+					}
+				} else {
+					die "No valid options for 'seq'";
 				}
-			} elsif ($class eq 'App::Sandy::Seq::PairedEnd') {
-				if ($new_size < $self->seq->fragment_mean) {
-					log_msg ":: Skip '$seq_id:$type': So many deletions resulted in a sequence lesser than the required fragment mean";
-					next;
-				}
-			} else {
-				die "No valid options for 'seq'";
 			}
 
 			# If all's right

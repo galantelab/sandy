@@ -18,7 +18,7 @@ with qw{
 # VERSION
 
 sub insertdb {
-	my ($self, $file, $name, $source, $is_user_provided, $error, $single_end, $type) = @_;
+	my ($self, $file, $name, $source, $is_user_provided, $error, $single_molecule, $type) = @_;
 	my $schema = App::Sandy::DB->schema;
 
 	log_msg ":: Checking if there is already a quality-profile '$name' ...";
@@ -46,16 +46,16 @@ sub insertdb {
 
 	log_msg ":: Storing quality matrix entry at '$name' ...";
 	$rs = $schema->resultset('QualityProfile')->create({
-		'name'             => $name,
-		'source'           => $source,
-		'is_user_provided' => $is_user_provided,
-		'is_single_end'    => $single_end,
-		'mean'             => $mean,
-		'stdd'             => $stdd,
-		'error'            => $error,
-		'deepth'           => $deepth,
-		'partil'           => PARTIL,
-		'matrix'           => $compressed
+		'name'               => $name,
+		'source'             => $source,
+		'is_user_provided'   => $is_user_provided,
+		'is_single_molecule' => $single_molecule,
+		'mean'               => $mean,
+		'stdd'               => $stdd,
+		'error'              => $error,
+		'deepth'             => $deepth,
+		'partil'             => PARTIL,
+		'matrix'             => $compressed
 	});
 
 	# End transation
@@ -281,7 +281,7 @@ sub make_report {
 			'mean'       => $quality->mean,
 			'stdd'       => $quality->stdd,
 			'error'      => $quality->error,
-			'type'       => $quality->is_single_end ? 'single-end' : 'single/paired-end',
+			'type'       => $quality->is_single_molecule ? 'single-molecule' : 'fragment',
 			'source'     => $quality->source,
 			'provider'   => $quality->is_user_provided ? "user" : "vendor",
 			'date'       => $quality->date

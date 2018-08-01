@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS "quality_profile" (
 	"name" TEXT NOT NULL,
 	"source" TEXT DEFAULT "not defined",
 	"is_user_provided" INTEGER DEFAULT 1,
-	"is_single_end" INTEGER NOT NULL,
+	"is_single_molecule" INTEGER NOT NULL,
 	"mean" INTEGER NOT NULL,
 	"stdd" INTEGER NOT NULL,
 	"error" REAL NOT NULL,

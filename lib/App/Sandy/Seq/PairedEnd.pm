@@ -84,6 +84,14 @@ sub sprint_seq {
 	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;
 
 	my $read_size = $self->_get_read_size;
+
+	# In order to work third gen sequencing
+	# simulator, it is necessary to truncate
+	# the read according to the ptable size
+	if ($read_size > $ptable_size) {
+		$read_size = $ptable_size;
+	}
+
 	my ($read1_ref, $read2_ref, $attr) = $self->gen_read($ptable, $ptable_size,
 		$read_size, $is_leader);
 
