@@ -46,7 +46,7 @@ __END__
 
  Options:
   -h, --help               brief help message
-  -M, --man                full documentation
+  -u, --man                full documentation
   -v, --verbose            print log messages
 
 =head1 DESCRIPTION

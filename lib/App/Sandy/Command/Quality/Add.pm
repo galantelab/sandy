@@ -103,7 +103,7 @@ __END__
 
  Options:
   -h, --help               brief help message
-  -M, --man                full documentation
+  -u, --man                full documentation
   -v, --verbose            print log messages
   -s, --source             quality-profile source detail for database
   -1, --single-molecule    constraint to single-molecule sequencing

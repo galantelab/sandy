@@ -65,7 +65,7 @@ __END__
 
  Options:
   -h, --help               brief help message
-  -M, --man                full documentation
+  -u, --man                full documentation
 
  Commands:
   add                      add a new structural variation to database

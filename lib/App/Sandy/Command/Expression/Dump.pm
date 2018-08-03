@@ -42,7 +42,7 @@ __END__
 
  Options:
   -h, --help               brief help message
-  -M, --man                full documentation
+  -u, --man                full documentation
 
 =head1 DESCRIPTION
 

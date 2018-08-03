@@ -20,7 +20,7 @@ has 'progname' => (
 
 sub opt_spec {
 	'help|h',
-	'man|M'
+	'man|u'
 }
 
 __END__

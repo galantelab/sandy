@@ -50,7 +50,7 @@ __END__
 
  Options:
   -h, --help                         brief help message
-  -M, --man                          full documentation
+  -u, --man                          full documentation
   -v, --verbose                      print log messages
   -p, --prefix                       prefix output [default:"out"]
   -o, --output-dir                   output directory [default:"."]
@@ -59,7 +59,6 @@ __END__
   -i, --append-id                    append to the defined template id [Format]
   -I, --id                           overlap the default template id [Format]
   -j, --jobs                         number of jobs [default:"1"; Integer]
-  -z, --gzip                         compress output file
   -s, --seed                         set the seed of the base generator
                                      [default:"time()"; Integer]
   -c, --coverage                     fastq-file coverage [default:"8", Number]
@@ -197,12 +196,6 @@ B<Paired-end specific escape characters>
 =item B<--jobs>
 
 Sets the number of child jobs to be created
-
-=item B<--gzip>
-
-Compress the output-file with gzip algorithm. It is
-possible to pass --no-gzip if one wants
-uncompressed output-file
 
 =item B<--seed>
 
