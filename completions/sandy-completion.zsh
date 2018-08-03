@@ -56,12 +56,12 @@ _sandy_database() {
 				restore:restore\ the\ database
 			))"
 			{'(--help)-h','(-h)--help'}'[brief help message]'
-			{'(--man)-M','(-M)--man'}'[full documentation]'
+			{'(--man)-u','(-u)--man'}'[full documentation]'
 		)
 	else
 		args+=(
 			{'(--help)-h','(-h)--help'}'[brief help message]'
-			{'(--man)-M','(-M)--man'}'[full documentation]'
+			{'(--man)-u','(-u)--man'}'[full documentation]'
 			{'(--verbose)-v','(-v)--verbose'}'[print log messages]'
 			{'(--source)-s','(-s)--source'}"[$cmd source detail for database]:str:"
 		)
@@ -74,7 +74,8 @@ _sandy_database() {
 					quality)
 						args+=(
 							{'(--quality-profile)-q','(-q)--quality-profile'}'[a quality-profile name]:str:'
-							{'(--read-size)-r','(-r)--read-size'}'[the read-size to be used for the quality]:int:'
+							{'(--sequencing-error)-e','(-e)--sequencing-error'}'[sequencing error rate]:float:'
+							{'(--single-molecule)-1','(-1)--single-molecule'}'[constraint to single-molecule sequencing]'
 						)
 						;;
 					expression)
@@ -110,7 +111,7 @@ _sandy_simulation() {
 
 	args+=(
 		{'(--help)-h','(-h)--help'}'[brief help message]'
-		{'(--man)-M','(-M)--man'}'[full documentation]'
+		{'(--man)-u','(-u)--man'}'[full documentation]'
 		{'(--verbose)-v','(-v)--verbose'}'[print log messages]'
 		{'(--prefix)-p','(-p)--prefix'}'[prefix output]:str:'
 		{'(--output-dir)-o','(-o)--output-dir'}'[output directory]:str:'
@@ -122,10 +123,11 @@ _sandy_simulation() {
 		{'(--seed)-s','(-s)--seed'}'[set the seed of the base generator]:int:'
 		{'(--sequencing-type)-t','(-t)--sequencing-type'}'[single-end or paired-end reads]:str:(single-end paired-end)'
 		{'(--quality-profile)-q','(-q)--quality-profile'}'[quality-profile from database]:str:->quality'
-		{'(--sequencing-error)-e','(-e)--sequencing-error'}'[sequencing error rate]:float'
-		{'(--read-size)-r','(-r)--read-size'}'[the read size]:int:'
-		{'(--fragment-mean)-m','(-m)--fragment-mean'}'[the fragment mean size for paired-end reads]:int:'
-		{'(--fragment-stdd)-d','(-d)--fragment-stdd'}'[the fragment standard deviation size for paired-end reads]:int:'
+		{'(--sequencing-error)-e','(-e)--sequencing-error'}'[sequencing error rate for poisson]:float'
+		{'(--read-mean)-m','(-m)--read-mean'}'[read mean size for poisson]:int:'
+		{'(--read-stdd)-d','(-d)--read-stdd'}'[read standard deviation size for poisson]:int:'
+		{'(--fragment-mean)-M','(-M)--fragment-mean'}'[the fragment mean size for paired-end reads]:int:'
+		{'(--fragment-stdd)-D','(-D)--fragment-stdd'}'[the fragment standard deviation size for paired-end reads]:int:'
 		'*:files:_files'
 	)
 
@@ -181,7 +183,7 @@ _sandy() {
 				transcriptome:simulate\ transcriptome\ sequencing
 			))'
 			{'(--help)-h','(-h)--help'}'[brief help message]'
-			{'(--man)-M','(-M)--man'}'[full documentation]'
+			{'(--man)-u','(-u)--man'}'[full documentation]'
 		)
 		_arguments $args[@] && ret=0
 		return ret

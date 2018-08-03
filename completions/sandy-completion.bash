@@ -19,7 +19,7 @@ _sandy_database() {
 	"
 
 	local long_opts="--help --man"
-	local short_opts="-h -M"
+	local short_opts="-h -u"
 
 	if [[ "$COMP_CWORD" == 2 ]]; then
 		case "$cur" in
@@ -42,8 +42,8 @@ _sandy_database() {
 	if [[ "$subcmd" == "add" ]]; then
 		case "$cmd" in
 			quality)
-				long_opts+=" --quality-profile --read-size --source"
-				short_opts+=" -s -q -r"
+				long_opts+=" --quality-profile --single-molecule --sequencing-error --source"
+				short_opts+=" -s -q -1 -e"
 				;;
 			expression)
 				long_opts+=" --expression-matrix --source"
@@ -100,14 +100,15 @@ _sandy_genome() {
 		--sequencing-type
 		--quality-profile
 		--sequencing-error
-		--read-size
+		--read-mean
+		--read-stdd
 		--fragment-mean
 		--fragment-stdd
 		--structural-variation
 		--structural-variation-regex
 	"
 
-	local short_opts="-h -M -v -p -o -O -1 -i -I -j -s -t -q -e -r -m -d -A -a -c"
+	local short_opts="-h -u -v -p -o -O -1 -i -I -j -s -t -q -e -m -d -M -D -A -a -c"
 
 	case "$prev" in
 		--structural-variation|-a)
@@ -160,12 +161,13 @@ _sandy_transcriptome() {
 		--sequencing-type
 		--quality-profile
 		--sequencing-error
-		--read-size
+		--read-mean
+		--read-stdd
 		--fragment-mean
 		--fragment-stdd
 	"
 
-	local short_opts="-f -h -M -v -p -o -O -1 -i -I -j -s -n -t -q -e -r -m -d"
+	local short_opts="-f -h -u -v -p -o -O -1 -i -I -j -s -n -t -q -e -m -d -M -D"
 
 	case "$prev" in
 		--expression-matrix|-f)
@@ -247,7 +249,7 @@ _sandy() {
 	"
 
 	local long_opts="--help --man"
-	local short_opts="-h -M"
+	local short_opts="-h -u"
 
 	if [[ "$COMP_CWORD" == 1 ]]; then
 		case "$cur" in
@@ -275,6 +277,7 @@ _sandy() {
 			_sandy_genome
 			;;
 		transcriptome)
+			_sandy_transcriptome
 			;;
 		*)
 			COMPREPLY=()
