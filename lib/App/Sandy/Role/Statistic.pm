@@ -4,6 +4,8 @@ package App::Sandy::Role::Statistic;
 use App::Sandy::Base 'role';
 use List::Util 'sum';
 
+# VERSION
+
 sub with_mean {
 	my ($self, $vet) = @_;
 

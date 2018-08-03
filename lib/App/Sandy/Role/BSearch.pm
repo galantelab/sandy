@@ -3,6 +3,8 @@ package App::Sandy::Role::BSearch;
 
 use App::Sandy::Base 'role';
 
+# VERSION
+
 sub with_bsearch {
 	my ($self, $key, $base, $nmemb, $func) = @_;
 	return $self->_bsearch($key, $base, 0, $nmemb - 1, $func);
