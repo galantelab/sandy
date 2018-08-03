@@ -58,7 +58,6 @@ sub gen_read {
 	@$attr{qw/start1 end1/} = ($attr->{start}, $attr->{start} + $read_size - 1);
 
 	# Insert sequencing error
-	$self->update_count_base($read_size);
 	$attr->{error1} = $self->insert_sequencing_error($read1_ref, $read_size);
 
 	# Catch R2 substring
@@ -70,7 +69,6 @@ sub gen_read {
 	$self->reverse_complement($read2_ref);
 
 	# Insert sequencing error
-	$self->update_count_base($read_size);
 	$attr->{error2} = $self->insert_sequencing_error($read2_ref, $read_size);
 
 	return ($read1_ref, $read2_ref, $attr);

@@ -137,26 +137,21 @@ sub _is_pos_inside_piece {
 sub insert_sequencing_error {
 	my ($self, $seq_ref, $read_size) = @_;
 
-	my $err = int($self->_count_base * $self->sequencing_error);
+	my $acm_base = $read_size + $self->_count_base;
+	my $num_err = int($acm_base / $self->_base);
+	my $left_count = $acm_base % $self->_base;
 	my @errors;
 
-	for (my $i = 0; $i < $err; $i++) {
-		$self->update_count_base(-$self->_base);
-		my $pos = $read_size - $self->_count_base - 1;
-
+	for (my $i = 0; $i < $num_err; $i++) {
+		my $pos = $i * $self->_base + $self->_base - $self->_count_base - 1;
 		my $b = substr($$seq_ref, $pos, 1);
 		my $not_b = $self->_randb($b);
-
 		substr($$seq_ref, $pos, 1) = $not_b;
 		push @errors => sprintf("%d:%s/%s", $pos + 1, $b, $not_b);
 	}
 
+	$self->_count_base($left_count);
 	return \@errors;
-}
-
-sub update_count_base {
-	my ($self, $val) = @_;
-	$self->_count_base($self->_count_base + $val);
 }
 
 sub reverse_complement {

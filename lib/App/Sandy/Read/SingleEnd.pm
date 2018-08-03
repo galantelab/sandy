@@ -22,7 +22,6 @@ sub gen_read {
 		$self->reverse_complement($read_ref);
 	}
 
-	$self->update_count_base($read_size);
 	$attr->{error} = $self->insert_sequencing_error($read_ref, $read_size);
 
 	return ($read_ref, $attr);
