@@ -71,14 +71,15 @@ __END__
                                  [default:"paired-end"]
   -q, --quality-profile          sequencing system profiles from quality
                                  database [default:"poisson"]
-  -e, --sequencing-error         sequencing error rate
-                                 [default:"0.005"; Number]
-  -r, --read-size                the read size [default:"100"; Integer]
-                                 the quality_profile from database overrides
-                                 this value
-  -m, --fragment-mean            the fragment mean size for paired-end reads
+  -e, --sequencing-error         sequencing error rate for poisson
+                                 [default:"0.001"; Number]
+  -m, --read-mean                read mean size for poisson
+                                 [default:"100"; Integer]
+  -d, --read-stdd                read standard deviation size for poisson
+                                 [default:"0"; Integer]
+  -M, --fragment-mean            the fragment mean size for paired-end reads
                                  [default:"300"; Integer]
-  -d, --fragment-stdd            the fragment standard deviation size for
+  -D, --fragment-stdd            the fragment standard deviation size for
                                  paired-end reads [default:"50"; Integer]
 
 =head1 OPTIONS
@@ -156,6 +157,8 @@ B<Common escape characters>
 	 %R           read 1, or 2 if it is the paired-end mate
 	 %U           read number
 	 %r           read size
+	 %m           read mean
+	 %d           read standard deviation
 	 %c           sequence id as chromossome, gene/transcript id
 	 %C           sequence id type (reference or alternate non reference allele) ***
 	 %s           read strand
@@ -177,8 +180,8 @@ B<Paired-end specific escape characters>
 	 %A           mate read start position regarding reference genome ***
 	 %B           mate read end position regarding reference genome ***
 	 %D           distance between the paired-reads
-	 %m           fragment mean
-	 %d           fragment standard deviation
+	 %M           fragment mean
+	 %D           fragment standard deviation
 	 %f           fragment size
 	 %F           fragment strand
 	 %S           fragment start position
@@ -206,10 +209,15 @@ the number of jobs (--jobs) set, because each job receives a different
 seed calculated from the I<main seed>. So, for reproducibility, the
 same seed set before needs the same number of jobs set before as well.
 
-=item B<--read-size>
+=item B<--read-mean>
 
-Sets the read size, if quality-profile is equal to 'poisson'. The
+Sets the read mean if quality-profile is equal to 'poisson'. The
 quality-profile from database overrides the read-size
+
+=item B<--read-stdd>
+
+Sets the read standard deviation if quality-profile is equal to
+'poisson'. The quality-profile from database overrides the read-stdd
 
 =item B<--number-of-reads>
 
@@ -232,7 +240,8 @@ fragment standard deviation
 
 =item B<--sequencing-error>
 
-Sets the sequencing error rate. Valid values are between zero and one
+Sets the sequencing error rate if quality-profile is equal to 'poisson'.
+Valid values are between zero and one
 
 =item B<--quality-profile>
 
