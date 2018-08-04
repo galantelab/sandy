@@ -30,7 +30,7 @@ has 'piece_table' => (
 		_get_piece     => 'get',
 		_splice_piece  => 'splice',
 		_count_pieces  => 'count',
-		_all_píeces    => 'elements'
+		_all_pieces    => 'elements'
 	}
 );
 
@@ -248,7 +248,7 @@ sub calculate_logical_offset {
 	my $offset_acm = 0;
 
 	# Insert each piece reference into a tree
-	for my $piece ($self->_all_píeces) {
+	for my $piece ($self->_all_pieces) {
 		# Update piece offset
 		$piece->{offset} = $offset_acm;
 
