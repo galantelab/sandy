@@ -2,12 +2,12 @@ package TestsFor::App::Sandy::Simulator;
 # ABSTRACT: Tests for 'App::Sandy::Simulator' class
 
 use App::Sandy::Base 'test';
-use App::Sandy::Fastq::SingleEnd;
-use App::Sandy::Fastq::PairedEnd;
+use App::Sandy::Seq::SingleEnd;
+use App::Sandy::Seq::PairedEnd;
 use autodie;
 
 use base 'TestsFor';
- 
+
 use constant {
 	VERBOSE           => 0,
 	COUNT_LOOPS_BY    => 'coverage',
@@ -18,7 +18,7 @@ use constant {
 	SEQUENCING_SYSTEM => 'poisson',
 	SEED              => time,
 	JOBS              => 2,
-	OUTPUT_GZIP       => 0,
+	FORMAT            => 'fastq',
 	SEQ_SYS           => 'poisson',
 	QUALITY_SIZE      => 10,
 	GENOME            => '.data.fa',
@@ -93,36 +93,43 @@ sub setup : Tests(setup) {
 	$test->SUPER::setup;
 
 	my %default_attr = (
-		prefix         => PREFIX,
-		output_gzip    => OUTPUT_GZIP,
-		fasta_file     => GENOME,
-		coverage       => COVERAGE,
-		jobs           => JOBS,
-		seqid_weight   => 'length',
-		count_loops_by => 'coverage',
-		strand_bias    => 'random',
-		seed           => SEED
+		argv             => [qw/ponga 1 2 3 4 5/],
+		truncate         => 0,
+		join_paired_ends => 0,
+		prefix           => PREFIX,
+		fasta_file       => GENOME,
+		coverage         => COVERAGE,
+		jobs             => JOBS,
+		output_format    => FORMAT,
+		seqid_weight     => 'length',
+		count_loops_by   => 'coverage',
+		strand_bias      => 'random',
+		seed             => SEED
 	);
-	
+
 	my %sg_single_end = (
 		%default_attr,
-		fastq => App::Sandy::Fastq::SingleEnd->new(
+		seq => App::Sandy::Seq::SingleEnd->new(
 			quality_profile   => 'poisson',
-			read_size         => QUALITY_SIZE,
+			read_mean         => QUALITY_SIZE,
+			read_stdd         => 0,
 			sequencing_error  => 0.1,
-			template_id       => 'sr0001 simulation_read length=%r position=%c:%t-%n'
+			template_id       => 'sr0001 simulation_read length=%r position=%c:%t-%n',
+			format            => FORMAT
 		)
 	);
 
 	my %sg_paired_end = (
 		%default_attr,
-		fastq => App::Sandy::Fastq::PairedEnd->new(
+		seq => App::Sandy::Seq::PairedEnd->new(
 			quality_profile   => 'poisson',
-			read_size         => QUALITY_SIZE,
+			read_mean         => QUALITY_SIZE,
+			read_stdd         => 0,
 			sequencing_error  => 0.1,
 			fragment_mean     => 50,
 			fragment_stdd     => 10,
-			template_id       => 'sr0001 simulation_read length=%r position=%c:%t-%n'
+			template_id       => 'sr0001 simulation_read length=%r position=%c:%t-%n',
+			format            => FORMAT
 		)
 	);
 
@@ -137,7 +144,7 @@ sub cleanup : Tests(shutdown) {
 	$test->SUPER::shutdown;
 }
 
-sub constructor : Tests(18) {
+sub constructor : Tests(24) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
@@ -187,13 +194,13 @@ sub run_simulation : Tests(9) {
 
 	my ($chr_acm, $entries) = $fastq_count->($output_single_end);
 
-	is int((GENOME_SIZE * $sg->coverage) / $sg->fastq->read_size), $entries,
+	is int((GENOME_SIZE * $sg->coverage) / $sg->seq->read_mean), $entries,
 		"run_simulation must create a fastq with the right number of entries for single-end";
 
 	my $str_sort = join " " => sort { $chr_acm->{$a} <=> $chr_acm->{$b} } keys %$chr_acm;
 	ok((lc $str_sort eq lc "Chr2 Chr3 Chr5 Chr1 Chr4" || lc $str_sort eq lc "Chr3 Chr2 Chr5 Chr1 Chr4"),
 		"chromossome frequency must follow a weighted raffle pattern for single-end");
-		
+
 	unlink $output_single_end;
 
 	# Testing paired-end
@@ -206,17 +213,15 @@ sub run_simulation : Tests(9) {
 
 		($chr_acm, $entries) = $fastq_count->($output_paired_end->[$i]);
 
-		is int((GENOME_SIZE * $sg->coverage) / ($sg->fastq->read_size * 2)), $entries,
+		is int((GENOME_SIZE * $sg->coverage) / ($sg->seq->read_mean * 2)), $entries,
 			"run_simulation must create a fastq with the right number of entries for paired-end $i";
 
 		my $str_sort = join " " => sort { $chr_acm->{$a} <=> $chr_acm->{$b} } keys %$chr_acm;
 		ok((lc $str_sort eq lc "Chr2 Chr3 Chr5 Chr1 Chr4" || lc $str_sort eq lc "Chr3 Chr2 Chr5 Chr1 Chr4"),
 			"chromossome frequency must follow a weighted raffle pattern ($str_sort) for paired-end $i");
-			
+
 		unlink $output_paired_end->[$i];
 	}
 
 	unlink $output_counts;
 }
-
-## --- end class TestsFor::Simulator

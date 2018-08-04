@@ -16,6 +16,7 @@ sub startup : Tests(startup) {
 	$class->mk_classdata('seq_len');
 	$class->mk_classdata('table');
 	$class->mk_classdata('table_seq');
+	$class->mk_classdata('slice_len');
 }
 
 sub setup : Tests(setup) {
@@ -25,7 +26,6 @@ sub setup : Tests(setup) {
 
 	my %default_attr = (
 		sequencing_error => 0.1,
-		read_size        => 10,
 		%child_arg
 	);
 
@@ -36,6 +36,7 @@ sub setup : Tests(setup) {
 	$test->default_read($test->class_to_test->new(%default_attr));
 	$test->seq($seq);
 	$test->seq_len(length $seq);
+	$test->slice_len(10);
 	$test->table(App::Sandy::PieceTable->new(orig => \$table_seq));
 }
 
@@ -58,7 +59,7 @@ sub subseq_seq : Test(5) {
 	my $read = $test->default_read;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
-	my $slice_len = $read->read_size;
+	my $slice_len = $test->slice_len;
 
 	my ($read_seq1_ref, $pos1) = $read->subseq(\$seq, $seq_len, $slice_len, 0);
 
@@ -87,12 +88,11 @@ sub subseq_err : Test(60) {
 	my $read = $test->default_read;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
-	my $slice_len = $read->read_size;
+	my $slice_len = $test->slice_len;
 
 	for my $i (0..9) {
 		my ($seq_t_ref, $pos) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
-		$read->update_count_base($read->read_size);
-		$read->insert_sequencing_error($seq_t_ref);
+		$read->insert_sequencing_error($seq_t_ref, $slice_len);
 
 		ok index($seq, $$seq_t_ref) < 0,
 			"Sequence with error must be outside seq in subseq_rand Try $i";
@@ -103,8 +103,7 @@ sub subseq_err : Test(60) {
 
 	for my $i (0..9) {
 		my ($seq_t_ref, $pos) = $read->subseq(\$seq, $seq_len, $slice_len, $i * 10);
-		$read->update_count_base($read->read_size);
-		$read->insert_sequencing_error($seq_t_ref);
+		$read->insert_sequencing_error($seq_t_ref, $slice_len);
 
 		ok index($seq, $$seq_t_ref) < 0,
 			"Sequence with error must be outside seq in subseq Try $i";
@@ -120,16 +119,14 @@ sub subseq_err : Test(60) {
 
 	for my $i (0..9) {
 		my ($seq_t_ref, $pos) = $read2->subseq_rand(\$seq, $seq_len, $slice_len);
-		$read2->update_count_base($read2->read_size);
-		$read2->insert_sequencing_error($seq_t_ref);
+		$read2->insert_sequencing_error($seq_t_ref, $slice_len);
 		ok index($seq, $$seq_t_ref) >= 0,
 			"Sequence with sequencing_error = 0 must be inside seq in subseq_rand Try $i";
 	}
 
 	for my $i (0..9) {
 		my ($seq_t_ref, $pos) = $read2->subseq(\$seq, $seq_len, $slice_len, $i * 10);
-		$read2->update_count_base($read2->read_size);
-		$read2->insert_sequencing_error($seq_t_ref);
+		$read2->insert_sequencing_error($seq_t_ref, $slice_len);
 		ok index($seq, $$seq_t_ref) >= 0,
 			"Sequence with sequencing_error = 0 must be inside seq in subseq Try $i";
 	}
@@ -141,7 +138,7 @@ sub reverse_complement :Test(1) {
 	my $read = $test->default_read;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
-	my $slice_len = $read->read_size;
+	my $slice_len = $test->slice_len;
 
 	my $seq_rev1 = $seq;
 	$read->reverse_complement(\$seq_rev1);
@@ -175,7 +172,7 @@ sub subseq_rand_ptable : Test(20) {
 
 	for my $i (1..10) {
 		my ($seq_ref, $attr) = $read->subseq_rand_ptable($table,
-			$table->logical_len, $len);
+			$table->logical_len, $len, $len);
 		my $true_seq = substr $alt_seq, $attr->{start} - 1, $len;
 		ok $$seq_ref eq $true_seq,
 			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";
@@ -194,7 +191,7 @@ sub subseq_rand_ptable : Test(20) {
 
 	for my $i (1..10) {
 		my ($seq_ref, $attr) = $read->subseq_rand_ptable($table,
-			$table->logical_len, $len);
+			$table->logical_len, $len, $len);
 		my $true_seq = substr $alt_seq2, $attr->{start} - 1, $len;
 		ok $$seq_ref eq $true_seq,
 			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";

@@ -26,7 +26,7 @@ sub setup : Tests(setup) {
 	$test->table_read->calculate_logical_offset;
 }
 
-sub constructor : Tests(9) {
+sub constructor : Tests(8) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
@@ -37,30 +37,19 @@ sub constructor : Tests(9) {
 		can_ok $read, $attr;
 		is $read->$attr, $value,"The value for $attr shold be correct";
 	}
-
-	my %attrs = %default_attr;
-
-	$attrs{fragment_mean} = 50;
-	$attrs{read_size} = 51;
-	throws_ok { $class->new(%attrs) }
-	qr/must be greater or equal/,
-		"Setting fragment_mean to less than read_size should fail";
 }
 
-sub gen_read : Tests(62) {
+sub gen_read : Tests(61) {
 	my $test = shift;
 
 	my $read = $test->default_read;
 	my $seq = $test->seq;
+	my $read_size = $test->slice_len;
 	my $table = $test->table_read;
-
-	throws_ok { $read->gen_read($table, $read->read_size - 1, 1) }
-	qr/must be greater or equal to fragment_mean/,
-		"Sequence length lesser than read_size must return error";
 
 	my $err = 0;
 	for (1..100) {
-		my ($r1_ref, $r2_ref, $attr) = $read->gen_read($table, $table->logical_len, 1);
+		my ($r1_ref, $r2_ref, $attr) = $read->gen_read($table, $table->logical_len, $read_size, 1);
 		$err++ unless defined $$r1_ref && defined $$r2_ref;
 	}
 
@@ -68,10 +57,10 @@ sub gen_read : Tests(62) {
 
 	for my $i (0..9) {
 		#For leader strand
-		my ($r1_ref, $r2_ref, $attr) = $read->gen_read($table, $table->logical_len, 1);
+		my ($r1_ref, $r2_ref, $attr) = $read->gen_read($table, $table->logical_len, $read_size, 1);
 		ok index($seq, $$r1_ref) < 0,
 			"Sequence with error must be outside seq in gen_read (PairEnd -> read1). Try $i";
-		my $r1_l1 = substr $$r1_ref, 0, $read->read_size - 1;
+		my $r1_l1 = substr $$r1_ref, 0, $read_size - 1;
 		ok index($seq, $r1_l1) >= 0,
 			"Sequence with error (but last char -> err) must be inside seq in gen_read (PairedEnd -> read1). Try $i";
 		is index($seq, $r1_l1), $attr->{start} - 1,
@@ -80,7 +69,7 @@ sub gen_read : Tests(62) {
 		$read->reverse_complement($r2_ref);
 		ok index($seq, $$r2_ref) < 0,
 			"Sequence with error must be outside seq in gen_read (PairEnd -> read2). Try $i";
-		my $r2_f1 = substr $$r2_ref, 1, $read->read_size;
+		my $r2_f1 = substr $$r2_ref, 1, $read_size - 1;
 		ok index($seq, $r2_f1) >= 0,
 			"Sequence with error (but first char -> err) must be inside seq in gen_read (PairedEnd -> read2). Try $i";
 		is index($seq, $r2_f1), $attr->{read_start_ref},
