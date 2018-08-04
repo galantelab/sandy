@@ -5,8 +5,6 @@ use App::Sandy::Base 'role';
 use PerlIO::gzip;
 use Compress::BGZF::Writer;
 
-# VERSION
-
 sub with_open_r {
 	my ($self, $file) = @_;
 

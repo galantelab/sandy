@@ -3,8 +3,6 @@ package App::Sandy::Role::Counter;
 
 use App::Sandy::Base 'role';
 
-# VERSION
-
 sub with_make_counter {
 	# ALgorithm based in perlfaq:
 	# How do I select a random line from a file?

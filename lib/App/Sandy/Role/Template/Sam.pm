@@ -3,8 +3,6 @@ package App::Sandy::Role::Template::Sam;
 
 use App::Sandy::Base 'role';
 
-# VERSION
-
 use constant {
 	PAIRED        => 0x1,
 	PROPER_PAIR   => 0x2,

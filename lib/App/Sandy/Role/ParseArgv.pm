@@ -4,8 +4,6 @@ package App::Sandy::Role::ParseArgv;
 use App::Sandy::Base 'role';
 use Getopt::Long 'GetOptionsFromArray';
 
-# VERSION
-
 sub with_parser {
 	my ($self, $argv, @opt_spec) = @_;
 	my @argv = @{ $argv };

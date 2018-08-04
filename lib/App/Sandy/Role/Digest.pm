@@ -14,8 +14,6 @@ use List::Util 'uniq';
 
 requires qw/default_opt opt_spec rm_opt/;
 
-# VERSION
-
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
 	STRAND_BIAS_OPT       => ['random', 'plus', 'minus'],
