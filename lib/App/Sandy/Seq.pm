@@ -155,7 +155,7 @@ sub _build_template_seq {
 	my $format = $self->format;
 	my $gen_seq;
 
-	if ($format =~ 'fastq') {
+	if ($format =~ /fastq/) {
 		$gen_seq = sub { $self->with_fastq_template(@_) };
 	} elsif ($format eq 'sam') {
 		$gen_seq = sub { $self->with_sam_align_template(@_) };
