@@ -26,9 +26,11 @@ has 'fragment_stdd' => (
 sub gen_read {
 	my ($self, $ptable, $ptable_size, $read_size, $is_leader) = @_;
 
-	if ($ptable_size < $self->fragment_mean) {
-		croak sprintf "ptable_size (%d) must be greater or equal to fragment_mean (%d)"
-			=> $ptable_size, $self->fragment_mean;
+	unless ($read_size <= $self->fragment_mean && $self->fragment_mean <= $ptable_size) {
+		croak sprintf
+			"read_size (%d) must be leseer or equal to fragment_mean (%d) and\n" .
+			"fragment_mean (%d) must be lesser or equal to ptable_size (%d)"
+				=> $read_size, $self->fragment_mean, $self->fragment_mean, $ptable_size;
 	}
 
 	my $fragment_size = 0;
@@ -51,7 +53,7 @@ sub gen_read {
 
 	# Build the fragment string
 	my ($fragment_ref, $attr) = $self->subseq_rand_ptable($ptable,
-		$ptable_size, $fragment_size);
+		$ptable_size, $fragment_size, $read_size);
 
 	# Catch R1 substring
 	my $read1_ref = $self->subseq($fragment_ref, $fragment_size, $read_size, 0);

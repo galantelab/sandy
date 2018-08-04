@@ -16,7 +16,7 @@ sub gen_read {
 	}
 
 	my ($read_ref, $attr) = $self->subseq_rand_ptable($ptable,
-		$ptable_size, $read_size);
+		$ptable_size, $read_size, $read_size);
 
 	unless ($is_leader) {
 		$self->reverse_complement($read_ref);

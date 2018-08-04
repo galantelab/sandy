@@ -67,15 +67,15 @@ sub subseq_rand {
 }
 
 sub subseq_rand_ptable {
-	my ($self, $ptable, $ptable_size, $slice_len) = @_;
+	my ($self, $ptable, $ptable_size, $slice_len, $sub_slice_len) = @_;
 	my $usable_len = $ptable_size - $slice_len;
 	my $pos = int(rand($usable_len + 1));
 	my $pieces = $ptable->lookup($pos, $slice_len);
-	return $self->_build_subseq($pieces, $pos, $slice_len);
+	return $self->_build_subseq($pieces, $pos, $slice_len, $sub_slice_len);
 }
 
 sub _build_subseq {
-	my ($self, $pieces, $pos, $len) = @_;
+	my ($self, $pieces, $pos, $len, $sub_len) = @_;
 
 	my $offset = $pos - $pieces->[0]{offset};
 	my $usable_len = $pieces->[0]{len} - $offset;
@@ -110,9 +110,9 @@ sub _build_subseq {
 	# I must to make this mess in order to annotate paired-end reads :(
 	my $start_ref = $pieces->[0]{pos} + $offset;
 	my $end_ref = $start_ref + $len - 1;
-	my $read_end_ref = $start_ref + $len - 1;
+	my $read_end_ref = $start_ref + $sub_len - 1;
 	my $read_end_piece = first { $self->_is_pos_inside_piece($read_end_ref, $_) } reverse @$pieces;
-	my $read_start_ref = $end_ref - $len + 1;
+	my $read_start_ref = $end_ref - $sub_len + 1;
 	my $read_start_piece = first { $self->_is_pos_inside_piece($read_start_ref, $_) } @$pieces;
 
 	my $attr = {
@@ -136,21 +136,24 @@ sub _is_pos_inside_piece {
 
 sub insert_sequencing_error {
 	my ($self, $seq_ref, $read_size) = @_;
-
-	my $acm_base = $read_size + $self->_count_base;
-	my $num_err = int($acm_base / $self->_base);
-	my $left_count = $acm_base % $self->_base;
 	my @errors;
 
-	for (my $i = 0; $i < $num_err; $i++) {
-		my $pos = $i * $self->_base + $self->_base - $self->_count_base - 1;
-		my $b = substr($$seq_ref, $pos, 1);
-		my $not_b = $self->_randb($b);
-		substr($$seq_ref, $pos, 1) = $not_b;
-		push @errors => sprintf("%d:%s/%s", $pos + 1, $b, $not_b);
+	if ($self->sequencing_error) {
+		my $acm_base = $read_size + $self->_count_base;
+		my $num_err = int($acm_base / $self->_base);
+		my $left_count = $acm_base % $self->_base;
+
+		for (my $i = 0; $i < $num_err; $i++) {
+			my $pos = $i * $self->_base + $self->_base - $self->_count_base - 1;
+			my $b = substr($$seq_ref, $pos, 1);
+			my $not_b = $self->_randb($b);
+			substr($$seq_ref, $pos, 1) = $not_b;
+			push @errors => sprintf("%d:%s/%s", $pos + 1, $b, $not_b);
+		}
+
+		$self->_count_base($left_count);
 	}
 
-	$self->_count_base($left_count);
 	return \@errors;
 }
 
