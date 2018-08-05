@@ -155,7 +155,7 @@ _sandy_simulation() {
 			_values  'expression' $(_sandy_database_option 'expression')
 			;;
 		quality)
-			_values 'quality' 'poisson' $(_sandy_database_option 'quality')
+			_values 'quality' $(_sandy_database_option 'quality')
 			;;
 		format)
 			_values 'format' 'bam' 'sam' 'fastq.gz' 'fastq'

@@ -115,7 +115,7 @@ _sandy_genome() {
 			COMPREPLY=($(compgen -W "$(_sandy_database_option "variation")" -- "$cur"))
 			;;
 		--quality-profile|-q)
-			COMPREPLY=($(compgen -W "poisson $(_sandy_database_option "quality")" -- "$cur"))
+			COMPREPLY=($(compgen -W "$(_sandy_database_option "quality")" -- "$cur"))
 			;;
 		--sequencing-type|-t)
 			COMPREPLY=($(compgen -W "single-end paired-end" -- "$cur"))
@@ -174,7 +174,7 @@ _sandy_transcriptome() {
 			COMPREPLY=($(compgen -W "$(_sandy_database_option "expression")" -- "$cur"))
 			;;
 		--quality-profile|-q)
-			COMPREPLY=($(compgen -W "poisson $(_sandy_database_option "quality")" -- "$cur"))
+			COMPREPLY=($(compgen -W "$(_sandy_database_option "quality")" -- "$cur"))
 			;;
 		--sequencing-type|-t)
 			COMPREPLY=($(compgen -W "single-end paired-end" -- "$cur"))

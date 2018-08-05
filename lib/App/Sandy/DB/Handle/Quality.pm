@@ -7,7 +7,20 @@ use IO::Compress::Gzip 'gzip';
 use IO::Uncompress::Gunzip 'gunzip';
 use Storable qw/nfreeze thaw/;
 
-use constant PARTIL => 10;
+use constant {
+	PARTIL          => 10,
+	DEFAULT_PROFILE => {
+		poisson => {
+			'mean'     => '-m',
+			'stdd'     => '-d',
+			'error'    => '-e',
+			'type'     => 'both',
+			'source'   => 'default',
+			'provider' => 'vendor',
+			'date'     => '2018-08-01'
+		}
+	}
+};
 
 with qw{
 	App::Sandy::Role::IO
@@ -20,10 +33,11 @@ with qw{
 sub insertdb {
 	my ($self, $file, $name, $source, $is_user_provided, $error, $single_molecule, $type) = @_;
 	my $schema = App::Sandy::DB->schema;
+	my %default_profile = %{ &DEFAULT_PROFILE };
 
 	log_msg ":: Checking if there is already a quality-profile '$name' ...";
 	my $rs = $schema->resultset('QualityProfile')->find({ name => $name });
-	if ($rs) {
+	if ($rs || $default_profile{$name}) {
 		die "There is already a quality-profile '$name'\n";
 	} else {
 		log_msg ":: quality-profile '$name' not found";
@@ -200,6 +214,11 @@ sub _wcl {
 sub retrievedb {
 	my ($self, $quality_profile) = @_;
 	my $schema = App::Sandy::DB->schema;
+	my %default_profile = %{ &DEFAULT_PROFILE };
+
+	if ($default_profile{$quality_profile}) {
+		die "Cannot retrieve '$quality_profile' because it is based on a theoretical distribution\n";
+	}
 
 	my $rs = $schema->resultset('QualityProfile')->find({ name => $quality_profile });
 	die "'$quality_profile' not found into database\n" unless defined $rs;
@@ -219,14 +238,20 @@ sub retrievedb {
 sub deletedb {
 	my ($self, $quality_profile) = @_;
 	my $schema = App::Sandy::DB->schema;
+	my %default_profile = %{ &DEFAULT_PROFILE };
 
 	log_msg ":: Checking if there is a quality-profile '$quality_profile' ...";
 	my $rs = $schema->resultset('QualityProfile')->find({ name => $quality_profile });
-	die "'$quality_profile' not found into database\n" unless defined $rs;
+
+	unless ($rs || $default_profile{$quality_profile}) {
+		die "'$quality_profile' not found into database\n";
+	}
 
 	log_msg ":: Found '$quality_profile'";
-	die "'$quality_profile' is not a user provided entry. Cannot be deleted\n"
-		unless $rs->is_user_provided;
+
+	if (($rs && !$rs->is_user_provided) || $default_profile{$quality_profile}) {
+		die "'$quality_profile' is not a user provided entry. Cannot be deleted\n";
+	}
 
 	log_msg ":: Removing '$quality_profile' entry ...";
 
@@ -272,7 +297,7 @@ sub restoredb {
 sub make_report {
 	my $self = shift;
 	my $schema = App::Sandy::DB->schema;
-	my %report;
+	my %report = %{ &DEFAULT_PROFILE };
 
 	my $rs = $schema->resultset('QualityProfile')->search(undef);
 
