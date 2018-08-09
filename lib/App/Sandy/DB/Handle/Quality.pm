@@ -17,7 +17,7 @@ use constant {
 			'type'     => 'both',
 			'source'   => 'default',
 			'provider' => 'vendor',
-			'date'     => '2018-08-01'
+			'date'     => '2018-08-08'
 		}
 	}
 };
