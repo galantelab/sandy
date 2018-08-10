@@ -1,10 +1,4 @@
 FROM perl:latest
-
-LABEL \
-	maintainer="Thiago L. A. Miller" \
-	email="<tmiller@mochsl.org.br>" \
-	description="Docker image for the sandy project"
-
+LABEL maintainer="tmiller@mochsl.org.br"
 RUN cpanm App::Sandy
-
 ENTRYPOINT ["sandy"]
