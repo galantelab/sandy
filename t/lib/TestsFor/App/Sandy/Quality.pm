@@ -6,7 +6,7 @@ use autodie;
 use base 'TestsFor';
 
 use constant {
-	SEQ_SYS       => "poisson", 
+	SEQ_SYS       => "poisson",
 	QUALITY_SIZE  => 10
 };
 
@@ -25,7 +25,6 @@ sub setup : Tests(setup) {
 
 	my %default_attr = (
 		quality_profile => SEQ_SYS,
-		read_size       => QUALITY_SIZE,
 		%child_arg
 	);
 
@@ -33,7 +32,7 @@ sub setup : Tests(setup) {
 	$test->default_quality($test->class_to_test->new(%default_attr));
 }
 
-sub constructor : Tests(5) {
+sub constructor : Tests(2) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
@@ -44,23 +43,18 @@ sub constructor : Tests(5) {
 		can_ok $quality, $attr;
 		is lc $quality->$attr, lc $value, "The value for $attr shold be correct";
 	}
-
-	my %attrs = %default_attr;
-	$attrs{read_size} = 0;
-	throws_ok { $class->new(%attrs) }
-	qr/must be an integer greater than zero/,
-		"Setting read_size to less than zero should fail";
 }
 
 sub gen_quality : Test(10) {
 	my $test = shift;
 
+	my $size = QUALITY_SIZE;
 	my $class = $test->class_to_test;
 	my $quality = $test->default_quality;
-	
+
 	for my $i (1..10) {
-		my $q = $quality->gen_quality;
-		is length $$q, $quality->read_size,
+		my $q = $quality->gen_quality($size);
+		is length $$q, $size,
 			"quality length should be equal read_size. Try $i";
 	}
 }

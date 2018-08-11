@@ -3,11 +3,12 @@ package App::Sandy::Role::RunTimeTemplate;
 
 use App::Sandy::Base 'role';
 
-our $VERSION = '0.18'; # VERSION
-
-sub compile_template {
+sub with_compile_template {
 	my ($self, $template, $input_name, $sym_table) = @_;
-	die "sym_table is not a hashref" unless ref $sym_table eq 'HASH';
+	croak "sym_table is not a hashref" unless ref $sym_table eq 'HASH';
+
+	# Inactivate perl reserved characters $, @, &, #
+	$template =~ s/(?<!\\)[\$\@\#\&]/\\$&/g;
 
 	while (my ($sym, $variable) = each %$sym_table) {
 		$template =~ s/$sym/$variable/g;
@@ -35,7 +36,7 @@ App::Sandy::Role::RunTimeTemplate - Extends class with runtime printf like funct
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 AUTHORS
 
@@ -47,11 +48,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

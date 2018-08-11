@@ -23,9 +23,17 @@ __PACKAGE__->add_columns(
   { data_type => "text", default_value => "not defined", is_nullable => 1 },
   "is_user_provided",
   { data_type => "integer", default_value => 1, is_nullable => 1 },
-  "size",
+  "is_single_molecule",
   { data_type => "integer", is_nullable => 0 },
+  "mean",
+  { data_type => "integer", is_nullable => 0 },
+  "stdd",
+  { data_type => "integer", is_nullable => 0 },
+  "error",
+  { data_type => "real", is_nullable => 0 },
   "deepth",
+  { data_type => "integer", is_nullable => 0 },
+  "partil",
   { data_type => "integer", is_nullable => 0 },
   "matrix",
   { data_type => "blob", is_nullable => 0 },
@@ -40,8 +48,8 @@ __PACKAGE__->set_primary_key("id");
 __PACKAGE__->add_unique_constraint("name_unique", ["name"]);
 
 
-# Created by DBIx::Class::Schema::Loader v0.07049 @ 2018-05-05 21:23:49
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lWFnfokFcc/WdefeS5wbnw
+# Created by DBIx::Class::Schema::Loader v0.07049 @ 2018-07-31 20:22:50
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:5r74uIOy2yUdN9U2wz3kmg
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
@@ -59,7 +67,7 @@ App::Sandy::DB::Schema::Result::QualityProfile
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 NAME
 
@@ -92,12 +100,32 @@ App::Sandy::DB::Schema::Result::QualityProfile
   default_value: 1
   is_nullable: 1
 
-=head2 size
+=head2 is_single_molecule
 
   data_type: 'integer'
   is_nullable: 0
 
+=head2 mean
+
+  data_type: 'integer'
+  is_nullable: 0
+
+=head2 stdd
+
+  data_type: 'integer'
+  is_nullable: 0
+
+=head2 error
+
+  data_type: 'real'
+  is_nullable: 0
+
 =head2 deepth
+
+  data_type: 'integer'
+  is_nullable: 0
+
+=head2 partil
 
   data_type: 'integer'
   is_nullable: 0
@@ -141,11 +169,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

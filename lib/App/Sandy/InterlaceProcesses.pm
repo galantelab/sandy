@@ -3,7 +3,7 @@ package App::Sandy::InterlaceProcesses;
 
 use App::Sandy::Base 'class';
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 has 'foreign_pid' => (
 	is       => 'ro',
@@ -34,8 +34,10 @@ sub _handle_signal {
 	my $self = shift;
 	return sub {
 		my $signame = shift;
-		$self->_add_signal($signame);
-		my $cnt = kill 'TERM' => @{ $self->foreign_pid };
+		unless ($self->signal_catched) {
+			$self->_add_signal($signame);
+			my $cnt = kill 'TERM' => @{ $self->foreign_pid };
+		}
 	};
 }
 
@@ -51,7 +53,7 @@ App::Sandy::InterlaceProcesses - Interlaces the processe id for differents proce
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 AUTHORS
 
@@ -63,11 +65,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Command::Quality';
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 use constant {
 	TYPE_OPT => ['raw', 'fastq']
@@ -15,14 +15,17 @@ override 'opt_spec' => sub {
 	super,
 	'verbose|v',
 	'quality-profile|q=s',
-	'read-size|r=i',
-	'source|s=s'
+	'source|s=s',
+	'sequencing-error|e=f',
+	'single-molecule|1'
 };
 
 sub _default_opt {
-	'verbose' => 0,
-	'type'    => 'fastq',
-	'source'  => 'not defined'
+	'verbose'          => 0,
+	'type'             => 'fastq',
+	'source'           => 'not defined',
+	'sequencing-error' => 0.001,
+	'single-molecule'  => 0
 }
 
 sub validate_args {
@@ -51,12 +54,8 @@ sub validate_opts {
 		die "Option 'quality-profile' not defined\n";
 	}
 
-	if (not exists $opts->{'read-size'}) {
-		die "Option 'read-size' not defined\n";
-	}
-
-	if ($opts->{'read-size'} <= 0) {
-		die "Option 'read-size' requires an integer greater than zero\n";
+	if (0 > $opts->{'sequencing-error'} || $opts->{'sequencing-error'} > 1)  {
+		die "Option 'sequencing-error' requires a value between zero and one, not $opts->{'sequencing-error'}\n";
 	}
 }
 
@@ -80,9 +79,10 @@ sub execute {
 	$self->insertdb(
 		$file,
 		$opts->{'quality-profile'},
-		$opts->{'read-size'},
 		$opts->{'source'},
 		1,
+		$opts->{'sequencing-error'},
+		$opts->{'single-molecule'},
 		$opts->{'type'}
 	);
 
@@ -101,24 +101,27 @@ App::Sandy::Command::Quality::Add - quality subcommand class. Add a quality prof
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 SYNOPSIS
 
- sandy quality add -q <entry name> -r <size> [-s <source>] FILE
+ sandy quality add -q <entry name> [-s <source>] [-e <error>] [-1] FILE
 
  Arguments:
-  a file (fastq or a matrix with only quality entries)
+  a file (fastq or a matrix with quality entries only)
 
  Mandatory options:
-  -q, --quality-profile    quality-profile name for the database [required]
-  -r, --read-size          the read-size to be used for the quality [required, Integer]
+  -q, --quality-profile    a quality-profile name
 
  Options:
   -h, --help               brief help message
-  -M, --man                full documentation
+  -u, --man                full documentation
   -v, --verbose            print log messages
-  -s, --source             qaulity-profile source detail for database
+  -s, --source             quality-profile source detail for database
+  -1, --single-molecule    constraint to single-molecule sequencing
+                           (as Pacbio and Nanopore)
+  -e, --sequencing-error   sequencing error rate
+                           [default:"0.001"; Number]
 
 =head1 DESCRIPTION
 
@@ -134,11 +137,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

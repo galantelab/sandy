@@ -4,21 +4,22 @@ package App::Sandy::Role::Digest;
 use App::Sandy::Base 'role';
 use App::Sandy::DB::Handle::Quality;
 use App::Sandy::DB::Handle::Expression;
-use App::Sandy::Fastq::SingleEnd;
-use App::Sandy::Fastq::PairedEnd;
+use App::Sandy::DB::Handle::Variation;
+use App::Sandy::Seq::SingleEnd;
+use App::Sandy::Seq::PairedEnd;
 use App::Sandy::Simulator;
 use Path::Class 'file';
 use File::Path 'make_path';
+use List::Util 'uniq';
 
 requires qw/default_opt opt_spec rm_opt/;
-
-our $VERSION = '0.18'; # VERSION
 
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
 	STRAND_BIAS_OPT       => ['random', 'plus', 'minus'],
 	SEQID_WEIGHT_OPT      => ['length', 'same', 'count'],
-	SEQUENCING_TYPE_OPT   => ['single-end', 'paired-end']
+	SEQUENCING_TYPE_OPT   => ['single-end', 'paired-end'],
+	OUTPUT_FORMAT_OPT     => ['fastq', 'fastq.gz', 'sam', 'bam']
 };
 
 override 'opt_spec' => sub {
@@ -26,25 +27,29 @@ override 'opt_spec' => sub {
 	my @rm_opt = $self->rm_opt;
 
 	my %all_opt = (
-		'seed'              => 'seed|s=i',
-		'prefix'            => 'prefix|p=s',
-		'id'                => 'id|I=s',
-		'append-id'         => 'append-id|i=s',
-		'verbose'           => 'verbose|v',
-		'output-dir'        => 'output-dir|o=s',
-		'jobs'              => 'jobs|j=i',
-		'gzip'              => 'gzip|z!',
-		'coverage'          => 'coverage|c=f',
-		'read-size'         => 'read-size|r=i',
-		'fragment-mean'     => 'fragment-mean|m=i',
-		'fragment-stdd'     => 'fragment-stdd|d=i',
-		'sequencing-error'  => 'sequencing-error|e=f',
-		'sequencing-type'   => 'sequencing-type|t=s',
-		'quality-profile'   => 'quality-profile|q=s',
-		'strand-bias'       => 'strand-bias|b=s',
-		'seqid-weight'      => 'seqid-weight|w=s',
-		'number-of-reads'   => 'number-of-reads|n=i',
-		'expression-matrix' => 'expression-matrix|f=s'
+		'seed'                       => 'seed|s=i',
+		'prefix'                     => 'prefix|p=s',
+		'id'                         => 'id|I=s',
+		'append-id'                  => 'append-id|i=s',
+		'output-format'              => 'output-format|O=s',
+		'join-paired-ends'           => 'join-paired-ends|1',
+		'verbose'                    => 'verbose|v',
+		'output-dir'                 => 'output-dir|o=s',
+		'jobs'                       => 'jobs|j=i',
+		'coverage'                   => 'coverage|c=f',
+		'read-mean'                  => 'read-mean|m=i',
+		'read-stdd'                  => 'read-stdd|d=i',
+		'fragment-mean'              => 'fragment-mean|M=i',
+		'fragment-stdd'              => 'fragment-stdd|D=i',
+		'sequencing-error'           => 'sequencing-error|e=f',
+		'sequencing-type'            => 'sequencing-type|t=s',
+		'quality-profile'            => 'quality-profile|q=s',
+		'strand-bias'                => 'strand-bias|b=s',
+		'seqid-weight'               => 'seqid-weight|w=s',
+		'number-of-reads'            => 'number-of-reads|n=i',
+		'expression-matrix'          => 'expression-matrix|f=s',
+		'structural-variation'       => 'structural-variation|a=s@',
+		'structural-variation-regex' => 'structural-variation-regex|A=s@'
 	);
 
 	for my $opt (@rm_opt) {
@@ -57,9 +62,16 @@ override 'opt_spec' => sub {
 sub _log_msg_opt {
 	my ($self, $opts) = @_;
 	while (my ($key, $value) = each %$opts) {
-		next if ref($value) =~ /Fastq/;
+		next if ref($value) =~ /Seq/;
+		next if $key eq 'argv';
 		next if not defined $value;
+
 		$key =~ s/_/ /g;
+
+		if (ref $value eq 'ARRAY') {
+			$value = join ', ' => @$value;
+		}
+
 		log_msg "  => $key $value";
 	}
 }
@@ -71,6 +83,11 @@ sub _quality_profile_report {
 
 sub _expression_matrix_report {
 	state $report = App::Sandy::DB::Handle::Expression->new->make_report;
+	return $report;
+}
+
+sub _structural_variation_report {
+	state $report = App::Sandy::DB::Handle::Variation->new->make_report;
 	return $report;
 }
 
@@ -103,12 +120,14 @@ sub validate_opts {
 	$self->fill_opts($opts, \%default_opt);
 
 	# Possible alternatives
-	my %STRAND_BIAS       = map { $_ => 1 } @{ &STRAND_BIAS_OPT     };
-	my %SEQID_WEIGHT      = map { $_ => 1 } @{ &SEQID_WEIGHT_OPT    };
-	my %SEQUENCING_TYPE   = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT };
-	my %COUNT_LOOPS_BY    = map { $_ => 1 } @{ &COUNT_LOOPS_BY_OPT  };
-	my %QUALITY_PROFILE   = %{ $self->_quality_profile_report };
-	my %EXPRESSION_MATRIX = %{ $self->_expression_matrix_report };
+	my %STRAND_BIAS          = map { $_ => 1 } @{ &STRAND_BIAS_OPT     };
+	my %SEQID_WEIGHT         = map { $_ => 1 } @{ &SEQID_WEIGHT_OPT    };
+	my %SEQUENCING_TYPE      = map { $_ => 1 } @{ &SEQUENCING_TYPE_OPT };
+	my %COUNT_LOOPS_BY       = map { $_ => 1 } @{ &COUNT_LOOPS_BY_OPT  };
+	my %OUTPUT_FORMAT        = map { $_ => 1 } @{ &OUTPUT_FORMAT_OPT   };
+	my %QUALITY_PROFILE      = %{ $self->_quality_profile_report      };
+	my %EXPRESSION_MATRIX    = %{ $self->_expression_matrix_report    };
+	my %STRUCTURAL_VARIATION = %{ $self->_structural_variation_report };
 
 	#  prefix
 	if ($opts->{prefix} =~ /([\/\\])/) {
@@ -120,29 +139,64 @@ sub validate_opts {
 		die "Option 'jobs' requires an integer greater than zero, not $opts->{jobs}\n";
 	}
 
-	# 0 <= sequencing_error <= 1
-	if (0 > $opts->{'sequencing-error'} || $opts->{'sequencing-error'} > 1)  {
-		die "Option 'sequencing-error' requires a value between zero and one, not $opts->{'sequencing-error'}\n";
-	}
-
 	# quality_profile
-	# If the quality_profile is 'poisson', then check the read-size.
-	# Else look for the quality-profile into the database 
+	# If the quality_profile is 'poisson', then check the read-mean and rad-stdd.
+	# Else look for the quality-profile into the database
 	if ($opts->{'quality-profile'} eq 'poisson') {
-		# 0 < read-size <= 101
-		if (0 > $opts->{'read-size'}) {
-			die "Option 'read-size' requires an integer greater than zero, not $opts->{'read-size'}\n";
+		if (0 >= $opts->{'read-mean'}) {
+			die "Option 'read-mean' requires an integer greater than zero, not $opts->{'read-mean'}\n";
+		}
+
+		if (0 > $opts->{'read-stdd'}) {
+			die "Option 'read-stdd' requires an integer greater or equal to zero, not $opts->{'read-stdd'}\n";
+		}
+
+		# 0 <= sequencing_error <= 1
+		if (0 > $opts->{'sequencing-error'} || $opts->{'sequencing-error'} > 1)  {
+			die "Option 'sequencing-error' requires a value between zero and one, not $opts->{'sequencing-error'}\n";
 		}
 	} else {
-		if (exists $QUALITY_PROFILE{$opts->{'quality-profile'}}) {
+		if (%QUALITY_PROFILE && exists $QUALITY_PROFILE{$opts->{'quality-profile'}}) {
 			my $entry = $QUALITY_PROFILE{$opts->{'quality-profile'}};
 			# It is necessary for the next validations, so
 			# I set the opts read-size for the value that will be used
 			# afterwards
-			$opts->{'read-size'} = $entry->{'size'};
+			$opts->{'read-mean'} = $entry->{'mean'};
+			$opts->{'read-stdd'} = $entry->{'stdd'};
+			$opts->{'sequencing-error'} = $entry->{'error'};
+			$opts->{'sequencing-type'} = 'single-end' if $entry->{'type'} eq 'single-molecule';
 		} else {
 			die "Option quality-profile='$opts->{'quality-profile'}' does not exist into the database.\n",
 				"Please check '$progname quality' to see the available profiles or use '--quality-profile=poisson'\n";
+		}
+	}
+
+	# structural-variation
+	if (exists $opts->{'structural-variation'}) {
+		for my $sv (split(/,/ => join(',', @{ $opts->{'structural-variation'} }))) {
+			unless (%STRUCTURAL_VARIATION && exists $STRUCTURAL_VARIATION{$sv}) {
+				die "Option structural-variation='$sv' does not exist into the database.\n",
+					"Please check '$progname variation' to see the available structural variations\n";
+			}
+		}
+	}
+
+	# structural-variation-regex
+	if (exists $opts->{'structural-variation-regex'}) {
+		for my $sv_pattern (split(/,/ => join(',', @{ $opts->{'structural-variation-regex'} }))) {
+			my $pattern = qr/$sv_pattern/;
+			my $fail = 1;
+			for my $sv (keys %STRUCTURAL_VARIATION) {
+				if ($sv =~ /$pattern/)	 {
+					$fail = 0;
+					last;
+				}
+			}
+
+			if ($fail) {
+				die "Option structural-variation-regex='$sv_pattern' does not exist into the database.\n",
+					"Please check '$progname variation' to see the available structural variations\n";
+			}
 		}
 	}
 
@@ -171,9 +225,9 @@ sub validate_opts {
 			die "Option 'fragment-stdd' requires an integer greater or equal to zero, not $opts->{'fragment-stdd'}\n";
 		}
 
-		# (fragment_mean - fragment_stdd) >= read_size
-		if (($opts->{'fragment-mean'} - $opts->{'fragment-stdd'}) < $opts->{'read-size'}) {
-			die "Option 'fragment-mean' minus 'fragment-stdd' requires a value greater or equal read-size, not " .
+		# (fragment_mean - fragment_stdd) >= read_mean + read_stdd
+		if (($opts->{'fragment-mean'} - $opts->{'fragment-stdd'}) < ($opts->{'read-mean'} + $opts->{'read-stdd'})) {
+			die "Option 'fragment-mean' minus 'fragment-stdd' requires a value greater or equal 'read-mean' plus 'read-stdd', not " .
 				($opts->{'fragment-mean'} - $opts->{'fragment-stdd'}) . "\n";
 		}
 	}
@@ -213,6 +267,11 @@ sub validate_opts {
 		}
 	}
 
+	if (not exists $OUTPUT_FORMAT{$opts->{'output-format'}}) {
+		my $opt = join ', ' => keys %OUTPUT_FORMAT;
+		die "Option 'output-format' requires one of these arguments: $opt not $opts->{'output-format'}\n";
+	}
+
 	# seqid-weight (SEQID_WEIGHT_OPT)
 	if (not exists $SEQID_WEIGHT{$opts->{'seqid-weight'}}) {
 		my $opt = join ', ' => keys %SEQID_WEIGHT;
@@ -226,7 +285,7 @@ sub validate_opts {
 		}
 
 		# It is defined, but the entry exists?
-		if (not exists $EXPRESSION_MATRIX{$opts->{'expression-matrix'}}) {
+		unless (%EXPRESSION_MATRIX && exists $EXPRESSION_MATRIX{$opts->{'expression-matrix'}}) {
 			die "Option expression-matrix='$opts->{'expression-matrix'}' does not exist into the database.\n",
 				"Please check '$progname expression' to see the available matrices\n";
 		}
@@ -239,6 +298,9 @@ sub execute {
 
 	my %default_opt = $self->default_opt;
 	$self->fill_opts($opts, \%default_opt);
+
+	my $report = $self->_quality_profile_report;
+	my $entry = $report->{$opts->{'quality-profile'}};
 
 	# Set if user wants a verbose log
 	$LOG_VERBOSE = $opts->{verbose};
@@ -255,18 +317,65 @@ sub execute {
 
 	# Override read-size if quality-profile comes from database
 	if ($opts->{'quality-profile'} ne 'poisson') {
-		my $report = $self->_quality_profile_report;
-		my $entry = $report->{$opts->{'quality-profile'}};
 		# Override default or user-defined value
-		$opts->{'read-size'} = $entry->{'size'};
+		$opts->{'read-mean'} = $entry->{'mean'};
+		$opts->{'read-stdd'} = $entry->{'stdd'};
+		$opts->{'sequencing-error'} = $entry->{'error'};
+		$opts->{'sequencing-type'} = 'single-end' if $entry->{'type'} eq 'single-molecule';
 	}
 
 	# Sequence identifier
-	$opts->{'id'} ||= $opts->{'sequencing-type'} eq 'paired-end' ?
-		$opts->{'paired-end-id'} :
-		$opts->{'single-end-id'};
+	$opts->{'id'} ||= $opts->{'sequencing-type'} eq 'paired-end'
+		? $opts->{'paired-end-id'}
+		: $opts->{'single-end-id'};
 
-	$opts->{id} .= " $opts->{'append-id'}" if defined $opts->{'append-id'};
+	# Append extra id
+	$opts->{'id'} .= " $opts->{'append-id'}" if defined $opts->{'append-id'};
+
+	# If bam, leave only the first field;
+	if ($opts->{'output-format'} =~ /^(bam|sam)$/) {
+		$opts->{'id'} = (split ' ' => $opts->{'id'})[0];
+	}
+
+	# In this case, try to make simulation less redundant
+	if ($opts->{'output-format'} =~ /fastq/ && $opts->{'sequencing-type'} eq 'paired-end'
+		&& $opts->{'join-paired-ends'}) {
+		# Try to guess if the user passed a char to distinguish single/paired-end reads
+		$opts->{'id'} =~ /%R/ || $opts->{'id'} =~ s/(\S+)/$1\/\%R/;
+	}
+
+	# Structural Variation
+	if ($opts->{'structural-variation'}) {
+		my @svs = split(/,/ => join(',', @{ $opts->{'structural-variation'} }));
+		@svs = uniq sort @svs;
+		$opts->{'structural-variation'} = \@svs;
+	}
+
+	# Structural Variation Regex
+	if ($opts->{'structural-variation-regex'}) {
+		my @sv_list = keys %{ $self->_structural_variation_report };
+		my @sv_patterns = split(/,/ => join(',', @{ $opts->{'structural-variation-regex'} }));
+		my @svs_rg;
+
+		for my $sv_pattern (@sv_patterns) {
+			my $pattern = qr/$sv_pattern/;
+			for (@sv_list) {
+				if (/$pattern/)	{
+					push @svs_rg => $_;
+				}
+			}
+		}
+
+		my @svs;
+
+		if ($opts->{'structural-variation'}) {
+			push @svs => @{ $opts->{'structural-variation'} };
+		}
+
+		push @svs => @svs_rg;
+		@svs = uniq sort @svs;
+		$opts->{'structural-variation'} = \@svs;
+	}
 
 	# Create output directory if it not exist
 	make_path($opts->{'output-dir'}, {error => \my $err_list});
@@ -299,48 +408,56 @@ Date $time_stamp
 HEADER
 
 	#-------------------------------------------------------------------------------
-	#  Construct the Fastq and Simulator classes
+	#  Construct the Seq and Simulator classes
 	#-------------------------------------------------------------------------------
 	my %paired_end_param = (
 		template_id       => $opts->{'id'},
+		format            => $opts->{'output-format'},
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
-		read_size         => $opts->{'read-size'},
+		read_mean         => $opts->{'read-mean'},
+		read_stdd         => $opts->{'read-stdd'},
 		fragment_mean     => $opts->{'fragment-mean'},
 		fragment_stdd     => $opts->{'fragment-stdd'}
 	);
 
 	my %single_end_param = (
 		template_id       => $opts->{'id'},
+		format            => $opts->{'output-format'},
 		quality_profile   => $opts->{'quality-profile'},
 		sequencing_error  => $opts->{'sequencing-error'},
-		read_size         => $opts->{'read-size'}
+		read_mean         => $opts->{'read-mean'},
+		read_stdd         => $opts->{'read-stdd'}
 	);
 
-	my $fastq;
+	my $seq;
 	if ($opts->{'sequencing-type'} eq 'paired-end') {
-		log_msg ":: Creating paired-end fastq generator ...";
+		log_msg ":: Creating paired-end seq generator ...";
 		$self->_log_msg_opt(\%paired_end_param);
-		$fastq = App::Sandy::Fastq::PairedEnd->new(%paired_end_param);
+		$seq = App::Sandy::Seq::PairedEnd->new(%paired_end_param);
 	} else {
-		log_msg ":: Creating single-end fastq generator ...";
+		log_msg ":: Creating single-end seq generator ...";
 		$self->_log_msg_opt(\%single_end_param);
-		$fastq = App::Sandy::Fastq::SingleEnd->new(%single_end_param);
+		$seq = App::Sandy::Seq::SingleEnd->new(%single_end_param);
 	}
 
 	my %simulator_param = (
-		fastq             => $fastq,
-		fasta_file        => $fasta_file,
-		prefix            => $opts->{'prefix'},
-		output_gzip       => $opts->{'gzip'},
-		seed              => $opts->{'seed'},
-		count_loops_by    => $opts->{'count-loops-by'},
-		number_of_reads   => $opts->{'number-of-reads'},
-		coverage          => $opts->{'coverage'},
-		jobs              => $opts->{'jobs'},
-		strand_bias       => $opts->{'strand-bias'},
-		seqid_weight      => $opts->{'seqid-weight'},
-		expression_matrix => $opts->{'expression-matrix'}
+		argv                 => $argv,
+		seq                  => $seq,
+		fasta_file           => $fasta_file,
+		truncate             => $entry->{'type'} && $entry->{'type'} eq 'single-molecule',
+		prefix               => $opts->{'prefix'},
+		output_format        => $opts->{'output-format'},
+		join_paired_ends     => $opts->{'join-paired-ends'},
+		seed                 => $opts->{'seed'},
+		count_loops_by       => $opts->{'count-loops-by'},
+		number_of_reads      => $opts->{'number-of-reads'},
+		coverage             => $opts->{'coverage'},
+		jobs                 => $opts->{'jobs'},
+		strand_bias          => $opts->{'strand-bias'},
+		seqid_weight         => $opts->{'seqid-weight'},
+		expression_matrix    => $opts->{'expression-matrix'},
+		structural_variation => $opts->{'structural-variation'}
 	);
 
 	my $simulator;
@@ -369,7 +486,7 @@ App::Sandy::Role::Digest - Wrapper on Simulator class for genome/transcriptome s
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 AUTHORS
 
@@ -381,11 +498,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

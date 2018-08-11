@@ -2,8 +2,8 @@
 abstract: 'A straightforward and complete next-generation sequencing read simulator'
 author:
   - 'Thiago L. A. Miller <tmiller@mochsl.org.br>'
-  - 'Gabriela Guardia <gguardia@mochsl.org.br>'
   - 'J. Leonel Buzzo <lbuzzo@mochsl.org.br>'
+  - 'Gabriela Guardia <gguardia@mochsl.org.br>'
   - 'Fernanda Orpinelli <forpinelli@mochsl.org.br>'
   - 'Pedro A. F. Galante <pgalante@mochsl.org.br>'
 build_requires:
@@ -12,13 +12,13 @@ build_requires:
   Test::Most: '0.35'
   Test::UseAllModules: '0'
   autodie: '0'
-  perl: '5.010'
+  perl: '5.01301'
 configure_requires:
   ExtUtils::MakeMaker: '0'
-  File::ShareDir::Install: '0.06'
-  perl: '5.010'
+  File::ShareDir::Install: '0.03'
+  perl: '5.004'
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 6.012, CPAN::Meta::Converter version 2.150010'
+generated_by: 'Dist::Zilla version 6.012, CPAN::Meta::Converter version 2.150001'
 license: gpl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -26,6 +26,7 @@ meta-spec:
 name: App-Sandy
 requires:
   Carp: '0'
+  Compress::BGZF::Writer: '0'
   DBIx::Class::Core: '0'
   DBIx::Class::Schema: '0'
   Data::OptList: '0'
@@ -36,6 +37,7 @@ requires:
   IO::Compress::Gzip: '0'
   IO::Uncompress::Gunzip: '0'
   Import::Into: '0'
+  List::Util: '0'
   Math::Random: '0.72'
   Module::Runtime: '0'
   Moose: '0'
@@ -50,14 +52,13 @@ requires:
   Pod::Usage: '0'
   Scalar::Util: '0'
   Storable: '2.51'
-  Text::SimpleTable::AutoWidth: '0'
+  Text::ASCIITable: '0'
   Try::Tiny: '0'
   base: '0'
   constant: '0'
   feature: '0'
-  if: '0'
   namespace::autoclean: '0'
-  perl: '5.010'
+  perl: '5.01301'
   strict: '0'
   'true': '0'
   utf8: '0'
@@ -66,6 +67,6 @@ resources:
   bugtracker: https://github.com/galantelab/sandy/issues
   homepage: https://galantelab.github.io/sandy/
   repository: git://github.com/galantelab/sandy.git
-version: '0.18'
-x_generated_by_perl: v5.18.4
-x_serialization_backend: 'YAML::Tiny version 1.70'
+version: '0.19'
+x_generated_by_perl: v5.22.4
+x_serialization_backend: 'YAML::Tiny version 1.73'

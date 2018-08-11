@@ -1,5 +1,5 @@
-package TestsFor::App::Sandy::Fastq;
-# ABSTRACT: Tests for 'App::Sandy::Fastq' class
+package TestsFor::App::Sandy::Seq;
+# ABSTRACT: Tests for 'App::Sandy::Seq' class
 
 use App::Sandy::Base 'test';
 use base 'TestsFor';
@@ -26,8 +26,12 @@ sub setup : Tests(setup) {
 	$test->SUPER::setup;
 
 	my %default_attr = (
-		quality_profile => SEQ_SYS,
-		read_size       => QUALITY_SIZE,
+		quality_profile  => SEQ_SYS,
+		read_mean        => QUALITY_SIZE,
+		read_stdd        => 0,
+		sequencing_error => 0.1,
+		template_id      => 'ponga_header',
+		format           => 'fastq',
 		%child_arg
 	);
 
@@ -39,7 +43,7 @@ sub setup : Tests(setup) {
 	$test->seq_len(length $seq);
 }
 
-sub constructor : Tests(4) {
+sub constructor : Tests(12) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
@@ -57,14 +61,14 @@ sub fastq_template : Tests(1) {
 
 	my $class = $test->class_to_test;
 	my $fastq = $test->default_fastq;
-	
-	my $header = "PONGA_HEADER";		
+
+	my $header = "ponga_header";
 	my $seq = "ATCGATCGAT";
-	
+	my $qual = '!!!!!!!!!!';
+
 	my $quality_size = QUALITY_SIZE;
-	my $rg = qr/\@${header}\n${seq}\n\+\n.{$quality_size}/;
-	ok ${ $fastq->fastq_template(\$header, \$seq) } =~ $rg,
+	my $rg = "\@${header}\n${seq}\n\+\n${qual}\n";
+	my $entry_ref = $fastq->_gen_seq(\$header, \$seq, \$qual);
+	ok $$entry_ref eq $rg,
 		"'fastq' should return an entry in fastq format";
 }
-
-## --- end class TestsFor::Fastq

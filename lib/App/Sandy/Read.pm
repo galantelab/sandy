@@ -2,18 +2,13 @@ package App::Sandy::Read;
 # ABSTRACT: Base class to simulate reads
 
 use App::Sandy::Base 'class';
+use List::Util 'first';
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 has 'sequencing_error' => (
 	is         => 'ro',
 	isa        => 'My:NumHS',
-	required   => 1
-);
-
-has 'read_size' => (
-	is         => 'ro',
-	isa        => 'My:IntGt0',
 	required   => 1
 );
 
@@ -71,29 +66,95 @@ sub subseq_rand {
 	return (\$read, $pos);
 }
 
-sub insert_sequencing_error {
-	my ($self, $seq_ref) = @_;
+sub subseq_rand_ptable {
+	my ($self, $ptable, $ptable_size, $slice_len, $sub_slice_len) = @_;
+	my $usable_len = $ptable_size - $slice_len;
+	my $pos = int(rand($usable_len + 1));
+	my $pieces = $ptable->lookup($pos, $slice_len);
+	return $self->_build_subseq($pieces, $pos, $slice_len, $sub_slice_len);
+}
 
-	my $err = int($self->_count_base * $self->sequencing_error);
+sub _build_subseq {
+	my ($self, $pieces, $pos, $len, $sub_len) = @_;
+
+	my $offset = $pos - $pieces->[0]{offset};
+	my $usable_len = $pieces->[0]{len} - $offset;
+
+	my @annot;
+
+	if (not $pieces->[0]{is_orig}) {
+		push @annot => @{ $pieces->[0]{annot2} } if @{ $pieces->[0]{annot2} };
+		push @annot => $pieces->[0]{annot1} if $pieces->[0]{annot1};
+	}
+
+	my $slice_len = $len < $usable_len
+		? $len
+		: $usable_len;
+
+	my $read = substr ${ $pieces->[0]{ref} }, $pieces->[0]{start} + $offset, $slice_len;
+	my $miss_len = $len - $slice_len;
+
+	for (my $i = 1; $i < @$pieces; $i++) {
+
+		push @annot => @{ $pieces->[$i]{annot2} } if @{ $pieces->[$i]{annot2} };
+		push @annot => $pieces->[$i]{annot1} if $pieces->[$i]{annot1};
+
+		$slice_len = $miss_len < $pieces->[$i]{len}
+			? $miss_len
+			: $pieces->[$i]{len};
+
+		$read .= substr ${ $pieces->[$i]{ref} }, $pieces->[$i]{start}, $slice_len;
+		$miss_len -= $slice_len;
+	}
+
+	# I must to make this mess in order to annotate paired-end reads :(
+	my $start_ref = $pieces->[0]{pos} + $offset;
+	my $end_ref = $start_ref + $len - 1;
+	my $read_end_ref = $start_ref + $sub_len - 1;
+	my $read_end_piece = first { $self->_is_pos_inside_piece($read_end_ref, $_) } reverse @$pieces;
+	my $read_start_ref = $end_ref - $sub_len + 1;
+	my $read_start_piece = first { $self->_is_pos_inside_piece($read_start_ref, $_) } @$pieces;
+
+	my $attr = {
+		'start'          => $pos + 1,
+		'end'            => $pos + $len,
+		'start_ref'      => $pieces->[0]{is_orig} ? $start_ref + 1 : 'NA',
+		'end_ref'        => $pieces->[-1]{is_orig} ? $end_ref + 1 : 'NA',
+		'read_end_ref'   => $read_end_piece->{is_orig} ? $read_end_ref + 1 : 'NA',
+		'read_start_ref' => $read_start_piece->{is_orig} ? $read_start_ref + 1 : 'NA',
+		'annot'          => \@annot
+	};
+
+	return (\$read, $attr);
+}
+
+sub _is_pos_inside_piece {
+	my ($self, $pos, $piece) = @_;
+	my $end = $piece->{pos} + $piece->{len} - 1;
+	return $pos >= $piece->{pos} && $pos <= $end;
+}
+
+sub insert_sequencing_error {
+	my ($self, $seq_ref, $read_size) = @_;
 	my @errors;
 
-	for (my $i = 0; $i < $err; $i++) {
-		$self->update_count_base(-$self->_base);
-		my $pos = $self->read_size - $self->_count_base - 1;
+	if ($self->sequencing_error) {
+		my $acm_base = $read_size + $self->_count_base;
+		my $num_err = int($acm_base / $self->_base);
+		my $left_count = $acm_base % $self->_base;
 
-		my $b = substr($$seq_ref, $pos, 1);
-		my $not_b = $self->_randb($b);
+		for (my $i = 0; $i < $num_err; $i++) {
+			my $pos = $i * $self->_base + $self->_base - $self->_count_base - 1;
+			my $b = substr($$seq_ref, $pos, 1);
+			my $not_b = $self->_randb($b);
+			substr($$seq_ref, $pos, 1) = $not_b;
+			push @errors => sprintf("%d:%s/%s", $pos + 1, $b, $not_b);
+		}
 
-		substr($$seq_ref, $pos, 1) = $not_b;
-		push @errors => { b => $b, not_b => $not_b, pos => $pos };
+		$self->_count_base($left_count);
 	}
 
 	return \@errors;
-}
-
-sub update_count_base {
-	my ($self, $val) = @_;
-	$self->_count_base($self->_count_base + $val);
 }
 
 sub reverse_complement {
@@ -119,7 +180,7 @@ App::Sandy::Read - Base class to simulate reads
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 AUTHORS
 
@@ -131,11 +192,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

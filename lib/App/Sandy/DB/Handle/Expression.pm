@@ -10,7 +10,7 @@ use Scalar::Util 'looks_like_number';
 
 with 'App::Sandy::Role::IO';
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 sub insertdb {
 	my ($self, $file, $name, $source, $is_user_provided) = @_;
@@ -50,7 +50,7 @@ sub insertdb {
 sub _index_expression_matrix {
 	my ($self, $file) = @_;
 
-	my $fh = $self->my_open_r($file);
+	my $fh = $self->with_open_r($file);
 	my %indexed_file;
 
 	my $line = 0;
@@ -187,7 +187,7 @@ App::Sandy::DB::Handle::Expression - Class to handle expression-matrix database 
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 AUTHORS
 
@@ -199,11 +199,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

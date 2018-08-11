@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Command::Expression';
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 override 'opt_spec' => sub {
 	super,
@@ -80,7 +80,7 @@ App::Sandy::Command::Expression::Add - expression subcommand class. Add an expre
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 SYNOPSIS
 
@@ -90,11 +90,11 @@ version 0.18
   an expression-matrix file
 
  Mandatory options:
-  -f, --expression-matrix    an expression-matrix entry
+  -f, --expression-matrix    an expression-matrix name
 
  Options:
   -h, --help                 brief help message
-  -M, --man                  full documentation
+  -u, --man                  full documentation
   -v, --verbose              print log messages
   -s, --source               expression-matrix source detail for database
 
@@ -123,11 +123,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

@@ -10,7 +10,7 @@ extends 'App::Sandy::CLI';
 
 with 'App::Sandy::Role::ParseArgv';
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 has 'command_stack' => (
 	traits  => ['Array'],
@@ -110,7 +110,7 @@ sub run_no_command {
 	my ($opts, $args);
 
 	try {
-		($opts, $args) = $self->parser($argv, $self->opt_spec);
+		($opts, $args) = $self->with_parser($argv, $self->opt_spec);
 	} catch {
 		$self->error("$_" . $self->_try_msg);
 	};
@@ -132,9 +132,9 @@ sub run_command {
 
 	if ($o->can('opt_spec')) {
 		try	{
-			($opts, $args) = $self->parser($argv, $o->opt_spec);	
+			($opts, $args) = $self->with_parser($argv, $o->opt_spec);
 		} catch  {
-			$self->error("$_" . $self->_try_msg);	
+			$self->error("$_" . $self->_try_msg);
 		};
 	}
 
@@ -150,7 +150,7 @@ sub run_command {
 		try {
 			$o->validate_args(\@args_copy);
 		} catch {
-			$self->error("$_" . $self->_try_msg);	
+			$self->error("$_" . $self->_try_msg);
 		};
 	}
 
@@ -158,7 +158,7 @@ sub run_command {
 		try {
 			$o->validate_opts(\%opts_copy);
 		} catch {
-			$self->error("$_" . $self->_try_msg);	
+			$self->error("$_" . $self->_try_msg);
 		};
 	}
 
@@ -215,21 +215,16 @@ sub run {
 
 	$self->_help_text unless scalar @argv;
 
-	given ($argv[0]) {
-		when (%command_map_bultin) {
-			my $command_name = shift @argv;	
-			my $command_method = $command_map_bultin{$command_name};
-			$self->$command_method(\@argv);
-		}
-		when (%command_map) {
-			$self->run_command(\@argv);
-		}
-		when (/^-/) {
-			$self->run_no_command(\@argv);
-		}
-		default {
-			$self->error("Unknown command '$argv[0]'\n" . $self->_try_msg);
-		}
+	if ($command_map_bultin{$argv[0]}) {
+		my $command_name = shift @argv;
+		my $command_method = $command_map_bultin{$command_name};
+		$self->$command_method(\@argv);
+	} elsif ($command_map{$argv[0]}) {
+		$self->run_command(\@argv);
+	} elsif ($argv[0] =~ /^-/) {
+		$self->run_no_command(\@argv);
+	} else {
+		$self->error("Unknown command '$argv[0]'\n" . $self->_try_msg);
 	}
 }
 
@@ -245,7 +240,7 @@ App::Sandy::CLI::App - App::Sandy::CLI subclass for command line application int
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 SYNOPSIS
 
@@ -332,11 +327,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 
