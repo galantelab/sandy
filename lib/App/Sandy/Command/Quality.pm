@@ -3,18 +3,18 @@ package App::Sandy::Command::Quality;
 
 use App::Sandy::Base 'class';
 use App::Sandy::DB::Handle::Quality;
-use Text::SimpleTable::AutoWidth;
+use Text::ASCIITable;
 
 extends 'App::Sandy::CLI::Command';
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 has 'db' => (
 	is         => 'ro',
 	isa        => 'App::Sandy::DB::Handle::Quality',
 	builder    => '_build_db',
 	lazy_build => 1,
-	handles    => [qw/insertdb restoredb deletedb make_report/]
+	handles    => [qw/insertdb restoredb deletedb make_report retrievedb/]
 );
 
 sub _build_db {
@@ -28,7 +28,8 @@ override 'opt_spec' => sub {
 sub subcommand_map {
 	add     => 'App::Sandy::Command::Quality::Add',
 	remove  => 'App::Sandy::Command::Quality::Remove',
-	restore => 'App::Sandy::Command::Quality::Restore'
+	restore => 'App::Sandy::Command::Quality::Restore',
+	dump    => 'App::Sandy::Command::Quality::Dump'
 }
 
 sub validate_args {
@@ -40,16 +41,19 @@ sub execute {
 	my ($self, $opts, $args) = @_;
 
 	my $report_ref = $self->make_report;
-	my $t1 = Text::SimpleTable::AutoWidth->new;
 
-	$t1->captions(['quality profile', 'size', 'source', 'provider', 'date']);
+	if (%$report_ref) {
+		my $t1 = Text::ASCIITable->new;
+		$t1->setCols('quality profile', 'mean', 'stdd', 'error', 'type', 'source', 'provider', 'date');
 
-	for my $quality_profile (sort keys %$report_ref) {
-		my $attr = $report_ref->{$quality_profile};
-		$t1->row($quality_profile, $attr->{size}, $attr->{source}, $attr->{provider}, $attr->{date});
+		for my $quality_profile (sort keys %$report_ref) {
+			my $attr = $report_ref->{$quality_profile};
+			$t1->addRow($quality_profile, $attr->{mean}, $attr->{stdd}, $attr->{error}, $attr->{type},
+				$attr->{source}, $attr->{provider}, $attr->{date});
+		}
+
+		print $t1;
 	}
-
-	print $t1->draw;
 }
 
 __END__
@@ -64,7 +68,7 @@ App::Sandy::Command::Quality - quality command class. Manage quality profile dat
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 SYNOPSIS
 
@@ -74,10 +78,11 @@ version 0.18
 
  Options:
   -h, --help               brief help message
-  -M, --man                full documentation
+  -u, --man                full documentation
  
  Commands:
   add                      add a new quality profile to database
+  dump                     dump a quality-profle from database
   remove                   remove an user quality profle from database
   restore                  restore the database
 
@@ -95,11 +100,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

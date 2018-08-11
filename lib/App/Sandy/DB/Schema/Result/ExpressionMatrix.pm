@@ -55,7 +55,7 @@ App::Sandy::DB::Schema::Result::ExpressionMatrix
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 NAME
 
@@ -127,11 +127,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

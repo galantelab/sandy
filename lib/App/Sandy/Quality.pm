@@ -4,7 +4,9 @@ package App::Sandy::Quality;
 use App::Sandy::Base 'class';
 use App::Sandy::DB::Handle::Quality;
 
-our $VERSION = '0.18'; # VERSION
+with 'App::Sandy::Role::Counter';
+
+our $VERSION = '0.19'; # VERSION
 
 has 'quality_profile' => (
 	is         => 'ro',
@@ -13,24 +15,26 @@ has 'quality_profile' => (
 	coerce     => 1
 );
 
-has 'read_size' => (
-	is         => 'ro',
-	isa        => 'My:IntGt0',
-	required   => 1
-);
-
 has '_quality_by_system' => (
+	traits     => ['Hash'],
 	is         => 'ro',
 	isa        => 'My:QualityH',
 	builder    => '_build_quality_by_system',
-	lazy_build => 1
+	lazy_build => 1,
+	handles    => {
+		_get_quality_by_system => 'get'
+	}
 );
 
 has '_gen_quality' => (
+	traits     => ['Code'],
 	is         => 'ro',
 	isa        => 'CodeRef',
 	builder    => '_build_gen_quality',
-	lazy_build => 1
+	lazy_build => 1,
+	handles    => {
+		gen_quality => 'execute'
+	}
 );
 
 has '_phred_score' => (
@@ -54,13 +58,10 @@ sub _build_gen_quality {
 	my $self = shift;
 	my $fun;
 
-	given ($self->quality_profile) {
-		when ('poisson') {
-			$fun = sub { $self->_gen_quality_by_poisson_dist };
-		}
-		default {
-			$fun = sub { $self->_gen_quality_by_system };
-		}
+	if ($self->quality_profile eq 'poisson') {
+		$fun = sub { $self->_gen_quality_by_poisson_dist(@_) };
+	} else {
+		$fun = sub { $self->_gen_quality_by_system(@_) };
 	}
 
 	return $fun;
@@ -98,41 +99,54 @@ sub _build_phred_score {
 sub _build_quality_by_system {
 	my $self = shift;
 	my $db = App::Sandy::DB::Handle::Quality->new;
-
-	my ($matrix, $deepth, $size) = $db->retrievedb($self->quality_profile);
-
-	if ($self->read_size != $size) {
-		die sprintf "quality-profile '%s' requires read-size '%d', not '%d'\n" =>
-			$self->quality_profile, $size, $self->read_size;
-	}
-
-	return { matrix => $matrix, deepth => $deepth };
-}
-
-sub gen_quality {
-	my $self = shift;
-	my $gen_quality = $self->_gen_quality;
-	return $gen_quality->();
+	my ($matrix, $deepth, $partil) = $db->retrievedb($self->quality_profile);
+	return {
+		matrix => $matrix,
+		deepth => $deepth,
+		partil => $partil
+	};
 }
 
 sub _gen_quality_by_system {
-	my $self = shift;
+	my ($self, $read_size) = @_;
 
-	my $quality_matrix = $self->_quality_by_system->{matrix};
-	my $quality_deepth = $self->_quality_by_system->{deepth};
+	my ($matrix, $deepth, $partil) = $self->_get_quality_by_system(
+		qw/matrix deepth partil/
+	);
+
+	my ($bin, $left);
+
+	# To make this routine more robust.
+	# It is necessary to work on reads
+	# lesser than read_size
+	if ($read_size < $partil) {
+		$partil = $read_size;
+		$bin = 1;
+		$left = 0;
+	} else {
+		$bin = int($read_size / $partil);
+		$left = $read_size % $partil;
+	}
+
+	my $pick_again = $self->with_make_counter($read_size - $left, $left);
 	my $quality;
 
-	for (my $i = 0; $i < $self->read_size; $i++) {
-		$quality .= $quality_matrix->[$i][int(rand($quality_deepth))];
+	for (my $i = 0; $i < $partil; $i++) {
+		for (my $j = 0; $j < $bin; $j++) {
+			$quality .= $matrix->[$i][int(rand($deepth))];
+			if ($pick_again->()) {
+				$quality .= $matrix->[$i][int(rand($deepth))];
+			}
+		}
 	}
 
 	return \$quality;
 }
 
 sub _gen_quality_by_poisson_dist {
-	my $self = shift;
+	my ($self, $read_size) = @_;
 	my $quality;
-	return $self->_poisson_dist(\$quality, $self->read_size, $self->_count_phred_score);
+	return $self->_poisson_dist(\$quality, $read_size, $self->_count_phred_score);
 }
 
 sub _poisson_dist {
@@ -161,7 +175,7 @@ App::Sandy::Quality - Class to simulate quality entries
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 AUTHORS
 
@@ -173,11 +187,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

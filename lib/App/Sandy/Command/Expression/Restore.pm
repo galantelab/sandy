@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Command::Expression';
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 override 'opt_spec' => sub {
 	super,
@@ -37,7 +37,7 @@ App::Sandy::Command::Expression::Restore - expression subcommand class. Restore 
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 SYNOPSIS
 
@@ -62,11 +62,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

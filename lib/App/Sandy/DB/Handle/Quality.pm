@@ -7,17 +7,37 @@ use IO::Compress::Gzip 'gzip';
 use IO::Uncompress::Gunzip 'gunzip';
 use Storable qw/nfreeze thaw/;
 
-with 'App::Sandy::Role::IO';
+use constant {
+	PARTIL          => 10,
+	DEFAULT_PROFILE => {
+		poisson => {
+			'mean'     => '-m',
+			'stdd'     => '-d',
+			'error'    => '-e',
+			'type'     => 'both',
+			'source'   => 'default',
+			'provider' => 'vendor',
+			'date'     => '2018-08-08'
+		}
+	}
+};
 
-our $VERSION = '0.18'; # VERSION
+with qw{
+	App::Sandy::Role::IO
+	App::Sandy::Role::Statistic
+	App::Sandy::Role::Counter
+};
+
+our $VERSION = '0.19'; # VERSION
 
 sub insertdb {
-	my ($self, $file, $name, $size, $source, $is_user_provided, $type) = @_;
+	my ($self, $file, $name, $source, $is_user_provided, $error, $single_molecule, $type) = @_;
 	my $schema = App::Sandy::DB->schema;
+	my %default_profile = %{ &DEFAULT_PROFILE };
 
 	log_msg ":: Checking if there is already a quality-profile '$name' ...";
 	my $rs = $schema->resultset('QualityProfile')->find({ name => $name });
-	if ($rs) {
+	if ($rs || $default_profile{$name}) {
 		die "There is already a quality-profile '$name'\n";
 	} else {
 		log_msg ":: quality-profile '$name' not found";
@@ -28,7 +48,7 @@ sub insertdb {
 	}
 
 	log_msg ":: Indexing '$file'. It may take several minutes ...";
-	my ($arr, $deepth) = $self->_index_quality_type($file, $size, $type);
+	my ($arr, $mean, $stdd, $deepth) = $self->_index_quality_type($file, $type);
 
 	log_msg ":: Converting array to bytes ...";
 	my $bytes = nfreeze $arr;
@@ -40,12 +60,16 @@ sub insertdb {
 
 	log_msg ":: Storing quality matrix entry at '$name' ...";
 	$rs = $schema->resultset('QualityProfile')->create({
-		name             => $name,
-		source           => $source,
-		is_user_provided => $is_user_provided,
-		size             => $size,
-		deepth           => $deepth,
-		matrix           => $compressed
+		'name'               => $name,
+		'source'             => $source,
+		'is_user_provided'   => $is_user_provided,
+		'is_single_molecule' => $single_molecule,
+		'mean'               => $mean,
+		'stdd'               => $stdd,
+		'error'              => $error,
+		'deepth'             => $deepth,
+		'partil'             => PARTIL,
+		'matrix'             => $compressed
 	});
 
 	# End transation
@@ -53,30 +77,54 @@ sub insertdb {
 }
 
 sub _index_quality {
-	my ($self, $quality_ref, $size) = @_;
-	my $deepth = scalar @$quality_ref;
+	my ($self, $quality_ref) = @_;
+	my (@partil, @sizes);
 
-	my @arr;
-	for (@$quality_ref) {
-		my @tmp = split //;
-		for (my $i = 0; $i < $size; $i++) {
-			push @{ $arr[$i] } => $tmp[$i];
+	for my $entry (@$quality_ref) {
+		my @q = split // => $entry;
+
+		my $size = scalar @q;
+		push @sizes => $size;
+
+		my $bin = int($size / PARTIL);
+		my $left = $size % PARTIL;
+
+		my $pos = 0;
+		my $skip = $self->with_make_counter($size - $left, $left);
+
+		for (my $i = 0; $i < PARTIL; $i++) {
+			for (my $j = 0; $j < $bin; $j++) {
+				$pos++ if $skip->();
+				push @{ $partil[$i] } => $q[$pos++];
+			}
 		}
 	}
 
-	return (\@arr, $deepth);
+	my $deepth = scalar @{ $partil[0] };
+	for (my $i = 1; $i < PARTIL; $i++) {
+		if ($deepth != scalar(@{ $partil[$i] })) {
+			croak "deepth differs at partil $i";
+		}
+	}
+
+	# Basic stats
+	my $mean = int($self->with_mean(\@sizes) + 0.5);
+	my $stdd = int($self->with_stdd(\@sizes) + 0.5);
+
+	return (\@partil, $mean, $stdd, $deepth);
 }
 
 sub _index_quality_type {
-	# ALgorithm based in perlfaq:
-	# How do I select a random line from a file?
-	# "The Art of Computer Programming"
-
-	my ($self, $file, $size, $type) = @_;
-	my $fh = $self->my_open_r($file);
+	my ($self, $file, $type) = @_;
+	my $fh = $self->with_open_r($file);
 
 	log_msg ":: Counting number of lines in '$file' ...";
 	my $num_lines = $self->_wcl($file);
+
+	if ($num_lines == 0) {
+		die "The file '$file' is empty\n";
+	}
+
 	log_msg ":: Number of lines: $num_lines";
 
 	my $num_left = 0;
@@ -85,49 +133,43 @@ sub _index_quality_type {
 
 	my $getter;
 
-	given ($type) {
-		when ('fastq') {
-			log_msg ":: Setting fastq validation and getter";
-			$num_left = int($num_lines / 4);
+	if ($type eq 'fastq') {
+		log_msg ":: Setting fastq validation and getter";
+		$num_left = int($num_lines / 4);
 
-			$getter = sub {
-				my @stack;
+		$getter = sub {
+			return if eof($fh);
 
-				for (1..4) {
-					$line++;
-					defined(my $entry = <$fh>)
-						or die "Truncated fastq entry in '$file' at line $line\n";
-					push @stack => $entry;
-				}
+			my @stack;
 
-				chomp @stack;
-
-				if ($stack[0] !~ /^\@/ || $stack[2] !~ /^\+/) {
-					die "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read\n";
-				}
-
-				if (length $stack[3] != $size) {
-					die "Fastq entry in '$file' at line '$line' do not have length $size\n";
-				}
-
-				return $stack[3];
-			}
-		}
-		default {
-			log_msg ":: Setting raw validation and getter";
-			$num_left = $num_lines;
-
-			$getter = sub {
+			for (1..4) {
 				$line++;
-				chomp(my $entry = <$fh>);
-
-				if (length $entry != $size) {
-					die "Error parsing '$file': Line $line do not have length $size\n";
-				}
-
-				return $entry;
+				defined(my $entry = <$fh>)
+					or die "Truncated fastq entry in '$file' at line $line\n";
+				push @stack => $entry;
 			}
-		}
+
+			chomp @stack;
+
+			if ($stack[0] !~ /^\@/ || $stack[2] !~ /^\+/) {
+				die "Fastq entry at '$file' line '", $line - 3, "' not seems to be a valid read\n";
+			}
+
+			return $stack[3];
+		};
+	} else {
+		log_msg ":: Setting raw validation and getter";
+		$num_left = $num_lines;
+
+		$getter = sub {
+			defined(my $entry = <$fh>)
+				or return;
+
+			$line++;
+			chomp $entry;
+
+			return $entry;
+		};
 	}
 
 	log_msg ":: Calculating the  number of entries to pick ...";
@@ -135,32 +177,34 @@ sub _index_quality_type {
 	my $picks_left = $picks;
 
 	my @quality;
+	my $do_pick = $self->with_make_counter($num_left, $picks);
 
 	log_msg ":: Picking $picks entries in '$file' ...";
-	while ($picks_left > 0) {
-		my $entry = $getter->();
-
-		my $rand = int(rand($num_left));
-		if ($rand < $picks_left) {
-			push @quality => $entry;
-			$picks_left--;
+	while (my $entry = $getter->()) {
+		if ($do_pick->()) {
+			push @quality => $entry if length($entry) >= PARTIL;
 			if ($picks >= 10 && (++$acm % int($picks/10) == 0)) {
-				log_msg sprintf "   ==> %d%% processed\n", ($acm / $picks) * 100;
+				log_msg sprintf "   ==> %d%% processed", ($acm / $picks) * 100;
 			}
+			last if --$picks_left <= 0;
 		}
+	}
 
-		$num_left--;
+	if (scalar(@quality) == 0) {
+		die "All quality entries have length lesser then 10 in file '$file'.\n" .
+			"quality-profile constraints the quality length to values greater or equal to 10.\n" .
+			"If you need somehow profiles with length lesser than 10. Please use --quality-profile=poisson\n";
 	}
 
 	$fh->close
 		or die "Cannot close file '$file'\n";
 
-	return $self->_index_quality(\@quality, $size);
+	return $self->_index_quality(\@quality);
 }
 
 sub _wcl {
 	my ($self, $file) = @_;
-	my $fh = $self->my_open_r($file);
+	my $fh = $self->with_open_r($file);
 	my $num_lines = 0;
 	$num_lines++ while <$fh>;
 	$fh->close;
@@ -170,6 +214,11 @@ sub _wcl {
 sub retrievedb {
 	my ($self, $quality_profile) = @_;
 	my $schema = App::Sandy::DB->schema;
+	my %default_profile = %{ &DEFAULT_PROFILE };
+
+	if ($default_profile{$quality_profile}) {
+		die "Cannot retrieve '$quality_profile' because it is based on a theoretical distribution\n";
+	}
 
 	my $rs = $schema->resultset('QualityProfile')->find({ name => $quality_profile });
 	die "'$quality_profile' not found into database\n" unless defined $rs;
@@ -179,24 +228,30 @@ sub retrievedb {
 		unless defined $compressed;
 
 	my $deepth = $rs->deepth;
-	my $size = $rs->size;
+	my $partil = $rs->partil;
 
 	gunzip \$compressed => \my $bytes;
 	my $matrix = thaw $bytes;
-	return ($matrix, $deepth, $size);
+	return ($matrix, $deepth, $partil);
 }
 
 sub deletedb {
 	my ($self, $quality_profile) = @_;
 	my $schema = App::Sandy::DB->schema;
+	my %default_profile = %{ &DEFAULT_PROFILE };
 
 	log_msg ":: Checking if there is a quality-profile '$quality_profile' ...";
 	my $rs = $schema->resultset('QualityProfile')->find({ name => $quality_profile });
-	die "'$quality_profile' not found into database\n" unless defined $rs;
+
+	unless ($rs || $default_profile{$quality_profile}) {
+		die "'$quality_profile' not found into database\n";
+	}
 
 	log_msg ":: Found '$quality_profile'";
-	die "'$quality_profile' is not a user provided entry. Cannot be deleted\n"
-		unless $rs->is_user_provided;
+
+	if (($rs && !$rs->is_user_provided) || $default_profile{$quality_profile}) {
+		die "'$quality_profile' is not a user provided entry. Cannot be deleted\n";
+	}
 
 	log_msg ":: Removing '$quality_profile' entry ...";
 
@@ -242,16 +297,19 @@ sub restoredb {
 sub make_report {
 	my $self = shift;
 	my $schema = App::Sandy::DB->schema;
-	my %report;
+	my %report = %{ &DEFAULT_PROFILE };
 
 	my $rs = $schema->resultset('QualityProfile')->search(undef);
 
 	while (my $quality = $rs->next) {
 		my %hash = (
-			size     => $quality->size,
-			source   => $quality->source,
-			provider => $quality->is_user_provided ? "user" : "vendor",
-			date     => $quality->date
+			'mean'       => $quality->mean,
+			'stdd'       => $quality->stdd,
+			'error'      => $quality->error,
+			'type'       => $quality->is_single_molecule ? 'single-molecule' : 'fragment',
+			'source'     => $quality->source,
+			'provider'   => $quality->is_user_provided ? "user" : "vendor",
+			'date'       => $quality->date
 		);
 		$report{$quality->name} = \%hash;
 	}
@@ -271,7 +329,7 @@ App::Sandy::DB::Handle::Quality - Class to handle quality database schemas.
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 AUTHORS
 
@@ -283,11 +341,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

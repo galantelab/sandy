@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Command::Quality';
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 override 'opt_spec' => sub {
 	super,
@@ -46,7 +46,7 @@ App::Sandy::Command::Quality::Remove - quality subcommand class. Remove a qualit
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 SYNOPSIS
 
@@ -57,7 +57,7 @@ version 0.18
 
  Options:
   -h, --help               brief help message
-  -M, --man                full documentation
+  -u, --man                full documentation
   -v, --verbose            print log messages
 
 =head1 DESCRIPTION
@@ -74,11 +74,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

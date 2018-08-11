@@ -5,14 +5,14 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::CLI::App';
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 sub command_map {
-	custom        => 'App::Sandy::Command::Custom',
 	genome        => 'App::Sandy::Command::Genome',
 	transcriptome => 'App::Sandy::Command::Transcriptome',
 	quality       => 'App::Sandy::Command::Quality',
 	expression    => 'App::Sandy::Command::Expression',
+	variation     => 'App::Sandy::Command::Variation',
 	version       => 'App::Sandy::Command::Version',
 	citation      => 'App::Sandy::Command::Citation'
 }
@@ -29,7 +29,7 @@ App::Sandy - App builder that simulates single-end and paired-end reads.
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 SYNOPSIS
 
@@ -39,7 +39,7 @@ version 0.18
 
  Options:
   -h, --help               brief help message
-  -M, --man                full documentation
+  -u, --man                full documentation
  
  Help commands:
   help                     show application or command-specific help
@@ -49,12 +49,14 @@ version 0.18
   version                  print the current version
   citation                 export citation in BibTeX format
 
+ Database commands:
+  quality                  manage quality profile database
+  expression               manage expression-matrix database
+  variation                manage structural variation database
+
  Main commands:
   genome                   simulate genome sequencing
   transcriptome            simulate transcriptome sequencing
-  custom                   simulate custom sequencing
-  quality                  manage quality profile database
-  expression               manage expression-matrix database
 
 =head1 DESCRIPTION
 
@@ -81,11 +83,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

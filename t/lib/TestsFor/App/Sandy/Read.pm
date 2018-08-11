@@ -1,24 +1,9 @@
-#
-#===============================================================================
-#
-#         FILE: Read.pm
-#
-#  DESCRIPTION: Tests for 'Read' class
-#
-#        FILES: ---
-#         BUGS: ---
-#        NOTES: ---
-#       AUTHOR: Thiago Miller (tmiller), tmiller@mochsl.org.br
-# ORGANIZATION: Group of Bioinformatics
-#      VERSION: 1.0
-#      CREATED: 05/07/2017 01:49:49 AM
-#     REVISION: ---
-#===============================================================================
-
 package TestsFor::App::Sandy::Read;
 # ABSTRACT: Tests for 'App::Sandy::Read' class
 
 use App::Sandy::Base 'test';
+use App::Sandy::PieceTable;
+#use Data::Dumper;
 use base 'TestsFor';
 
 sub startup : Tests(startup) {
@@ -29,6 +14,9 @@ sub startup : Tests(startup) {
 	$class->mk_classdata('default_attr');
 	$class->mk_classdata('seq');
 	$class->mk_classdata('seq_len');
+	$class->mk_classdata('table');
+	$class->mk_classdata('table_seq');
+	$class->mk_classdata('slice_len');
 }
 
 sub setup : Tests(setup) {
@@ -38,16 +26,18 @@ sub setup : Tests(setup) {
 
 	my %default_attr = (
 		sequencing_error => 0.1,
-		read_size        => 10,
 		%child_arg
 	);
 
 	my $seq = 'TGACCCGCTAACCTCAGTTCTGCAGCAGTAACAACTGCCGTATCTGGACTTTCCTAATACCTCGCATAGTCCGTCCCCTCGCGCGGCAAGAGGTGCGGCG';
+	my $table_seq = "A large span of text";
 
 	$test->default_attr(\%default_attr);
 	$test->default_read($test->class_to_test->new(%default_attr));
 	$test->seq($seq);
 	$test->seq_len(length $seq);
+	$test->slice_len(10);
+	$test->table(App::Sandy::PieceTable->new(orig => \$table_seq));
 }
 
 sub constructor : Tests(4) {
@@ -69,7 +59,7 @@ sub subseq_seq : Test(5) {
 	my $read = $test->default_read;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
-	my $slice_len = $read->read_size;
+	my $slice_len = $test->slice_len;
 
 	my ($read_seq1_ref, $pos1) = $read->subseq(\$seq, $seq_len, $slice_len, 0);
 
@@ -98,12 +88,11 @@ sub subseq_err : Test(60) {
 	my $read = $test->default_read;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
-	my $slice_len = $read->read_size;
-	
+	my $slice_len = $test->slice_len;
+
 	for my $i (0..9) {
 		my ($seq_t_ref, $pos) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
-		$read->update_count_base($read->read_size);
-		$read->insert_sequencing_error($seq_t_ref);
+		$read->insert_sequencing_error($seq_t_ref, $slice_len);
 
 		ok index($seq, $$seq_t_ref) < 0,
 			"Sequence with error must be outside seq in subseq_rand Try $i";
@@ -114,8 +103,7 @@ sub subseq_err : Test(60) {
 
 	for my $i (0..9) {
 		my ($seq_t_ref, $pos) = $read->subseq(\$seq, $seq_len, $slice_len, $i * 10);
-		$read->update_count_base($read->read_size);
-		$read->insert_sequencing_error($seq_t_ref);
+		$read->insert_sequencing_error($seq_t_ref, $slice_len);
 
 		ok index($seq, $$seq_t_ref) < 0,
 			"Sequence with error must be outside seq in subseq Try $i";
@@ -131,16 +119,14 @@ sub subseq_err : Test(60) {
 
 	for my $i (0..9) {
 		my ($seq_t_ref, $pos) = $read2->subseq_rand(\$seq, $seq_len, $slice_len);
-		$read2->update_count_base($read2->read_size);
-		$read2->insert_sequencing_error($seq_t_ref);
+		$read2->insert_sequencing_error($seq_t_ref, $slice_len);
 		ok index($seq, $$seq_t_ref) >= 0,
 			"Sequence with sequencing_error = 0 must be inside seq in subseq_rand Try $i";
 	}
 
 	for my $i (0..9) {
 		my ($seq_t_ref, $pos) = $read2->subseq(\$seq, $seq_len, $slice_len, $i * 10);
-		$read2->update_count_base($read2->read_size);
-		$read2->insert_sequencing_error($seq_t_ref);
+		$read2->insert_sequencing_error($seq_t_ref, $slice_len);
 		ok index($seq, $$seq_t_ref) >= 0,
 			"Sequence with sequencing_error = 0 must be inside seq in subseq Try $i";
 	}
@@ -152,7 +138,7 @@ sub reverse_complement :Test(1) {
 	my $read = $test->default_read;
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
-	my $slice_len = $read->read_size;
+	my $slice_len = $test->slice_len;
 
 	my $seq_rev1 = $seq;
 	$read->reverse_complement(\$seq_rev1);
@@ -163,4 +149,51 @@ sub reverse_complement :Test(1) {
 		"The reverse_complement must return the reverse complement";
 }
 
-## --- end class TestsFor::Read
+sub subseq_rand_ptable : Test(20) {
+	my $test = shift;
+
+	my $read = $test->default_read;
+	my $table = $test->table;
+	my $seq = $test->table_seq;
+	my $alt_seq = "A span of English text";
+
+	# Try to remove large
+	$table->delete(2, 6, "large/-");
+
+	# Try to insert 'English'
+	my $add = "English ";
+	$table->insert(\$add, 16, "-/English");
+
+#	diag Dumper($table->piece_table);
+
+	# Initialize
+	$table->calculate_logical_offset;
+	my $len = 10;
+
+	for my $i (1..10) {
+		my ($seq_ref, $attr) = $read->subseq_rand_ptable($table,
+			$table->logical_len, $len, $len);
+		my $true_seq = substr $alt_seq, $attr->{start} - 1, $len;
+		ok $$seq_ref eq $true_seq,
+			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";
+#		$" = ", ";
+#		diag sprintf "[%s] %s\n" => $$seq_ref, join "; ", map { "pos=$_->{pos},offset=$_->{offset},rel=$_->{pos_rel}:$_->{annot}" } @$annot;
+	}
+
+	# A large span of text
+	my $alt_seq2 = "A span of English Ponga";
+
+	# Try to chnage text to Ponga
+	$table->change(\"Ponga", 16, 4, "text/Ponga");
+	$table->calculate_logical_offset;
+
+#	diag Dumper($table->piece_table);
+
+	for my $i (1..10) {
+		my ($seq_ref, $attr) = $read->subseq_rand_ptable($table,
+			$table->logical_len, $len, $len);
+		my $true_seq = substr $alt_seq2, $attr->{start} - 1, $len;
+		ok $$seq_ref eq $true_seq,
+			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";
+	}
+}

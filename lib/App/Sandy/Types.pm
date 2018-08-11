@@ -1,28 +1,28 @@
 package App::Sandy::Types;
 # ABSTRACT: Moose type constraints for App::Sandy project
- 
+
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.18'; # VERSION
+our $VERSION = '0.19'; # VERSION
 
 subtype 'My:IntGt0'
 	=> as      'Int'
-	=> where   { $_ > 0 } 
+	=> where   { $_ > 0 }
 	=> message { "Value must be an integer greater than zero, not '$_'" };
 
 subtype 'My:IntGe0'
 	=> as      'Int'
-	=> where   { $_ >= 0 } 
+	=> where   { $_ >= 0 }
 	=> message { "Value must be an integer greater or equal to zero, not '$_'" };
 
 subtype 'My:NumGt0'
 	=> as      'Num'
-	=> where   { $_ > 0 } 
+	=> where   { $_ > 0 }
 	=> message { "Value must be a number greater than zero, not '$_'" };
 
 subtype 'My:NumGe0'
 	=> as      'Num'
-	=> where   { $_ >= 0 } 
+	=> where   { $_ >= 0 }
 	=> message { "Value must be a number greater or equal to zero, not '$_'" };
 
 subtype 'My:NumHS'
@@ -42,7 +42,7 @@ subtype 'My:Fasta'
 
 subtype 'My:Weight'
 	=> as      'HashRef'
-	=> where   { exists $_->{down} && exists $_->{up} && exists $_->{feature} }
+	=> where   { exists $_->{down} && exists $_->{up} }
 	=> message { "'$_' is not a Weight object" };
 
 subtype 'My:Weights'
@@ -58,7 +58,7 @@ coerce 'My:QualityP'
 
 subtype 'My:QualityH'
 	=> as      'HashRef'
-	=> where   { exists $_->{matrix} && exists $_->{deepth} }
+	=> where   { exists $_->{matrix} && exists $_->{deepth} && exists $_->{partil} }
 	=> message { "'$_' is not a valid quality hash" };
 
 subtype 'My:IdFa'
@@ -90,10 +90,20 @@ subtype 'My:CountLoopBy'
 	=> where   { $_ eq 'coverage' || $_ eq 'number-of-reads' }
 	=> message { "'$_' is not a valid count_loops_by: 'coverage' or 'number-of-reads'" };
 
-#subtype 'My:HeaderP'
-#	=> as 'Str'
-#	=> where { $_ eq 'illumina' || $_ eq 'transcriptime' || $_ eq 'genome' }
-#	=> message { "'$_' is not a valid header profile" };
+subtype 'My:Piece'
+	=> as      'HashRef'
+	=> where   { exists $_->{ref} && exists $_->{start} && exists $_->{len} && exists $_->{pos} && exists $_->{offset} }
+	=> message { "Invalid piece inserted to piece_table" };
+
+subtype 'My:PieceTable'
+	=> as      'HashRef'
+	=> where   { exists $_->{size} && exists $_->{table} && ref $_->{table} eq 'App::Sandy::PieceTable' }
+	=> message { "Invalid piece table entry" };
+
+subtype 'My:Format'
+	=> as      'Str'
+	=> where   { $_ eq 'fastq' || $_ eq 'fastq.gz' || $_ eq 'bam' || $_ eq 'sam' }
+	=> message { "Invalid output format: '$_': 'fastq', 'fastq.gz', 'bam', 'sam'" };
 
 1; ## --- end class App::Sandy::Types
 
@@ -109,7 +119,7 @@ App::Sandy::Types - Moose type constraints for App::Sandy project
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 AUTHORS
 
@@ -121,11 +131,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

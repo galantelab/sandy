@@ -2,15 +2,14 @@ package App::Sandy::Read::PairedEnd;
 # ABSTRACT: App::Sandy::Read subclass for simulate paired-end reads.
 
 use App::Sandy::Base 'class';
-use Math::Random 'random_normal';
+
+use constant NUM_TRIES => 1000;
 
 extends 'App::Sandy::Read';
 
-our $VERSION = '0.18'; # VERSION
+with 'App::Sandy::Role::RNorm';
 
-use constant {
-	NUM_TRIES => 1000
-};
+our $VERSION = '0.19'; # VERSION
 
 has 'fragment_mean' => (
 	is       => 'ro',
@@ -24,58 +23,57 @@ has 'fragment_stdd' => (
 	required => 1
 );
 
-sub BUILD {
-	my $self = shift;
-	unless (($self->fragment_mean - $self->fragment_stdd) >= $self->read_size) {
-		die sprintf "fragment_mean (%d) minus fragment_stdd (%d) must be greater or equal to read_size (%d)\n"
-			=> $self->fragment_mean,  $self->fragment_stdd, $self->read_size;
-	}
-}
-
 sub gen_read {
-	my ($self, $seq_ref, $seq_size, $is_leader) = @_;
+	my ($self, $ptable, $ptable_size, $read_size, $is_leader) = @_;
 
-	if ($seq_size < $self->fragment_mean) {
-		die sprintf "seq_size (%d) must be greater or equal to fragment_mean (%d)\n"
-			=> $seq_size, $self->fragment_mean;
+	unless ($read_size <= $self->fragment_mean && $self->fragment_mean <= $ptable_size) {
+		croak sprintf
+			"read_size (%d) must be leseer or equal to fragment_mean (%d) and\n" .
+			"fragment_mean (%d) must be lesser or equal to ptable_size (%d)"
+				=> $read_size, $self->fragment_mean, $self->fragment_mean, $ptable_size;
 	}
 
 	my $fragment_size = 0;
 	my $random_tries = 0;
 
-	until (($fragment_size <= $seq_size) && ($fragment_size >= $self->read_size)) {
-		# seq_size must be greater or equal to fragment_size and
+	until (($fragment_size <= $ptable_size) && ($fragment_size >= $read_size)) {
+		# ptable_size must be greater or equal to fragment_size and
 		# fragment_size must be greater or equal to read_size
 		# As fragment_size is randomly calculated, try out NUM_TRIES times
 		if (++$random_tries > NUM_TRIES) {
-			die sprintf
+			croak sprintf
 				"So many tries to calculate a fragment. the constraints were not met:\n" .
-				"fragment_size <= seq_size (%d) and fragment_size >= read_size (%d)\n"
-					=> $seq_size, $self->read_size;
+				"fragment_size <= ptable_size (%d) and fragment_size >= read_size (%d)"
+					=> $ptable_size, $read_size;
 		}
 
-		$fragment_size = $self->_random_half_normal;
+		$fragment_size = $self->with_random_half_normal($self->fragment_mean,
+			$self->fragment_stdd);
 	}
 
-	my ($fragment_ref, $fragment_pos) = $self->subseq_rand($seq_ref, $seq_size, $fragment_size);
+	# Build the fragment string
+	my ($fragment_ref, $attr) = $self->subseq_rand_ptable($ptable,
+		$ptable_size, $fragment_size, $read_size);
 
-	my $read1_ref = $self->subseq($fragment_ref, $fragment_size, $self->read_size, 0);
-	$self->update_count_base($self->read_size);
-	my $errors1_a = $self->insert_sequencing_error($read1_ref);
+	# Catch R1 substring
+	my $read1_ref = $self->subseq($fragment_ref, $fragment_size, $read_size, 0);
+	@$attr{qw/start1 end1/} = ($attr->{start}, $attr->{start} + $read_size - 1);
 
-	my $read2_ref = $self->subseq($fragment_ref, $fragment_size, $self->read_size, $fragment_size - $self->read_size);
+	# Insert sequencing error
+	$attr->{error1} = $self->insert_sequencing_error($read1_ref, $read_size);
+
+	# Catch R2 substring
+	my $read2_ref = $self->subseq($fragment_ref, $fragment_size, $read_size,
+		$fragment_size - $read_size);
+	@$attr{qw/start2 end2/} = ($attr->{end}, $attr->{end} - $read_size + 1);
+
+	# Reverse completement
 	$self->reverse_complement($read2_ref);
-	$self->update_count_base($self->read_size);
-	my $errors2_a = $self->insert_sequencing_error($read2_ref);
 
-	return $is_leader
-		? ($read1_ref, $errors1_a, $read2_ref, $errors2_a, $fragment_pos, $fragment_size)
-		: ($read2_ref, $errors2_a, $read1_ref, $errors1_a, $fragment_pos, $fragment_size);
-}
+	# Insert sequencing error
+	$attr->{error2} = $self->insert_sequencing_error($read2_ref, $read_size);
 
-sub _random_half_normal {
-	my $self = shift;
-	return abs(int(random_normal(1, $self->fragment_mean, $self->fragment_stdd)));
+	return ($read1_ref, $read2_ref, $attr);
 }
 
 __END__
@@ -90,7 +88,7 @@ App::Sandy::Read::PairedEnd - App::Sandy::Read subclass for simulate paired-end 
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 AUTHORS
 
@@ -102,11 +100,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

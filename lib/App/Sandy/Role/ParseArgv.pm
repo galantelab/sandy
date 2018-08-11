@@ -4,9 +4,7 @@ package App::Sandy::Role::ParseArgv;
 use App::Sandy::Base 'role';
 use Getopt::Long 'GetOptionsFromArray';
 
-our $VERSION = '0.18'; # VERSION
-
-sub parser {
+sub with_parser {
 	my ($self, $argv, @opt_spec) = @_;
 	my @argv = @{ $argv };
 	my %opts;
@@ -34,7 +32,7 @@ App::Sandy::Role::ParseArgv - Getopt::Long wrapper.
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 AUTHORS
 
@@ -46,11 +44,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 

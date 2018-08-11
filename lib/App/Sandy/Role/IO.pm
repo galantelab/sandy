@@ -3,22 +3,21 @@ package App::Sandy::Role::IO;
 
 use App::Sandy::Base 'role';
 use PerlIO::gzip;
+use Compress::BGZF::Writer;
 
-our $VERSION = '0.18'; # VERSION
-
-sub my_open_r {
+sub with_open_r {
 	my ($self, $file) = @_;
 
 	my $fh;
 	my $mode = $file =~ /\.gz$/ ? "<:gzip" : "<";
 
 	open $fh, $mode => $file
-		or die "Not possible to read $file: $!";
+		or die "Not possible to read $file: $!\n";
 
 	return $fh;
 }
 
-sub my_open_w {
+sub with_open_w {
 	my ($self, $file, $is_gzipped) = @_;
 
 	my $fh;
@@ -31,7 +30,16 @@ sub my_open_w {
 	}
 
 	open $fh, $mode => $file
-		or die "Not possible to create $file: $!";
+		or die "Not possible to create $file: $!\n";
+
+	return $fh;
+}
+
+sub with_open_bam_w {
+	my ($self, $file) = @_;
+
+	my $fh = Compress::BGZF::Writer->new_filehandle($file)
+		or die "Not possible to create $file: $!\n";
 
 	return $fh;
 }
@@ -48,7 +56,7 @@ App::Sandy::Role::IO - Input and output custom wrappers.
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 AUTHORS
 
@@ -60,11 +68,11 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 
 =item *
 
-Gabriela Guardia <gguardia@mochsl.org.br>
+J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 
 =item *
 
-J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+Gabriela Guardia <gguardia@mochsl.org.br>
 
 =item *
 
