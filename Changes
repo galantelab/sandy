@@ -2,6 +2,12 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.19      2018-08-10 21:10:27-03:00 America/Sao_Paulo
+
+	- Implement structural variation
+	- Add variation database
+	- Add bash/zsh completions
+
 0.18      2018-05-06 02:36:33-03:00 America/Sao_Paulo
 
 	- Add citation command
