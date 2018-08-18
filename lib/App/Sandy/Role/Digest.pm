@@ -278,6 +278,11 @@ sub validate_opts {
 		die "Option 'seqid-weight' requires one of these arguments: $opt not $opts->{'seqid_weight'}\n";
 	}
 
+	# Now expression-matrix is an option
+	if ($opts->{'expression-matrix'}) {
+		$opts->{'seqid-weight'} = 'count';
+	}
+
 	# seqid-weight eq 'count' requires an expression-matrix
 	if ($opts->{'seqid-weight'} eq 'count') {
 		if (not defined $opts->{'expression-matrix'}) {
@@ -313,6 +318,11 @@ sub execute {
 		$opts->{'count-loops-by'} = 'coverage' if exists $opts->{'coverage'};
 	} else {
 		die "'count-lopps-by' must be defined"
+	}
+
+	# Now expression-matrix is an option
+	if ($opts->{'expression-matrix'}) {
+		$opts->{'seqid-weight'} = 'count';
 	}
 
 	# Override read-size if quality-profile comes from database

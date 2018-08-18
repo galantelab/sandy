@@ -20,7 +20,7 @@ sub default_opt {
 	'count-loops-by'   => 'number-of-reads',
 	'number-of-reads'  => 1000000,
 	'strand-bias'      => 'minus',
-	'seqid-weight'     => 'count',
+	'seqid-weight'     => 'length',
 	'sequencing-type'  => 'paired-end',
 	'fragment-mean'    => 300,
 	'fragment-stdd'    => 50,
@@ -43,13 +43,10 @@ __END__
 
 =head1 SYNOPSIS
 
- sandy transcriptome [options] -f <expression-matrix> <fasta-file>
+ sandy transcriptome [options] <fasta-file>
 
  Arguments:
-  a fasta-file 
-
- Mandatory options:
-  -f, --expression-matrix        an expression-matrix entry from database
+  a fasta-file
 
  Options:
   -h, --help                     brief help message
@@ -80,6 +77,8 @@ __END__
                                  [default:"300"; Integer]
   -D, --fragment-stdd            the fragment standard deviation size for
                                  paired-end reads [default:"50"; Integer]
+  -f, --expression-matrix        an expression-matrix entry from database
+
 
 =head1 OPTIONS
 
@@ -245,6 +244,9 @@ See B<quality> command for more details
 
 =item B<--expression-matrix>
 
+By default, the gene/transcript is raffled using its length as weight. If
+you choose an expression-matrix, then the raffle will be made based on the
+gene/transcript expression.
 The expression-matrix entries are found into the database.
 See B<expression> command for more details
 
