@@ -27,7 +27,12 @@ BEGIN {
 	};
 }
 
+# To ensure STDERR will be utf8 encoded
 binmode STDERR, ":encoding(utf8)";
+
+# Enable auto-flush
+select STDERR; $| = 1;
+
 our $LOG_VERBOSE = 1;
 
 sub log_msg {
