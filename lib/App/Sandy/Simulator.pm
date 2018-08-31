@@ -1078,12 +1078,19 @@ sub run_simulation {
 	log_msg ":: Saving the work ...";
 
 	# Concatenate all temporary files
-	log_msg ":: Concatenating all temporary files ...";
+	log_msg ":: Concatenate all temporary files";
 	my @fh = map { $self->with_open_w($_, 0) } @{ $files{$file_class} };
 	for my $i (0..$#tmp_files) {
 		my $fh_idx = $i % scalar @fh;
+
+		log_msg "  => Concatenating $tmp_files[$i] to $files{$file_class}[$fh_idx] ...";
 		cat $tmp_files[$i] => $fh[$fh_idx]
 			or die "Cannot concatenate $tmp_files[$i] to $files{$file_class}[$fh_idx]: $!\n";
+
+		# Clean up the mess
+		log_msg "  => Removing $tmp_files[$i] ...";
+		unlink $tmp_files[$i]
+			or die "Cannot remove temporary file '$tmp_files[$i]': $!\n";
 	}
 
 	# Close files
@@ -1094,10 +1101,10 @@ sub run_simulation {
 	}
 
 	# Save counts
-	log_msg ":: Saving count file ...";
+	log_msg ":: Saving count file";
 	my $count_fh = $self->with_open_w($count_file, 0);
 
-	log_msg ":; Wrinting counts to $count_file ...";
+	log_msg "  => Writing counts to $count_file ...";
 	while (my ($id, $count) = each %counters) {
 		print {$count_fh} "$id\t$count\n";
 	}
@@ -1115,11 +1122,4 @@ sub run_simulation {
 	log_msg ":; Writing and closing $count_file ...";
 	close $count_fh
 		or die "Cannot write file $count_file: $!\n";
-
-	# Clean up the mess
-	log_msg ":: Removing temporary files ...";
-	for my $file_t (@tmp_files) {
-		unlink $file_t
-			or die "Cannot remove temporary file: $file_t: $!\n";
-	}
 }
