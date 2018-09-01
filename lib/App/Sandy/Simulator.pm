@@ -1088,7 +1088,6 @@ sub run_simulation {
 			or die "Cannot concatenate $tmp_files[$i] to $files{$file_class}[$fh_idx]: $!\n";
 
 		# Clean up the mess
-		log_msg "  => Removing $tmp_files[$i] ...";
 		unlink $tmp_files[$i]
 			or die "Cannot remove temporary file '$tmp_files[$i]': $!\n";
 	}
@@ -1105,16 +1104,16 @@ sub run_simulation {
 	my $count_fh = $self->with_open_w($count_file, 0);
 
 	log_msg "  => Writing counts to $count_file ...";
-	while (my ($id, $count) = each %counters) {
-		print {$count_fh} "$id\t$count\n";
+	for my $id (sort keys %counters) {
+		print {$count_fh} "$id\t$counters{$id}\n";
 	}
 
 	# Just in case, calculate 'gene' like expression
 	my $parent_count = $self->_calculate_parent_count(\%counters);
 
 	if (defined $parent_count) {
-		while (my ($id, $count) = each %$parent_count) {
-			print {$count_fh} "$id\t$count\n";
+		for my $id (sort keys %$parent_count) {
+			print {$count_fh} "$id\t$parent_count->{$id}\n";
 		}
 	}
 
