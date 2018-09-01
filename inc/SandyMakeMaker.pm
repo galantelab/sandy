@@ -14,37 +14,43 @@ package MY;
 
 use File::ShareDir::Install;
 
-sub install {
-	my $self = shift;
-	my $inherited = $self->SUPER::install(@_);
-	my $new;
-	for (split( "\n", $inherited)) {
-		if ( /^install :: / ) {
-			$_ .= " support_files_install";
-		} elsif (/^uninstall ::/) {
-			$_ .= " support_files_uninstall";
-		}
-		$new .= "$_\n";
-	}
-	return $new;
-}
-
 sub postamble {
 	my $self = shift;
 	my @ret = File::ShareDir::Install::postamble($self);
 
 	my $cmd = q{
-SHELL := /bin/bash
-support_files_install :
-	$(NOECHO) [ `id -u` = 0 ] \
-		&& $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)'\'')' -- \
-			'completions/sandy-completion.bash' '/usr/share/bash-completion/completions/sandy' \
-		&& $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)'\'')' -- \
-			'completions/sandy-completion.zsh' '/usr/share/zsh/site-functions/_sandy'
+# --- App::Sandy custom postamble section:
+INST_SHARE = blib/share
+INSTALLSHARE = /usr/share
+DESTINSTALLSHARE = $(DESTDIR)$(INSTALLSHARE)
 
-support_files_uninstall :
-	$(NOECHO) rm -f '/usr/share/bash-completion/completions/sandy' \
-		'/usr/share/zsh/site-functions/_sandy'
+pure_perl_install :: all
+	-$(NOECHO) $(MOD_INSTALL) \
+		read "$(PERL_ARCHLIB)/auto/$(FULLEXT)/.packlist" \
+		write "$(DESTINSTALLARCHLIB)/auto/$(FULLEXT)/.packlist" \
+		"$(INST_SHARE)" "$(DESTINSTALLSHARE)"
+
+pure_site_install :: all
+	-$(NOECHO) $(MOD_INSTALL) \
+		read "$(SITEARCHEXP)/auto/$(FULLEXT)/.packlist" \
+		write "$(DESTINSTALLSITEARCH)/auto/$(FULLEXT)/.packlist" \
+		"$(INST_SHARE)" "$(DESTINSTALLSHARE)"
+
+pure_vendor_install :: all
+	-$(NOECHO) $(MOD_INSTALL) \
+		read "$(VENDORARCHEXP)/auto/$(FULLEXT)/.packlist" \
+		write "$(DESTINSTALLVENDORARCH)/auto/$(FULLEXT)/.packlist" \
+		"$(INST_SHARE)" "$(DESTINSTALLSHARE)"
+
+config ::
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_SHARE)'\'')' -- \
+		'completions/sandy-completion.bash' '$(INST_SHARE)/bash-completion/completions/sandy'
+
+config ::
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_SHARE)'\'')' -- \
+		'completions/sandy-completion.zsh' '$(INST_SHARE)/zsh/site-functions/_sandy'
+
+# --- END: App::Sandy custom postamble section
 };
 
 	push @ret, $cmd;
