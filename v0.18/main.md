@@ -2,7 +2,7 @@
 
 1. [New Features](#new-features)
 2. [Installation](#installation)
-3. [Usage and Option summary](usage.md#usage-and-option-summary)
+3. [Usage and Option summary](#usage-and-option-summary)
 	1. [General](#general-syntax)
     2. [Command `genome`, its options and examples](#the-genome-command)
     3. [Command `transcriptome`, its options and examples](#the-transcriptome-command)
