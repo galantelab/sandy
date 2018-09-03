@@ -3,22 +3,26 @@
 1. [New Features](#new-features)
 2. [Installation](#installation)
 3. [Usage and Option summary](usage.md#usage-and-option-summary)
-	1. [General](usage.md#general-syntax)
-    2. [Command `genome`, its options and examples](usage.md#the-genome-command)
-    3. [Command `transcriptome`, its options and examples](usage.md#the-transcriptome-command)
-    4. [Command `custom`, its options and examples](usage.md#the-custom-command)
-    5. [Command `quality`, its options and examples](usage.md#the-quality-command)
-    6. [Command `expression`, its options and examples](usage.md#the-expression-command)
-    7. [Command `help`, its options and examples](usage.md#the-help-command)
+	1. [General](#general-syntax)
+    2. [Command `genome`, its options and examples](#the-genome-command)
+    3. [Command `transcriptome`, its options and examples](#the-transcriptome-command)
+    4. [Command `custom`, its options and examples](#the-custom-command)
+    5. [Command `quality`, its options and examples](#the-quality-command)
+    6. [Command `expression`, its options and examples](#the-expression-command)
+    7. [Command `help`, its options and examples](#the-help-command)
 4. [Case study examples](case.md#case-study-examples)
-5. [Aknowledgements](#aknowledgements)
-6. [Author](#author)
-7. [Citation](#citation)
-8. [Copyright and License](#copyright-and-license)
 
 
 
 ### New Features ###
+
+This version implents these new interesting features:
+* Several ways to customize the reads' identifiers in the FASTq files on
+output.
+* Ready to use built-in datasets for quality profile of sequencing, based on
+experimental data from several platforms (e.g. Ilumina HISeq).
+* Ready to use datasets for 54 tissue especific matrix expression, from GTEx
+[(Xena Project)](https://xena.ucsc.edu/).
 
 
 
@@ -521,4 +525,4 @@ builtin documentations with `man sandy` or `info sandy` commands.
 
 
 
-[Back to Contents](#contents-at-a-glance) | [Back to main page](README.md)
+[Back to Top](#contents-at-a-glance) | [Back to main page](../README.md)
