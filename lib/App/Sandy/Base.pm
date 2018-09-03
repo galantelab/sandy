@@ -8,6 +8,7 @@ use utf8 ();
 use feature ();
 use true ();
 use Carp ();
+use IO::Handle;
 use Try::Tiny ();
 use Hook::AfterRuntime;
 use Import::Into;
@@ -31,7 +32,7 @@ BEGIN {
 binmode STDERR, ":encoding(utf8)";
 
 # Enable auto-flush
-select STDERR; $| = 1;
+STDERR->autoflush(1);
 
 our $LOG_VERBOSE = 1;
 
