@@ -410,8 +410,7 @@ sub execute {
 	my $argv = $self->argv;
 	log_msg <<"HEADER";
 --------------------------------------------------------
-$progname
-Date $time_stamp
+$progname - $time_stamp
 --------------------------------------------------------
 :: Arguments passed by the user:
   => '@$argv'

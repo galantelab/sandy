@@ -1111,10 +1111,8 @@ sub run_simulation {
 	# Just in case, calculate 'gene' like expression
 	my $parent_count = $self->_calculate_parent_count(\%counters);
 
-	if (defined $parent_count) {
-		for my $id (sort keys %$parent_count) {
-			print {$count_fh} "$id\t$parent_count->{$id}\n";
-		}
+	for my $id (sort keys %$parent_count) {
+		print {$count_fh} "$id\t$parent_count->{$id}\n";
 	}
 
 	# Close $count_file
