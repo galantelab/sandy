@@ -8,47 +8,57 @@ then *Sandy* is your choice!
 
 
 ### Introduction ###
+**Sandy** is a bioinformatic tool that provides a simple engine to generate
+single-end/paired-end reads from a given FASTA file. Many next-generation
+sequencing (NGS) analyses rely on hypothetical models and principles that
+are not precisely satisfied in practice. Simulated data, which provides
+positive controls would be a perfect way to overcome these difficulties.
+Nevertheless, most of NGS simulators are extremely complex to use, they do
+not cover all kinds of the desired features needed by the users, and (some)
+are very slow to run in a standard computer. Here, we present **Sandy**, a
+straightforward, easy to use, fast, complete set of tools to generate
+synthetic next-generation sequencing reads. Sandy simulates whole genome
+sequencing, whole exome sequencing, RNAseq reads and it presents several
+features to the users manipulate the data. One of the most impressive features
+of Sandy is the power to simulate polymorphisms as snvs, indels and structural
+variations along with the sequencing reads - with no need of further processing
+steps. **Sandy** can be used therefore for benchmarking results of a variety of
+pipelines in genomics and trancriptomics.
 
-Many next-generation sequencing (NGS) analyses rely on hypothetical
-models and principles that are not precisely satisfied in practice. Simulated
-data, which provides positive controls would be a perfect way to overcome
-these difficulties. Nevertheless, most of NGS simulators are extremely
-complex to use, they do not cover all kinds of the desired features needed by
-the users, and (some) are very slow to run in a standard computer. Here, we
-present *Sandy*, a straightforward, easy to use, fast, complete set of tools to
-generate synthetic next-generation sequencing reads. *Sandy* simulates
-whole genome sequencing, whole exome sequencing, RNAseq reads and it
-presents several features to the users manipulate the data. Sandy can be
-used therefore for benchmarking results of a variety of pipelines in the
-genomics or trancriptomics.
-
-Now, project *Sandy* is in it's 0.18 version and has earned enough maturity to
-simulate some realistic features, among these:
-* Simulate reads from genomic FASTA-files.
-* Simulate reads from transcriptomic data, based on expression matrix files.
-* Ready included databases for *quality profiles* and *expression matrixes*.
-* Import and record your own *expression matrixes* and *quality profiles* to
-simulate real experimental data.
+So, among the most killing features, we would like to highlight these:
+* Simulate reads for genome or transcriptome from any FASTA-file with a great
+number of options to fit your needs.
+* Simulate reads from transcriptomic data, based on tissue specific expression
+matrix files.
+* Simulate reads using 3rd generation sequencing (PacBio and Nanopore)
+quality profiles.
+* Simulate reads adding many kinds of genomic variations (SNPs, INDELs, Fusions
+an others) in a easy to use fashion.
+* Choose from a bulk of ready included databases for *quality profiles*,
+*expression matrixes* and *genomic variations*.
+* Import and record your own datasets to fit real experimental data.
 
 
 
 ### Contents at a Glance ###
 
 1. [Introduction](#introduction)
-2. [Installation](#installation)
-3. [Usage and Option summary](usage.md#usage-and-option-summary)
-	1. [General](usage.md#general-syntax)
-    2. [Command `genome`, its options and examples](usage.md#the-genome-command)
-    3. [Command `transcriptome`, its options and examples](usage.md#the-transcriptome-command)
-    4. [Command `custom`, its options and examples](usage.md#the-custom-command)
-    5. [Command `quality`, its options and examples](usage.md#the-quality-command)
-    6. [Command `expression`, its options and examples](usage.md#the-expression-command)
-    7. [Command `help`, its options and examples](usage.md#the-help-command)
-4. [Case study examples](case.md#case-study-examples)
-5. [Aknowledgements](#aknowledgements)
-6. [Author](#author)
-7. [Citation](#citation)
-8. [Copyright and License](#copyright-and-license)
+2. [Documentations](#documentations)
+3. [Installation](#installation)
+4. [Aknowledgements](#aknowledgements)
+5. [Authors](#authors)
+6. [Citation](#citation)
+7. [Copyright and License](#copyright-and-license)
+
+
+
+### Documentations ###
+
+1. [Version 0.19 (*current*)](v0.19/main.md)
+	1. [Under Construction](v0.19/case.md)
+
+2. [Version 0.18](v0.18/main.md)
+	1. [A Case study of Performances](v0.18/case.md)
 
 
 
