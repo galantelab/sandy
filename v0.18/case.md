@@ -57,4 +57,4 @@ choose pipelines for processing NGS data.
 
 
 
-[Back to Contents](README.md#contents-at-a-glance)
+[Back to Top](case.md#case-study-examples) | [Back to main page](../README.md)

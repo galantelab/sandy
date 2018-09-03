@@ -55,10 +55,10 @@ an others) in a easy to use fashion.
 ### Documentations ###
 
 1. [Version 0.19 (*current*)](v0.19/main.md)
-	1. [Under Construction](v0.19/case.md)
+	1. [Case study: Under Construction](v0.19/case.md)
 
 2. [Version 0.18](v0.18/main.md)
-	1. [A Case study of Performances](v0.18/case.md)
+	1. [Case study: Sandy's Performance](v0.18/case.md)
 
 
 
