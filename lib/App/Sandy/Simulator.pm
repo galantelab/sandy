@@ -866,7 +866,9 @@ sub run_simulation {
 	my $seqid = $self->_seqid_raffle;
 
 	# Count file to be generated
-	my $count_file = $self->prefix . '_counts.tsv';
+	my $count_file = defined $self->expression_matrix
+		? $self->prefix . '_abundance.tsv'
+		: $self->prefix . '_coverage.tsv';
 
 	# Main files
 	my %files = (
