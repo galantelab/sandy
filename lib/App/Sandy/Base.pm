@@ -49,7 +49,7 @@ sub import {
 
 	# Import as in Moder::Perl
 	strict->import;
-	feature->import(':5.10');
+	feature->import(':5.14');
 	utf8->import($caller);
 	true->import;
 	Carp->import::into($caller);
