@@ -1,7 +1,7 @@
 package App::Sandy::Base;
 # ABSTRACT: Policy and base module to App::Sandy project.
 
-use 5.010;
+use 5.014;
 use strict;
 use warnings FATAL => 'all';
 use utf8 ();
