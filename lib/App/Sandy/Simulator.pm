@@ -194,15 +194,15 @@ sub BUILD {
 
 	# If seqid_weight is 'count', then expression_matrix must be defined
 	if ($self->seqid_weight eq 'count' and not defined $self->expression_matrix) {
-		die "seqid_weight=count requires a expression_matrix\n";
+		croak "seqid_weight=count requires a expression_matrix\n";
 	}
 
 	# If count_loops_by is 'coverage', then coverage must be defined. Else if
 	# it is equal to 'number_of_reads', then number_of_reads must be defined
 	if ($self->count_loops_by eq 'coverage' and not defined $self->coverage) {
-		die "count_loops_by=coverage requires a coverage number\n";
+		croak "count_loops_by=coverage requires a coverage number\n";
 	} elsif ($self->count_loops_by eq 'number_of_reads' and not defined $self->number_of_reads) {
-		die "count_loops_by=number_of_reads requires a number_of_reads number\n";
+		croak "count_loops_by=number_of_reads requires a number_of_reads number\n";
 	}
 
 	## Just to ensure that the lazy attributes are built before &new returns
@@ -223,7 +223,8 @@ sub _build_strand {
 	} elsif ($self->strand_bias eq 'random') {
 		$strand_sub = sub { int(rand(2)) };
 	} else {
-		die "Unknown option '$_' for strand bias\n";
+		croak sprintf "Unknown option '%s' for strand bias\n",
+			$self->strand_bias;
 	}
 
 	return $strand_sub;
@@ -320,7 +321,7 @@ sub _build_fasta {
 					push @blacklist => $id;
 				}
 			} else {
-				die "Unknown option '$_' for sequencing type\n";
+				croak "Unknown option '$class' for sequencing type\n";
 			}
 		}
 	}
@@ -533,7 +534,8 @@ sub _build_seqid_raffle {
 
 		$seqid_sub = sub { $raffler->weighted_raffle };
 	} else {
-		die "Unknown option '$_' for seqid-raffle\n";
+		croak sprintf "Unknown option '%s' for seqid_weight\n",
+			$self->seqid_weight;
 	}
 
 	return $seqid_sub;
@@ -812,7 +814,8 @@ sub _calculate_number_of_reads {
 	} elsif ($self->count_loops_by eq 'number-of-reads') {
 		$number_of_reads = $self->number_of_reads;
 	} else {
-		die "Unknown option '$_' for calculating the number of reads\n";
+		croak sprintf "Unknown option '%s' for calculating the number of reads\n",
+			$self->count_loops_by;
 	}
 
 	# In case it is paired-end read, divide the number of reads by 2 because App::Sandy::Seq::PairedEnd class
