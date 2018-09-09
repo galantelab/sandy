@@ -1084,7 +1084,18 @@ sub run_simulation {
 
 	# Concatenate all temporary files
 	log_msg ":: Concatenate all temporary files";
-	my @fh = map { $self->with_open_w($_, 0) } @{ $files{$file_class} };
+
+	# Save time. Rename tmp_file (1,2)
+	for my $file (@{ $files{$file_class} }) {
+		my $tmp = shift @tmp_files;
+		log_msg "  => Concatenating $tmp to $file ...";
+		rename $tmp => $file
+			or die "Cannot create '$file': $!\n";
+	}
+
+	# Append to renamed tmp files
+	my @fh = map { $self->with_open_a($_) } @{ $files{$file_class} };
+
 	for my $i (0..$#tmp_files) {
 		my $fh_idx = $i % scalar @fh;
 

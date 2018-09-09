@@ -35,6 +35,15 @@ sub with_open_w {
 	return $fh;
 }
 
+sub with_open_a {
+	my ($self, $file) = @_;
+
+	open my $fh, '>>' => $file
+		or die "Not possible to append to $file: $!\n";
+
+	return $fh;
+}
+
 sub with_open_bam_w {
 	my ($self, $file) = @_;
 
