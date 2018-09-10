@@ -8,21 +8,21 @@ then *Sandy* is your choice!
 
 
 ### Introduction ###
-**Sandy** is a bioinformatic tool that provides a simple engine to generate
+*Sandy* is a bioinformatics tool that provides a simple engine to generate
 single-end/paired-end reads from a given FASTA file. Many next-generation
 sequencing (NGS) analyses rely on hypothetical models and principles that
 are not precisely satisfied in practice. Simulated data, which provides
 positive controls would be a perfect way to overcome these difficulties.
 Nevertheless, most of NGS simulators are extremely complex to use, they do
 not cover all kinds of the desired features needed by the users, and (some)
-are very slow to run in a standard computer. Here, we present **Sandy**, a
+are very slow to run in a standard computer. Here, we present *Sandy*, a
 straightforward, easy to use, fast, complete set of tools to generate
 synthetic next-generation sequencing reads. Sandy simulates whole genome
 sequencing, whole exome sequencing, RNAseq reads and it presents several
 features to the users manipulate the data. One of the most impressive features
 of Sandy is the power to simulate polymorphisms as snvs, indels and structural
 variations along with the sequencing reads - with no need of further processing
-steps. **Sandy** can be used therefore for benchmarking results of a variety of
+steps. *Sandy* can be used therefore for benchmarking results of a variety of
 pipelines in genomics and trancriptomics.
 
 So, among the most killing features, we would like to highlight these:
@@ -64,60 +64,70 @@ an others) in a easy to use fashion.
 
 ### Installation ###
 
-You can install it by two different approaches.
+#### Prerequisites ####
 
-1. If you already use `perl` and perl modules `cpanm`, the solution comes
-in one line:
-	```bash
-		$ cpanm App::Sandy
-	```
-If you only have `perl` but don't have it's modules from the *Comprehensive
-Perl Archive Network*, install it easy with the command:
-	```bash
-		$ cpan -i App::cpanminus
-	```
-	App::cpanminus will provide the `cpanm` utility, which has the capability of
-	install not only Sandy, but also all its dependencies recursively.
+Along with **Perl**, you must have **zlib**, **gcc** and **make** packages
+installed. To install them according to your distro, use:
 
-2. If you only have `perl`, as a last resort, you can manually install *Sandy*
-through the command line by downloading the [tarball](https://github.com/galantelab/sandy/archive/master.tar.gz)
-from GitHub, decompressing it and then building it, like this:
-	```bash
-		$ wget https://github.com/galantelab/sandy/archive/master.tar.gz
-		$ tar xzvf master.tar.gz
-		$ cd sandy-master
-		$ perl Makefile.PL
-		$ make && make test
-	```
-	Then install it properly with:
-	```bash
-		$ make install
-	```
+* Debian/Ubuntu
+```bash
+	$ apt-get install perl zlib1g-dev gcc make
+```
 
-For more details, see the INSTALL file on *Sandy's* GitHub [repository](https://github.com/galantelab/sandy).
+* CentOS/Fedora
+```bash
+	$ yum install perl zlib gcc make
+```
+
+* Archlinux
+```bash
+	$ pacman -S perl zlib gcc make
+```
+
+*Sandy* uses the *Comprehensive Perl Archive Network*, CPAN, as its package
+manager, which allows a good control over all dependencies needed. If you have
+Perl installed, then you may have the cpan command utility. At the first run,
+cpan will interactively configure your environment and mirror.
+
+If you are not sure, confirm the prerequisites presented and, after this,
+install *cpanminus* package manager:
+```bash
+	$ cpan -i App::cpanminus
+```
+
+`App::cpanminus` will provide the `cpanm` utility, which has the capability of
+install not only Sandy, but also all its dependencies, recursively.
+
+
+
+#### Installing *Sandy* properly ####
+
+Finally install *Sandy* with:
+```bash
+	$ cpanm App::Sandy
+```
+
+For more details, see the [INSTALL](https://github.com/galantelab/sandy/blob/master/INSTALL)
+file on *Sandy's* GitHub [repository](https://github.com/galantelab/sandy).
 
 
 
 ### Aknowledgements ###
 
-I, Thiago L. A. Miller, would like to thank:
-
-* Pedro A. F. Galante - for his guidance during my doctorate.
-* Gabriela Guardia, Helena Conceição and Fernanda Orpinelli - for the advices
-and testing.
-* J. Leonel Buzzo - for the documentation.
+* Coordination for the Improvement of Higher Level Personnel - CAPES
 * [Group of Bioinformatics of the Teaching and Research Institute from Sírio-Libanês Hospital](https://www.bioinfo.mochsl.org.br/)
 
 
 
 ### Authors ###
 
-- Thiago L. A. Miller <tmiller@mochsl.org.br>
-- Gabriela Guardia <gguardia@mochsl.org.br>
-- J. Leonel Buzzo <lbuzzo@mochsl.org.br>
-- Fernanda Orpinelli <forpinelli@mochsl.org.br>
-- Pedro A. F. Galante <pgalante@mochsl.org.br>
-
+* Thiago L. A. Miller <tmiller@mochsl.org.br>
+* Gabriela Guardia <gguardia@mochsl.org.br>
+* J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+* Fernanda Orpinelli <forpinelli@mochsl.org.br>
+* Felipe R. C. Santos <fsantos@mochsl.org.br>
+* Helena B. Conceição <hconceicao@mochsl.org.br>
+* Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 
 ### Citation ###
