@@ -1117,16 +1117,26 @@ sub run_simulation {
 	log_msg ":: Saving count file";
 	my $count_fh = $self->with_open_w($count_file, 0);
 
+	# It is necessary to correct the abundance according to
+	# fragment sequencing end
+	my $count_factor = 1;
+	if ($self->count_loops_by eq 'number-of-reads'
+		&& ref($self->seq) eq 'App::Sandy::Seq::PairedEnd') {
+		$count_factor = 2;
+	}
+
 	log_msg "  => Writing counts to $count_file ...";
 	for my $id (sort keys %counters) {
-		print {$count_fh} "$id\t$counters{$id}\n";
+		printf {$count_fh} "%s\t%d\n" => $id,
+			int($counters{$id} / $count_factor);
 	}
 
 	# Just in case, calculate 'gene' like expression
 	my $parent_count = $self->_calculate_parent_count(\%counters);
 
 	for my $id (sort keys %$parent_count) {
-		print {$count_fh} "$id\t$parent_count->{$id}\n";
+		printf {$count_fh} "%s\t%d\n" => $id,
+			int($parent_count->{$id} / $count_factor);
 	}
 
 	# Close $count_file
