@@ -61,7 +61,7 @@ __END__
   -j, --jobs                         number of jobs [default:"1"; Integer]
   -s, --seed                         set the seed of the base generator
                                      [default:"time()"; Integer]
-  -c, --coverage                     fastq-file coverage [default:"8", Number]
+  -c, --coverage                     genome coverage [default:"8", Number]
   -t, --sequencing-type              single-end or paired-end reads
                                      [default:"paired-end"]
   -q, --quality-profile              sequencing system profiles from quality
@@ -217,7 +217,7 @@ Sets the read standard deviation if quality-profile is equal to
 
 =item B<--coverage>
 
-Calculates the number of reads based on the sequence
+Calculates the number of reads based on the genome
 coverage: number_of_reads = (sequence_size * coverage) / read_size.
 This is the default option for genome sequencing simulation
 

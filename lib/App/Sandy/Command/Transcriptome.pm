@@ -213,8 +213,10 @@ Sets the read standard deviation if quality-profile is equal to
 
 =item B<--number-of-reads>
 
-Sets the number of reads desired. This is the default option
-for transcriptome sequencing simulation
+Sets the number of reads desired for each fragment end. That means,
+it will be the number of reads for each pair - 1 x N reads for single-end
+and 2 x N reads for paired-end. This is the default option for transcriptome
+sequencing simulation
 
 =item B<--sequencing-type>
 
