@@ -811,6 +811,10 @@ sub _calculate_number_of_reads {
 		my $fasta_size = 0;
 		$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
 		$number_of_reads = int(($fasta_size * $self->coverage) / $self->seq->read_mean);
+		# In case it is paired-end read, divide the number of reads by 2 because
+		# App::Sandy::Seq::PairedEnd class returns 2 reads at time
+		$number_of_reads = int($number_of_reads / 2)
+			if ref($self->seq) eq 'App::Sandy::Seq::PairedEnd';
 	} elsif ($self->count_loops_by eq 'number-of-reads') {
 		$number_of_reads = $self->number_of_reads;
 	} else {
@@ -818,14 +822,8 @@ sub _calculate_number_of_reads {
 			$self->count_loops_by;
 	}
 
-	# In case it is paired-end read, divide the number of reads by 2 because App::Sandy::Seq::PairedEnd class
-	# returns 2 reads at time
-	my $class = ref $self->seq;
-	my $read_type_factor = $class eq 'App::Sandy::Seq::PairedEnd' ? 2 : 1;
-	$number_of_reads = int($number_of_reads / $read_type_factor);
-
 	# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or fasta_file size
-	if ($number_of_reads <= 0 || ($class eq 'App::Sandy::Seq::PairedEnd' && $number_of_reads == 1)) {
+	if ($number_of_reads <= 0) {
 		die "The computed number of reads is equal to zero.\n" .
 			"It may occur due to the low coverage, fasta-file sequence size or number of reads directly passed by the user\n";
 	}

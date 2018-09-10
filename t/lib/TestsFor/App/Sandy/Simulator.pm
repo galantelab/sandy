@@ -27,7 +27,7 @@ use constant {
 	PREFIX            => 'ponga',
 	OUTPUT_SINGLE_END => 'ponga_R1_001.fastq',
 	OUTPUT_PAIRED_END => ['ponga_R1_001.fastq', 'ponga_R2_001.fastq'],
-	OUTPUT_COUNTS     => 'ponga_counts.tsv'
+	OUTPUT_COUNTS     => 'ponga_coverage.tsv'
 };
 
 sub startup : Tests(startup) {
