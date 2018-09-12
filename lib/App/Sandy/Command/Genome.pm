@@ -10,26 +10,27 @@ with 'App::Sandy::Role::Digest';
 # VERSION
 
 sub default_opt {
-	'paired-end-id'    => '%i.%U:%c:%F:%X-%Z',
-	'single-end-id'    => '%i.%U:%c:%s:%t-%n',
-	'seed'             => time,
-	'verbose'          => 0,
-	'prefix'           => 'out',
-	'output-dir'       => '.',
-	'jobs'             => 1,
-	'count-loops-by'   => 'coverage',
-	'coverage'         => 8,
-	'strand-bias'      => 'random',
-	'seqid-weight'     => 'length',
-	'sequencing-type'  => 'paired-end',
-	'fragment-mean'    => 300,
-	'fragment-stdd'    => 50,
-	'sequencing-error' => 0.001,
-	'read-mean'        => 100,
-	'read-stdd'        => 0,
-	'quality-profile'  => 'poisson',
-	'join-paired-ends' => 0,
-	'output-format'    => 'fastq.gz'
+	'paired-end-id'     => '%i.%U:%c:%F:%X-%Z',
+	'single-end-id'     => '%i.%U:%c:%s:%t-%n',
+	'seed'              => time,
+	'verbose'           => 0,
+	'prefix'            => 'out',
+	'output-dir'        => '.',
+	'jobs'              => 1,
+	'count-loops-by'    => 'coverage',
+	'coverage'          => 8,
+	'strand-bias'       => 'random',
+	'seqid-weight'      => 'length',
+	'sequencing-type'   => 'paired-end',
+	'fragment-mean'     => 300,
+	'fragment-stdd'     => 50,
+	'sequencing-error'  => 0.001,
+	'read-mean'         => 100,
+	'read-stdd'         => 0,
+	'quality-profile'   => 'poisson',
+	'join-paired-ends'  => 0,
+	'output-format'     => 'fastq.gz',
+	'compression-level' => 6
 }
 
 sub rm_opt {

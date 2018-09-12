@@ -105,4 +105,9 @@ subtype 'My:Format'
 	=> where   { $_ eq 'fastq' || $_ eq 'fastq.gz' || $_ eq 'bam' || $_ eq 'sam' }
 	=> message { "Invalid output format: '$_': 'fastq', 'fastq.gz', 'bam', 'sam'" };
 
+subtype 'My:Level'
+	=> as      'Int'
+	=> where   { /^[1-9]$/ }
+	=> message { "Invalid compression level: '$_': 1-9"};
+
 1; ## --- end class App::Sandy::Types

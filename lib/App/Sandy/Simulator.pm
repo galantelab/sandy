@@ -59,6 +59,12 @@ has 'output_format' => (
 	required    => 1
 );
 
+has 'compression_level' => (
+	is          => 'ro',
+	isa         => 'My:Level',
+	required    => 1
+);
+
 has 'fasta_file' => (
 	is         => 'ro',
 	isa        => 'My:Fasta',
@@ -1002,9 +1008,9 @@ sub run_simulation {
 		if ($output_format =~ /^(sam|fastq)$/) {
 			@fhs = map { $self->with_open_w($_, 0) } @files_t;
 		} elsif ($output_format eq 'fastq.gz') {
-			@fhs = map { $self->with_open_w($_, 1) } @files_t;
+			@fhs = map { $self->with_open_w($_, $self->compression_level) } @files_t;
 		} elsif ($output_format eq 'bam') {
-			@fhs = map { $self->with_open_bam_w($_) } @files_t;
+			@fhs = map { $self->with_open_bam_w($_, $self->compression_level) } @files_t;
 		} else {
 			croak "Something wrong with the output format: $file_class";
 		}

@@ -32,6 +32,7 @@ override 'opt_spec' => sub {
 		'id'                         => 'id|I=s',
 		'append-id'                  => 'append-id|i=s',
 		'output-format'              => 'output-format|O=s',
+		'compression-level'          => 'compression-level|x=i',
 		'join-paired-ends'           => 'join-paired-ends|1',
 		'verbose'                    => 'verbose|v',
 		'output-dir'                 => 'output-dir|o=s',
@@ -256,20 +257,17 @@ sub validate_opts {
 		}
 	}
 
-	if (defined $opts->{'number-of-reads'}) {
-		if ($opts->{'number-of-reads'} <= 0) {
-			die "Option 'number-of-reads' requires a value greater than zero, not $opts->{'number-of-reads'}\n";
-		}
-
-		# sequencing_type eq paired-end requires at least 2 reads
-		if ($opts->{'number-of-reads'} < 2 && $opts->{'sequencing-type'} eq 'paired-end') {
-			die "Option 'number-of-reads' requires a value greater or equal to 2 for paired-end reads, not $opts->{'number-of-reads'}\n";
-		}
+	if (defined $opts->{'number-of-reads'} && $opts->{'number-of-reads'} <= 0) {
+		die "Option 'number-of-reads' requires a value greater than zero, not $opts->{'number-of-reads'}\n";
 	}
 
 	if (not exists $OUTPUT_FORMAT{$opts->{'output-format'}}) {
 		my $opt = join ', ' => keys %OUTPUT_FORMAT;
 		die "Option 'output-format' requires one of these arguments: $opt not $opts->{'output-format'}\n";
+	}
+
+	if ($opts->{'compression-level'} !~ /^[1-9]$/) {
+		die "Option 'compression-level' requires an integer between 1-9, not $opts->{'compression-level'}\n";
 	}
 
 	# seqid-weight (SEQID_WEIGHT_OPT)
@@ -457,6 +455,7 @@ HEADER
 		truncate             => $entry->{'type'} && $entry->{'type'} eq 'single-molecule',
 		prefix               => $opts->{'prefix'},
 		output_format        => $opts->{'output-format'},
+		compression_level    => $opts->{'compression-level'},
 		join_paired_ends     => $opts->{'join-paired-ends'},
 		seed                 => $opts->{'seed'},
 		count_loops_by       => $opts->{'count-loops-by'},
