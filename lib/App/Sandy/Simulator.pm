@@ -872,8 +872,11 @@ sub run_simulation {
 	# Function that returns seqid by seqid_weight
 	my $seqid = $self->_seqid_raffle;
 
+	# genome or transcriptome?
+	my $simulation = $self->argv->[0];
+
 	# Count file to be generated
-	my $count_file = defined $self->expression_matrix
+	my $count_file = $simulation eq 'transcriptome'
 		? $self->prefix . '_abundance.tsv'
 		: $self->prefix . '_coverage.tsv';
 
@@ -1034,7 +1037,7 @@ sub run_simulation {
 			print {$fhs[0]} "$$header_ref";
 		}
 
-		# Run simualtion in child
+		# Run simulation in child
 		for (my $i = $idx; $i <= $last_read_idx and not $sig->signal_catched; $i++) {
 			my $id = $seqid->();
 			my $ptable = $piece_table->{$id->{seq_id}}{$id->{type}};
