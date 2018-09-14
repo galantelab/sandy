@@ -117,6 +117,7 @@ _sandy_simulation() {
 		{'(--output-dir)-o','(-o)--output-dir'}'[output directory]:str:'
 		{'(--output-format)-O','(-O)--output-format'}'[bam, sam, fastq.gz, fastq]:str:->format'
 		{'(--join-paired-ends)-1','(-1)--join-paired-ends'}'[merge R1 and R2 outputs in one file]'
+		{'(--compression-level)-x','(-x)--compression-level'}'[speed compression: "1" - compress faster, "9" - compress better]:int:->level'
 		{'(--append-id)-i','(-i)--append-id'}'[append to the defined template id]:str:'
 		{'(--id)-I','(-I)--id'}'[overlap the default template id]:str:'
 		{'(--jobs)-j','(-j)--jobs'}'[number of jobs]:int:'
@@ -156,6 +157,9 @@ _sandy_simulation() {
 			;;
 		quality)
 			_values 'quality' $(_sandy_database_option 'quality')
+			;;
+		level)
+			_values 'compression' $(seq 9)
 			;;
 		format)
 			_values 'format' 'bam' 'sam' 'fastq.gz' 'fastq'
