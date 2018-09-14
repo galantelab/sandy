@@ -6,6 +6,8 @@ use App::Sandy::BGZF;
 use IO::Compress::Gzip '$GzipError';
 use PerlIO::gzip;
 
+# VERSION
+
 sub with_open_r {
 	my ($self, $file) = @_;
 

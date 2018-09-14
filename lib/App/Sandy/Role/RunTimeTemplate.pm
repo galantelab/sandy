@@ -3,6 +3,8 @@ package App::Sandy::Role::RunTimeTemplate;
 
 use App::Sandy::Base 'role';
 
+# VERSION
+
 sub with_compile_template {
 	my ($self, $template, $input_name, $sym_table) = @_;
 	croak "sym_table is not a hashref" unless ref $sym_table eq 'HASH';

@@ -5,6 +5,8 @@ package App::Sandy::BGZF;
 use App::Sandy::Base 'class';
 use Compress::BGZF::Writer;
 
+# VERSION
+
 sub TIEHANDLE {
 	my ($class, $file, $level) = @_;
 	my $writer = Compress::BGZF::Writer->new($file);

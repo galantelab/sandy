@@ -3,6 +3,8 @@ package App::Sandy::Role::SeqID;
 
 use App::Sandy::Base 'role';
 
+# VERSION
+
 my $SEQID_REGEX = qr/^chr(?=\w+$)/ia;
 my $MT_REGEX = qr/^MT$/ia;
 
