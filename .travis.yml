@@ -1,0 +1,20 @@
+language: perl
+perl:
+  - "blead"
+  - "5.28"
+  - "5.26"
+  - "5.22"
+  - "5.20"
+  - "5.18"
+  - "5.16"
+  - "5.14"
+before_install:
+  - sudo apt-get update -q
+  - sudo apt-get install -y zlib1g-dev
+install:
+  - cpanm Pod::Elemental::Transformer::List
+  - cpanm Dist::Zilla
+  - dzil authordeps --missing | cpanm
+  - dzil listdeps --missing | cpanm
+script:
+  - dzil smoke --release --author
