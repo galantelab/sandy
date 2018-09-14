@@ -1,6 +1,5 @@
 language: perl
 perl:
-  - "blead"
   - "5.28"
   - "5.26"
   - "5.22"
@@ -14,7 +13,8 @@ before_install:
 install:
   - cpanm Pod::Elemental::Transformer::List
   - cpanm Dist::Zilla
-  - dzil authordeps --missing | cpanm
+  - cpanm Dist::Zilla::Plugin::MakeMaker::Awesome
+  - dzil authordeps --missing | grep -v '^inc::' | cpanm
   - dzil listdeps --missing | cpanm
 script:
   - dzil smoke --release --author
