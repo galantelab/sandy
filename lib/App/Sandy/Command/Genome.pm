@@ -57,6 +57,8 @@ __END__
   -o, --output-dir                   output directory [default:"."]
   -O, --output-format                bam, sam, fastq.gz, fastq [default:"fastq.gz"]
   -1, --join-paired-ends             merge R1 and R2 outputs in one file
+  -x, --compression-level            speed compression: "1" - compress faster,
+                                     "9" - compress better [default:"6"; Integer]
   -i, --append-id                    append to the defined template id [Format]
   -I, --id                           overlap the default template id [Format]
   -j, --jobs                         number of jobs [default:"1"; Integer]
@@ -128,6 +130,13 @@ If the B<--id> does not have the escape character %R, it is
 automatically included right after the first field (blank separated values)
 as in I<id/%R> - which resolves to I<id/1> or I<id/2>.
 It is necessary to distinguish which read is R1/R2
+
+=item B<--compression-level>
+
+Regulates the speed of compression using the specified digit (between 1 and 9),
+where "1" indicates the fastest compression method (less compression) and "9"
+indicates the slowest compression method (best compression). The default
+compression level is "6"
 
 =item B<--append-id>
 
