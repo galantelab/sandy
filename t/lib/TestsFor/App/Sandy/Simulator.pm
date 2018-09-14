@@ -10,6 +10,7 @@ use base 'TestsFor';
 
 use constant {
 	VERBOSE           => 0,
+	LEVEL             => 6,
 	COUNT_LOOPS_BY    => 'coverage',
 	COVERAGE          => 8,
 	STRAND_BIAS       => 'random',
@@ -93,18 +94,19 @@ sub setup : Tests(setup) {
 	$test->SUPER::setup;
 
 	my %default_attr = (
-		argv             => [qw/ponga 1 2 3 4 5/],
-		truncate         => 0,
-		join_paired_ends => 0,
-		prefix           => PREFIX,
-		fasta_file       => GENOME,
-		coverage         => COVERAGE,
-		jobs             => JOBS,
-		output_format    => FORMAT,
-		seqid_weight     => 'length',
-		count_loops_by   => 'coverage',
-		strand_bias      => 'random',
-		seed             => SEED
+		argv              => [qw/ponga 1 2 3 4 5/],
+		truncate          => 0,
+		join_paired_ends  => 0,
+		prefix            => PREFIX,
+		fasta_file        => GENOME,
+		coverage          => COVERAGE,
+		jobs              => JOBS,
+		output_format     => FORMAT,
+		seqid_weight      => 'length',
+		count_loops_by    => 'coverage',
+		strand_bias       => 'random',
+		seed              => SEED,
+		compression_level => LEVEL
 	);
 
 	my %sg_single_end = (
@@ -144,7 +146,7 @@ sub cleanup : Tests(shutdown) {
 	$test->SUPER::shutdown;
 }
 
-sub constructor : Tests(24) {
+sub constructor : Tests(26) {
 	my $test = shift;
 
 	my $class = $test->class_to_test;
