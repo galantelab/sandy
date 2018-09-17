@@ -44,11 +44,11 @@ pure_vendor_install :: all
 
 config ::
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_SHARE)'\'')' -- \
-		'completions/sandy-completion.bash' '$(INST_SHARE)/bash-completion/completions/sandy'
+		'share/completions/sandy-completion.bash' '$(INST_SHARE)/bash-completion/completions/sandy'
 
 config ::
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_SHARE)'\'')' -- \
-		'completions/sandy-completion.zsh' '$(INST_SHARE)/zsh/site-functions/_sandy'
+		'share/completions/sandy-completion.zsh' '$(INST_SHARE)/zsh/site-functions/_sandy'
 
 # --- END: App::Sandy custom postamble section
 };

@@ -21,7 +21,7 @@ sub _build_schema {
 	#  Hardcoded paths for database
 	my $DB = 'db.sqlite3';
 	my @DB_PATH = (
-		file(__FILE__)->dir->parent->parent->parent->file('share'),
+		file(__FILE__)->dir->parent->parent->parent->file('share', 'assets'),
 		file(__FILE__)->dir->parent->parent->file('auto', 'share', 'dist', 'App-Sandy')
 	);
 
