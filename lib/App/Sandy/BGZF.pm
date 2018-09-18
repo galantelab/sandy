@@ -1,29 +1,25 @@
-package App::Sandy::Role::RunTimeTemplate;
-# ABSTRACT: Extends class with runtime printf like function
+package App::Sandy::BGZF;
+# ABSTRACT: Wrapper around Compress::BGZF::Writer in order
+# to enable compression-level option
 
-use App::Sandy::Base 'role';
+use App::Sandy::Base 'class';
+use Compress::BGZF::Writer;
 
 our $VERSION = '0.21'; # VERSION
 
-sub with_compile_template {
-	my ($self, $template, $input_name, $sym_table) = @_;
-	croak "sym_table is not a hashref" unless ref $sym_table eq 'HASH';
+sub TIEHANDLE {
+	my ($class, $file, $level) = @_;
+	my $writer = Compress::BGZF::Writer->new($file);
+	$writer->set_level($level);
+	return $writer;
+}
 
-	# Inactivate perl reserved characters $, @, &, #
-	$template =~ s/(?<!\\)[\$\@\#\&]/\\$&/g;
-
-	while (my ($sym, $variable) = each %$sym_table) {
-		$template =~ s/$sym/$variable/g;
-	}
-
-	## no critic
-
-	my $sub = eval "sub { my \$$input_name = shift; return \"$template\"; }";
-	die "Error compiling template '$template': $@" if $@;
-
-	## use critic
-
-	return $sub;
+sub new_filehandle {
+	my ($class, $file, $level) = @_;
+	open my $fh, "<", undef;
+	tie *$fh, $class, $file, $level
+		or croak "Failed to tie filehandle: $!";
+	return $fh;
 }
 
 __END__
@@ -34,7 +30,7 @@ __END__
 
 =head1 NAME
 
-App::Sandy::Role::RunTimeTemplate - Extends class with runtime printf like function
+App::Sandy::BGZF - Wrapper around Compress::BGZF::Writer in order
 
 =head1 VERSION
 

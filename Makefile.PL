@@ -9,11 +9,11 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 use File::ShareDir::Install;
-install_share dist => "share";
+install_share dist => "share\/assets";
 
 my %WriteMakefileArgs = (
   "ABSTRACT" => "A straightforward and complete next-generation sequencing read simulator",
-  "AUTHOR" => "Thiago L. A. Miller <tmiller\@mochsl.org.br>, J. Leonel Buzzo <lbuzzo\@mochsl.org.br>, Gabriela Guardia <gguardia\@mochsl.org.br>, Fernanda Orpinelli <forpinelli\@mochsl.org.br>, Pedro A. F. Galante <pgalante\@mochsl.org.br>",
+  "AUTHOR" => "Thiago L. A. Miller <tmiller\@mochsl.org.br>, J. Leonel Buzzo <lbuzzo\@mochsl.org.br>, Felipe R. C. dos Santos <fsantos\@mochsl.org.br>, Helena B. Concei\x{e7}\x{e3}o <hconceicao\@mochsl.org.br>, Gabriela Guardia <gguardia\@mochsl.org.br>, Fernanda Orpinelli <forpinelli\@mochsl.org.br>, Pedro A. F. Galante <pgalante\@mochsl.org.br>",
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => 0,
     "File::ShareDir::Install" => "0.03"
@@ -35,9 +35,10 @@ my %WriteMakefileArgs = (
     "Getopt::Long" => 0,
     "Hook::AfterRuntime" => 0,
     "IO::Compress::Gzip" => 0,
+    "IO::Handle" => 0,
     "IO::Uncompress::Gunzip" => 0,
     "Import::Into" => 0,
-    "List::Util" => 0,
+    "List::Util" => "1.44",
     "Math::Random" => "0.72",
     "Module::Runtime" => 0,
     "Moose" => 0,
@@ -70,7 +71,7 @@ my %WriteMakefileArgs = (
     "Test::UseAllModules" => 0,
     "autodie" => 0
   },
-  "VERSION" => "0.19",
+  "VERSION" => "0.21",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -88,9 +89,10 @@ my %FallbackPrereqs = (
   "Getopt::Long" => 0,
   "Hook::AfterRuntime" => 0,
   "IO::Compress::Gzip" => 0,
+  "IO::Handle" => 0,
   "IO::Uncompress::Gunzip" => 0,
   "Import::Into" => 0,
-  "List::Util" => 0,
+  "List::Util" => "1.44",
   "Math::Random" => "0.72",
   "Module::Runtime" => 0,
   "Moose" => 0,
@@ -142,37 +144,43 @@ package MY;
 
 use File::ShareDir::Install;
 
-sub install {
-	my $self = shift;
-	my $inherited = $self->SUPER::install(@_);
-	my $new;
-	for (split( "\n", $inherited)) {
-		if ( /^install :: / ) {
-			$_ .= " support_files_install";
-		} elsif (/^uninstall ::/) {
-			$_ .= " support_files_uninstall";
-		}
-		$new .= "$_\n";
-	}
-	return $new;
-}
-
 sub postamble {
 	my $self = shift;
 	my @ret = File::ShareDir::Install::postamble($self);
 
 	my $cmd = q{
-SHELL := /bin/bash
-support_files_install :
-	$(NOECHO) [ `id -u` = 0 ] \
-		&& $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)'\'')' -- \
-			'completions/sandy-completion.bash' '/usr/share/bash-completion/completions/sandy' \
-		&& $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)'\'')' -- \
-			'completions/sandy-completion.zsh' '/usr/share/zsh/site-functions/_sandy'
+# --- App::Sandy custom postamble section:
+INST_SHARE = blib/share
+INSTALLSHARE = /usr/share
+DESTINSTALLSHARE = $(DESTDIR)$(INSTALLSHARE)
 
-support_files_uninstall :
-	$(NOECHO) rm -f '/usr/share/bash-completion/completions/sandy' \
-		'/usr/share/zsh/site-functions/_sandy'
+pure_perl_install :: all
+	-$(NOECHO) $(MOD_INSTALL) \
+		read "$(PERL_ARCHLIB)/auto/$(FULLEXT)/.packlist" \
+		write "$(DESTINSTALLARCHLIB)/auto/$(FULLEXT)/.packlist" \
+		"$(INST_SHARE)" "$(DESTINSTALLSHARE)"
+
+pure_site_install :: all
+	-$(NOECHO) $(MOD_INSTALL) \
+		read "$(SITEARCHEXP)/auto/$(FULLEXT)/.packlist" \
+		write "$(DESTINSTALLSITEARCH)/auto/$(FULLEXT)/.packlist" \
+		"$(INST_SHARE)" "$(DESTINSTALLSHARE)"
+
+pure_vendor_install :: all
+	-$(NOECHO) $(MOD_INSTALL) \
+		read "$(VENDORARCHEXP)/auto/$(FULLEXT)/.packlist" \
+		write "$(DESTINSTALLVENDORARCH)/auto/$(FULLEXT)/.packlist" \
+		"$(INST_SHARE)" "$(DESTINSTALLSHARE)"
+
+config ::
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_SHARE)'\'')' -- \
+		'share/completions/sandy-completion.bash' '$(INST_SHARE)/bash-completion/completions/sandy'
+
+config ::
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_SHARE)'\'')' -- \
+		'share/completions/sandy-completion.zsh' '$(INST_SHARE)/zsh/site-functions/_sandy'
+
+# --- END: App::Sandy custom postamble section
 };
 
 	push @ret, $cmd;

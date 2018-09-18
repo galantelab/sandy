@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::CLI::Command';
 
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 sub validate_args {
 	my ($self, $args) = @_;
@@ -16,20 +16,20 @@ sub execute {
 	print <<'EOP';
 You can cite all versions by using the following DOI:
 
-	Thiago Miller. (2018, May 6).
-	galantelab/sandy: A straightforward and complete next-generation sequencing read simulator.
-	Zenodo. http://doi.org/10.5281/zenodo.1241587
+  Thiago Miller. (2018, May 6).
+  galantelab/sandy: A straightforward and complete next-generation sequencing read simulator.
+  Zenodo. http://doi.org/10.5281/zenodo.1241587
 
-	BibTeX:
+  BibTeX:
 
-	@misc{thiago_miller_sandy,
-		author       = {Thiago Miller},
-		title        = {galantelab/sandy: A straightforward and complete next-generation sequencing read simulator},
-		month        = may,
-		year         = 2018,
-		doi          = {10.5281/zenodo.1241587},
-		url          = {https://doi.org/10.5281/zenodo.1241587}
-	}
+  @misc{thiago_miller_sandy,
+    author = {Thiago Miller},
+    title  = {galantelab/sandy: A straightforward and complete next-generation sequencing read simulator},
+    month  = may,
+    year   = 2018,
+    doi    = {10.5281/zenodo.1241587},
+    url    = {https://doi.org/10.5281/zenodo.1241587}
+  }
 
 This DOI represents all versions, and will always resolve to the latest one.
 If you want to cite a specific version, please point to https://zenodo.org/record/1241587
@@ -49,7 +49,7 @@ App::Sandy::Command::Citation - citation command class. Print citation
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 AUTHORS
 
@@ -62,6 +62,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

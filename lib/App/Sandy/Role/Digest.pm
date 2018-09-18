@@ -14,6 +14,8 @@ use List::Util 'uniq';
 
 requires qw/default_opt opt_spec rm_opt/;
 
+our $VERSION = '0.21'; # VERSION
+
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
 	STRAND_BIAS_OPT       => ['random', 'plus', 'minus'],
@@ -32,6 +34,7 @@ override 'opt_spec' => sub {
 		'id'                         => 'id|I=s',
 		'append-id'                  => 'append-id|i=s',
 		'output-format'              => 'output-format|O=s',
+		'compression-level'          => 'compression-level|x=i',
 		'join-paired-ends'           => 'join-paired-ends|1',
 		'verbose'                    => 'verbose|v',
 		'output-dir'                 => 'output-dir|o=s',
@@ -256,15 +259,8 @@ sub validate_opts {
 		}
 	}
 
-	if (defined $opts->{'number-of-reads'}) {
-		if ($opts->{'number-of-reads'} <= 0) {
-			die "Option 'number-of-reads' requires a value greater than zero, not $opts->{'number-of-reads'}\n";
-		}
-
-		# sequencing_type eq paired-end requires at least 2 reads
-		if ($opts->{'number-of-reads'} < 2 && $opts->{'sequencing-type'} eq 'paired-end') {
-			die "Option 'number-of-reads' requires a value greater or equal to 2 for paired-end reads, not $opts->{'number-of-reads'}\n";
-		}
+	if (defined $opts->{'number-of-reads'} && $opts->{'number-of-reads'} <= 0) {
+		die "Option 'number-of-reads' requires a value greater than zero, not $opts->{'number-of-reads'}\n";
 	}
 
 	if (not exists $OUTPUT_FORMAT{$opts->{'output-format'}}) {
@@ -272,10 +268,19 @@ sub validate_opts {
 		die "Option 'output-format' requires one of these arguments: $opt not $opts->{'output-format'}\n";
 	}
 
+	if ($opts->{'compression-level'} !~ /^[1-9]$/) {
+		die "Option 'compression-level' requires an integer between 1-9, not $opts->{'compression-level'}\n";
+	}
+
 	# seqid-weight (SEQID_WEIGHT_OPT)
 	if (not exists $SEQID_WEIGHT{$opts->{'seqid-weight'}}) {
 		my $opt = join ', ' => keys %SEQID_WEIGHT;
 		die "Option 'seqid-weight' requires one of these arguments: $opt not $opts->{'seqid_weight'}\n";
+	}
+
+	# Now expression-matrix is an option
+	if ($opts->{'expression-matrix'}) {
+		$opts->{'seqid-weight'} = 'count';
 	}
 
 	# seqid-weight eq 'count' requires an expression-matrix
@@ -313,6 +318,11 @@ sub execute {
 		$opts->{'count-loops-by'} = 'coverage' if exists $opts->{'coverage'};
 	} else {
 		die "'count-lopps-by' must be defined"
+	}
+
+	# Now expression-matrix is an option
+	if ($opts->{'expression-matrix'}) {
+		$opts->{'seqid-weight'} = 'count';
 	}
 
 	# Override read-size if quality-profile comes from database
@@ -400,8 +410,7 @@ sub execute {
 	my $argv = $self->argv;
 	log_msg <<"HEADER";
 --------------------------------------------------------
-$progname
-Date $time_stamp
+$progname - $time_stamp
 --------------------------------------------------------
 :: Arguments passed by the user:
   => '@$argv'
@@ -448,6 +457,7 @@ HEADER
 		truncate             => $entry->{'type'} && $entry->{'type'} eq 'single-molecule',
 		prefix               => $opts->{'prefix'},
 		output_format        => $opts->{'output-format'},
+		compression_level    => $opts->{'compression-level'},
 		join_paired_ends     => $opts->{'join-paired-ends'},
 		seed                 => $opts->{'seed'},
 		count_loops_by       => $opts->{'count-loops-by'},
@@ -486,7 +496,7 @@ App::Sandy::Role::Digest - Wrapper on Simulator class for genome/transcriptome s
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 AUTHORS
 
@@ -499,6 +509,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

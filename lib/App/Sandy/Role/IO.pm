@@ -2,8 +2,11 @@ package App::Sandy::Role::IO;
 # ABSTRACT: Input and output custom wrappers.
 
 use App::Sandy::Base 'role';
+use App::Sandy::BGZF;
+use IO::Compress::Gzip '$GzipError';
 use PerlIO::gzip;
-use Compress::BGZF::Writer;
+
+our $VERSION = '0.21'; # VERSION
 
 sub with_open_r {
 	my ($self, $file) = @_;
@@ -18,29 +21,33 @@ sub with_open_r {
 }
 
 sub with_open_w {
-	my ($self, $file, $is_gzipped) = @_;
+	my ($self, $file, $level) = @_;
 
 	my $fh;
-	my $mode;
 
-	if ($is_gzipped) {
-		$mode = ">:gzip";
+	if ($level) {
+		$fh = IO::Compress::Gzip->new($file, -Level => $level)
+			or die "Not possible to create $file: $GzipError\n";
 	} else {
-		$mode = ">";
+		open $fh, '>' => $file
+			or die "Not possible to create $file: $!\n";
 	}
 
-	open $fh, $mode => $file
-		or die "Not possible to create $file: $!\n";
+	return $fh;
+}
+
+sub with_open_a {
+	my ($self, $file) = @_;
+
+	open my $fh, '>>' => $file
+		or die "Not possible to append to $file: $!\n";
 
 	return $fh;
 }
 
 sub with_open_bam_w {
-	my ($self, $file) = @_;
-
-	my $fh = Compress::BGZF::Writer->new_filehandle($file)
-		or die "Not possible to create $file: $!\n";
-
+	my ($self, $file, $level) = @_;
+	my $fh = App::Sandy::BGZF->new_filehandle($file, $level);
 	return $fh;
 }
 
@@ -56,7 +63,7 @@ App::Sandy::Role::IO - Input and output custom wrappers.
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 AUTHORS
 
@@ -69,6 +76,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

@@ -7,29 +7,30 @@ extends 'App::Sandy::CLI::Command';
 
 with 'App::Sandy::Role::Digest';
 
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 sub default_opt {
-	'paired-end-id'    => '%i.%U:%c %U',
-	'single-end-id'    => '%i.%U:%c %U',
-	'seed'             => time,
-	'verbose'          => 0,
-	'prefix'           => 'out',
-	'output-dir'       => '.',
-	'jobs'             => 1,
-	'count-loops-by'   => 'number-of-reads',
-	'number-of-reads'  => 1000000,
-	'strand-bias'      => 'minus',
-	'seqid-weight'     => 'count',
-	'sequencing-type'  => 'paired-end',
-	'fragment-mean'    => 300,
-	'fragment-stdd'    => 50,
-	'sequencing-error' => 0.001,
-	'read-mean'        => 100,
-	'read-stdd'        => 0,
-	'quality-profile'  => 'poisson',
-	'join-paired-ends' => 0,
-	'output-format'    => 'fastq.gz'
+	'paired-end-id'     => '%i.%U:%c %U',
+	'single-end-id'     => '%i.%U:%c %U',
+	'seed'              => time,
+	'verbose'           => 0,
+	'prefix'            => 'out',
+	'output-dir'        => '.',
+	'jobs'              => 1,
+	'count-loops-by'    => 'number-of-reads',
+	'number-of-reads'   => 1000000,
+	'strand-bias'       => 'minus',
+	'seqid-weight'      => 'length',
+	'sequencing-type'   => 'paired-end',
+	'fragment-mean'     => 300,
+	'fragment-stdd'     => 50,
+	'sequencing-error'  => 0.001,
+	'read-mean'         => 100,
+	'read-stdd'         => 0,
+	'quality-profile'   => 'poisson',
+	'join-paired-ends'  => 0,
+	'output-format'     => 'fastq.gz',
+	'compression-level' => 6
 }
 
 sub rm_opt {
@@ -51,17 +52,14 @@ App::Sandy::Command::Transcriptome - simulate command class. Simulate transcript
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 SYNOPSIS
 
- sandy transcriptome [options] -f <expression-matrix> <fasta-file>
+ sandy transcriptome [options] <fasta-file>
 
  Arguments:
-  a fasta-file 
-
- Mandatory options:
-  -f, --expression-matrix        an expression-matrix entry from database
+  a fasta-file
 
  Options:
   -h, --help                     brief help message
@@ -71,6 +69,8 @@ version 0.19
   -o, --output-dir               output directory [default:"."]
   -O, --output-format            bam, sam, fastq.gz, fastq [default:"fastq.gz"]
   -1, --join-paired-ends         merge R1 and R2 outputs in one file
+  -x, --compression-level        speed compression: "1" - compress faster,
+                                 "9" - compress better [default:"6"; Integer]
   -i, --append-id                append to the defined template id [Format]
   -I, --id                       overlap the default template id [Format]
   -j, --jobs                     number of jobs [default:"1"; Integer]
@@ -92,6 +92,7 @@ version 0.19
                                  [default:"300"; Integer]
   -D, --fragment-stdd            the fragment standard deviation size for
                                  paired-end reads [default:"50"; Integer]
+  -f, --expression-matrix        an expression-matrix entry from database
 
 =head1 DESCRIPTION
 
@@ -140,6 +141,13 @@ If the B<--id> does not have the escape character %R, it is
 automatically included right after the first field (blank separated values)
 as in I<id/%R> - which resolves to I<id/1> or I<id/2>.
 It is necessary to distinguish which read is R1/R2
+
+=item B<--compression-level>
+
+Regulates the speed of compression using the specified digit (between 1 and 9),
+where "1" indicates the fastest compression method (less compression) and "9"
+indicates the slowest compression method (best compression). The default
+compression level is "6"
 
 =item B<--append-id>
 
@@ -230,8 +238,10 @@ Sets the read standard deviation if quality-profile is equal to
 
 =item B<--number-of-reads>
 
-Sets the number of reads desired. This is the default option
-for transcriptome sequencing simulation
+Sets the number of reads desired for each fragment end. That means,
+it will be the number of reads for each pair - 1 x N reads for single-end
+and 2 x N reads for paired-end. This is the default option for transcriptome
+sequencing simulation
 
 =item B<--sequencing-type>
 
@@ -261,6 +271,9 @@ See B<quality> command for more details
 
 =item B<--expression-matrix>
 
+By default, the gene/transcript is raffled using its length as weight. If
+you choose an expression-matrix, then the raffle will be made based on the
+gene/transcript expression.
 The expression-matrix entries are found into the database.
 See B<expression> command for more details
 
@@ -277,6 +290,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

@@ -4,6 +4,8 @@ package App::Sandy::Role::RNorm;
 use App::Sandy::Base 'role';
 use Math::Random 'random_normal';
 
+our $VERSION = '0.21'; # VERSION
+
 sub with_random_half_normal {
 	my ($self, $mean, $stdd) = @_;
 	return abs(int(random_normal(1, $mean, $stdd)));
@@ -21,7 +23,7 @@ App::Sandy::Role::RNorm - Random normal distribution
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 AUTHORS
 
@@ -34,6 +36,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

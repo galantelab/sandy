@@ -15,7 +15,7 @@ use Parallel::ForkManager;
 
 with qw/App::Sandy::Role::IO App::Sandy::Role::SeqID/;
 
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 has 'argv' => (
 	is       => 'ro',
@@ -56,6 +56,12 @@ has 'join_paired_ends' => (
 has 'output_format' => (
 	is          => 'ro',
 	isa         => 'My:Format',
+	required    => 1
+);
+
+has 'compression_level' => (
+	is          => 'ro',
+	isa         => 'My:Level',
 	required    => 1
 );
 
@@ -194,15 +200,15 @@ sub BUILD {
 
 	# If seqid_weight is 'count', then expression_matrix must be defined
 	if ($self->seqid_weight eq 'count' and not defined $self->expression_matrix) {
-		die "seqid_weight=count requires a expression_matrix\n";
+		croak "seqid_weight=count requires a expression_matrix\n";
 	}
 
 	# If count_loops_by is 'coverage', then coverage must be defined. Else if
 	# it is equal to 'number_of_reads', then number_of_reads must be defined
 	if ($self->count_loops_by eq 'coverage' and not defined $self->coverage) {
-		die "count_loops_by=coverage requires a coverage number\n";
+		croak "count_loops_by=coverage requires a coverage number\n";
 	} elsif ($self->count_loops_by eq 'number_of_reads' and not defined $self->number_of_reads) {
-		die "count_loops_by=number_of_reads requires a number_of_reads number\n";
+		croak "count_loops_by=number_of_reads requires a number_of_reads number\n";
 	}
 
 	## Just to ensure that the lazy attributes are built before &new returns
@@ -223,7 +229,8 @@ sub _build_strand {
 	} elsif ($self->strand_bias eq 'random') {
 		$strand_sub = sub { int(rand(2)) };
 	} else {
-		die "Unknown option '$_' for strand bias\n";
+		croak sprintf "Unknown option '%s' for strand bias\n",
+			$self->strand_bias;
 	}
 
 	return $strand_sub;
@@ -320,7 +327,7 @@ sub _build_fasta {
 					push @blacklist => $id;
 				}
 			} else {
-				die "Unknown option '$_' for sequencing type\n";
+				croak "Unknown option '$class' for sequencing type\n";
 			}
 		}
 	}
@@ -533,7 +540,8 @@ sub _build_seqid_raffle {
 
 		$seqid_sub = sub { $raffler->weighted_raffle };
 	} else {
-		die "Unknown option '$_' for seqid-raffle\n";
+		croak sprintf "Unknown option '%s' for seqid_weight\n",
+			$self->seqid_weight;
 	}
 
 	return $seqid_sub;
@@ -809,20 +817,19 @@ sub _calculate_number_of_reads {
 		my $fasta_size = 0;
 		$fasta_size += $fasta->{$_}{size} for keys %{ $fasta };
 		$number_of_reads = int(($fasta_size * $self->coverage) / $self->seq->read_mean);
+		# In case it is paired-end read, divide the number of reads by 2 because
+		# App::Sandy::Seq::PairedEnd class returns 2 reads at time
+		$number_of_reads = int($number_of_reads / 2)
+			if ref($self->seq) eq 'App::Sandy::Seq::PairedEnd';
 	} elsif ($self->count_loops_by eq 'number-of-reads') {
 		$number_of_reads = $self->number_of_reads;
 	} else {
-		die "Unknown option '$_' for calculating the number of reads\n";
+		croak sprintf "Unknown option '%s' for calculating the number of reads\n",
+			$self->count_loops_by;
 	}
 
-	# In case it is paired-end read, divide the number of reads by 2 because App::Sandy::Seq::PairedEnd class
-	# returns 2 reads at time
-	my $class = ref $self->seq;
-	my $read_type_factor = $class eq 'App::Sandy::Seq::PairedEnd' ? 2 : 1;
-	$number_of_reads = int($number_of_reads / $read_type_factor);
-
 	# Maybe the number_of_reads is zero. It may occur due to the low coverage and/or fasta_file size
-	if ($number_of_reads <= 0 || ($class eq 'App::Sandy::Seq::PairedEnd' && $number_of_reads == 1)) {
+	if ($number_of_reads <= 0) {
 		die "The computed number of reads is equal to zero.\n" .
 			"It may occur due to the low coverage, fasta-file sequence size or number of reads directly passed by the user\n";
 	}
@@ -865,8 +872,13 @@ sub run_simulation {
 	# Function that returns seqid by seqid_weight
 	my $seqid = $self->_seqid_raffle;
 
+	# genome or transcriptome?
+	my $simulation = $self->argv->[0];
+
 	# Count file to be generated
-	my $count_file = $self->prefix . '_counts.tsv';
+	my $count_file = $simulation eq 'transcriptome'
+		? $self->prefix . '_abundance.tsv'
+		: $self->prefix . '_coverage.tsv';
 
 	# Main files
 	my %files = (
@@ -999,9 +1011,9 @@ sub run_simulation {
 		if ($output_format =~ /^(sam|fastq)$/) {
 			@fhs = map { $self->with_open_w($_, 0) } @files_t;
 		} elsif ($output_format eq 'fastq.gz') {
-			@fhs = map { $self->with_open_w($_, 1) } @files_t;
+			@fhs = map { $self->with_open_w($_, $self->compression_level) } @files_t;
 		} elsif ($output_format eq 'bam') {
-			@fhs = map { $self->with_open_bam_w($_) } @files_t;
+			@fhs = map { $self->with_open_bam_w($_, $self->compression_level) } @files_t;
 		} else {
 			croak "Something wrong with the output format: $file_class";
 		}
@@ -1025,7 +1037,7 @@ sub run_simulation {
 			print {$fhs[0]} "$$header_ref";
 		}
 
-		# Run simualtion in child
+		# Run simulation in child
 		for (my $i = $idx; $i <= $last_read_idx and not $sig->signal_catched; $i++) {
 			my $id = $seqid->();
 			my $ptable = $piece_table->{$id->{seq_id}}{$id->{type}};
@@ -1078,12 +1090,29 @@ sub run_simulation {
 	log_msg ":: Saving the work ...";
 
 	# Concatenate all temporary files
-	log_msg ":: Concatenating all temporary files ...";
-	my @fh = map { $self->with_open_w($_, 0) } @{ $files{$file_class} };
+	log_msg ":: Concatenate all temporary files";
+
+	# Save time. Rename tmp_file (1,2)
+	for my $file (@{ $files{$file_class} }) {
+		my $tmp = shift @tmp_files;
+		log_msg "  => Concatenating $tmp to $file ...";
+		rename $tmp => $file
+			or die "Cannot create '$file': $!\n";
+	}
+
+	# Append to renamed tmp files
+	my @fh = map { $self->with_open_a($_) } @{ $files{$file_class} };
+
 	for my $i (0..$#tmp_files) {
 		my $fh_idx = $i % scalar @fh;
+
+		log_msg "  => Concatenating $tmp_files[$i] to $files{$file_class}[$fh_idx] ...";
 		cat $tmp_files[$i] => $fh[$fh_idx]
 			or die "Cannot concatenate $tmp_files[$i] to $files{$file_class}[$fh_idx]: $!\n";
+
+		# Clean up the mess
+		unlink $tmp_files[$i]
+			or die "Cannot remove temporary file '$tmp_files[$i]': $!\n";
 	}
 
 	# Close files
@@ -1094,34 +1123,35 @@ sub run_simulation {
 	}
 
 	# Save counts
-	log_msg ":: Saving count file ...";
+	log_msg ":: Saving count file";
 	my $count_fh = $self->with_open_w($count_file, 0);
 
-	log_msg ":; Wrinting counts to $count_file ...";
-	while (my ($id, $count) = each %counters) {
-		print {$count_fh} "$id\t$count\n";
+	# It is necessary to correct the abundance according to
+	# fragment sequencing end
+	my $count_factor = 1;
+	if ($self->count_loops_by eq 'number-of-reads'
+		&& ref($self->seq) eq 'App::Sandy::Seq::PairedEnd') {
+		$count_factor = 2;
+	}
+
+	log_msg "  => Writing counts to $count_file ...";
+	for my $id (sort keys %counters) {
+		printf {$count_fh} "%s\t%d\n" => $id,
+			int($counters{$id} / $count_factor);
 	}
 
 	# Just in case, calculate 'gene' like expression
 	my $parent_count = $self->_calculate_parent_count(\%counters);
 
-	if (defined $parent_count) {
-		while (my ($id, $count) = each %$parent_count) {
-			print {$count_fh} "$id\t$count\n";
-		}
+	for my $id (sort keys %$parent_count) {
+		printf {$count_fh} "%s\t%d\n" => $id,
+			int($parent_count->{$id} / $count_factor);
 	}
 
 	# Close $count_file
 	log_msg ":; Writing and closing $count_file ...";
 	close $count_fh
 		or die "Cannot write file $count_file: $!\n";
-
-	# Clean up the mess
-	log_msg ":: Removing temporary files ...";
-	for my $file_t (@tmp_files) {
-		unlink $file_t
-			or die "Cannot remove temporary file: $file_t: $!\n";
-	}
 }
 
 __END__
@@ -1136,7 +1166,7 @@ App::Sandy::Simulator - Class responsible to make the simulation
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 AUTHORS
 
@@ -1149,6 +1179,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

@@ -1,13 +1,14 @@
 package App::Sandy::Base;
 # ABSTRACT: Policy and base module to App::Sandy project.
 
-use 5.010;
+use 5.014;
 use strict;
 use warnings FATAL => 'all';
 use utf8 ();
 use feature ();
 use true ();
 use Carp ();
+use IO::Handle;
 use Try::Tiny ();
 use Hook::AfterRuntime;
 use Import::Into;
@@ -15,7 +16,7 @@ use Data::OptList;
 use Module::Runtime 'use_module';
 use namespace::autoclean;
 
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 BEGIN {
 	$SIG{'__DIE__'} = sub {
@@ -27,7 +28,12 @@ BEGIN {
 	};
 }
 
+# To ensure STDERR will be utf8 encoded
 binmode STDERR, ":encoding(utf8)";
+
+# Enable auto-flush
+STDERR->autoflush(1);
+
 our $LOG_VERBOSE = 1;
 
 sub log_msg {
@@ -43,7 +49,7 @@ sub import {
 
 	# Import as in Moder::Perl
 	strict->import;
-	feature->import(':5.10');
+	feature->import(':5.14');
 	utf8->import($caller);
 	true->import;
 	Carp->import::into($caller);
@@ -133,7 +139,7 @@ App::Sandy::Base - Policy and base module to App::Sandy project.
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 AUTHORS
 
@@ -146,6 +152,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

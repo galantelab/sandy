@@ -3,6 +3,8 @@ abstract: 'A straightforward and complete next-generation sequencing read simula
 author:
   - 'Thiago L. A. Miller <tmiller@mochsl.org.br>'
   - 'J. Leonel Buzzo <lbuzzo@mochsl.org.br>'
+  - 'Felipe R. C. dos Santos <fsantos@mochsl.org.br>'
+  - 'Helena B. Conceição <hconceicao@mochsl.org.br>'
   - 'Gabriela Guardia <gguardia@mochsl.org.br>'
   - 'Fernanda Orpinelli <forpinelli@mochsl.org.br>'
   - 'Pedro A. F. Galante <pgalante@mochsl.org.br>'
@@ -12,13 +14,13 @@ build_requires:
   Test::Most: '0.35'
   Test::UseAllModules: '0'
   autodie: '0'
-  perl: '5.01301'
+  perl: '5.014'
 configure_requires:
   ExtUtils::MakeMaker: '0'
   File::ShareDir::Install: '0.03'
   perl: '5.004'
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 6.012, CPAN::Meta::Converter version 2.150001'
+generated_by: 'Dist::Zilla version 6.012, CPAN::Meta::Converter version 2.150010'
 license: gpl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -35,9 +37,10 @@ requires:
   Getopt::Long: '0'
   Hook::AfterRuntime: '0'
   IO::Compress::Gzip: '0'
+  IO::Handle: '0'
   IO::Uncompress::Gunzip: '0'
   Import::Into: '0'
-  List::Util: '0'
+  List::Util: '1.44'
   Math::Random: '0.72'
   Module::Runtime: '0'
   Moose: '0'
@@ -58,7 +61,7 @@ requires:
   constant: '0'
   feature: '0'
   namespace::autoclean: '0'
-  perl: '5.01301'
+  perl: '5.014'
   strict: '0'
   'true': '0'
   utf8: '0'
@@ -67,6 +70,6 @@ resources:
   bugtracker: https://github.com/galantelab/sandy/issues
   homepage: https://galantelab.github.io/sandy/
   repository: git://github.com/galantelab/sandy.git
-version: '0.19'
-x_generated_by_perl: v5.22.4
+version: '0.21'
+x_generated_by_perl: v5.28.0
 x_serialization_backend: 'YAML::Tiny version 1.73'

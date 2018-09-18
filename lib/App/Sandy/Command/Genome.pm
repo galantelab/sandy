@@ -7,29 +7,30 @@ extends 'App::Sandy::CLI::Command';
 
 with 'App::Sandy::Role::Digest';
 
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 sub default_opt {
-	'paired-end-id'    => '%i.%U:%c:%F:%X-%Z',
-	'single-end-id'    => '%i.%U:%c:%s:%t-%n',
-	'seed'             => time,
-	'verbose'          => 0,
-	'prefix'           => 'out',
-	'output-dir'       => '.',
-	'jobs'             => 1,
-	'count-loops-by'   => 'coverage',
-	'coverage'         => 8,
-	'strand-bias'      => 'random',
-	'seqid-weight'     => 'length',
-	'sequencing-type'  => 'paired-end',
-	'fragment-mean'    => 300,
-	'fragment-stdd'    => 50,
-	'sequencing-error' => 0.001,
-	'read-mean'        => 100,
-	'read-stdd'        => 0,
-	'quality-profile'  => 'poisson',
-	'join-paired-ends' => 0,
-	'output-format'    => 'fastq.gz'
+	'paired-end-id'     => '%i.%U:%c:%F:%X-%Z',
+	'single-end-id'     => '%i.%U:%c:%s:%t-%n',
+	'seed'              => time,
+	'verbose'           => 0,
+	'prefix'            => 'out',
+	'output-dir'        => '.',
+	'jobs'              => 1,
+	'count-loops-by'    => 'coverage',
+	'coverage'          => 8,
+	'strand-bias'       => 'random',
+	'seqid-weight'      => 'length',
+	'sequencing-type'   => 'paired-end',
+	'fragment-mean'     => 300,
+	'fragment-stdd'     => 50,
+	'sequencing-error'  => 0.001,
+	'read-mean'         => 100,
+	'read-stdd'         => 0,
+	'quality-profile'   => 'poisson',
+	'join-paired-ends'  => 0,
+	'output-format'     => 'fastq.gz',
+	'compression-level' => 6
 }
 
 sub rm_opt {
@@ -51,7 +52,7 @@ App::Sandy::Command::Genome - simulate command class. Simulate genome sequencing
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 SYNOPSIS
 
@@ -68,12 +69,14 @@ version 0.19
   -o, --output-dir                   output directory [default:"."]
   -O, --output-format                bam, sam, fastq.gz, fastq [default:"fastq.gz"]
   -1, --join-paired-ends             merge R1 and R2 outputs in one file
+  -x, --compression-level            speed compression: "1" - compress faster,
+                                     "9" - compress better [default:"6"; Integer]
   -i, --append-id                    append to the defined template id [Format]
   -I, --id                           overlap the default template id [Format]
   -j, --jobs                         number of jobs [default:"1"; Integer]
   -s, --seed                         set the seed of the base generator
                                      [default:"time()"; Integer]
-  -c, --coverage                     fastq-file coverage [default:"8", Number]
+  -c, --coverage                     genome coverage [default:"8", Number]
   -t, --sequencing-type              single-end or paired-end reads
                                      [default:"paired-end"]
   -q, --quality-profile              sequencing system profiles from quality
@@ -143,6 +146,13 @@ If the B<--id> does not have the escape character %R, it is
 automatically included right after the first field (blank separated values)
 as in I<id/%R> - which resolves to I<id/1> or I<id/2>.
 It is necessary to distinguish which read is R1/R2
+
+=item B<--compression-level>
+
+Regulates the speed of compression using the specified digit (between 1 and 9),
+where "1" indicates the fastest compression method (less compression) and "9"
+indicates the slowest compression method (best compression). The default
+compression level is "6"
 
 =item B<--append-id>
 
@@ -233,7 +243,7 @@ Sets the read standard deviation if quality-profile is equal to
 
 =item B<--coverage>
 
-Calculates the number of reads based on the sequence
+Calculates the number of reads based on the genome
 coverage: number_of_reads = (sequence_size * coverage) / read_size.
 This is the default option for genome sequencing simulation
 
@@ -297,6 +307,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

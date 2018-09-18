@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::CLI::App';
 
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 sub command_map {
 	genome        => 'App::Sandy::Command::Genome',
@@ -29,7 +29,7 @@ App::Sandy - App builder that simulates single-end and paired-end reads.
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 SYNOPSIS
 
@@ -61,17 +61,24 @@ version 0.19
 =head1 DESCRIPTION
 
 B<Sandy> is a bioinformatic tool that provides a simple engine to generate
-single-end/paired-end reads from a given fasta file. Many next-generation sequencing
-(NGS) analyses rely on hypothetical models and principles that are not precisely
-satisfied in practice. Simulated data, which provides positive controls would be a
-perfect way to overcome these difficulties. Nevertheless, most of NGS simulators are
-extremely complex to use, they do not cover all kinds of the desired features needed
-by the users, and (some) are very slow to run in a standard computer. Here, we present
-Sandy, a straightforward, easy to use, fast, complete set of tools to generate synthetic
-next-generation sequencing reads. Sandy simulates whole genome sequencing, whole exome
-sequencing, RNAseq reads and it presents several features to the users manipulate the data.
-Sandy can be used therefore for benchmarking results of a variety of pipelines in the
-genomics or trancriptomics.
+single-end/paired-end reads from a given fasta file. Many next-generation
+sequencing analyses rely on hypothetical models and principles that are
+not precisely satisfied in practice. Simulated data, which provides positive
+controls, would be a perfect way to overcome these difficulties. Here, we
+present Sandy, a straightforward, easy to use, fast, complete set of tools
+to generate synthetic second and third-generation sequencing reads. Sandy
+simulates whole genome sequencing, whole exome sequencing, RNAseq reads.
+Sandy presents also several features to the users manipulate the data, as
+well as well-organized database containing the ‘true’ information (based on
+the generated data) of the reads position into the genome, gene and transcript
+expression, sequencing errors, and the sequencing coverage. One of the most
+impressive features of Sandy is the power to simulate polymorphisms as snvs,
+indels and structural variations (e.g. gene duplication, retro-duplication,
+gene-fusion) along with the sequencing reads - with no need of further processing
+steps. Sandy can be used therefore for benchmarking results of a variety of
+pipelines in the genomics or transcriptomics, as well as in generating new
+hypotheses and helping in the best designing of sequencing projects, possibly
+optimizing time and costs.
 
 =head1 AUTHORS
 
@@ -84,6 +91,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

@@ -6,7 +6,7 @@ use App::Sandy::DB::Schema;
 use MooseX::Singleton;
 use Path::Class 'file';
 
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 has 'schema' => (
 	is         => 'ro',
@@ -21,7 +21,7 @@ sub _build_schema {
 	#  Hardcoded paths for database
 	my $DB = 'db.sqlite3';
 	my @DB_PATH = (
-		file(__FILE__)->dir->parent->parent->parent->file('share'),
+		file(__FILE__)->dir->parent->parent->parent->file('share', 'assets'),
 		file(__FILE__)->dir->parent->parent->file('auto', 'share', 'dist', 'App-Sandy')
 	);
 
@@ -63,7 +63,7 @@ App::Sandy::DB - Singleton class to manage database
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 AUTHORS
 
@@ -76,6 +76,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

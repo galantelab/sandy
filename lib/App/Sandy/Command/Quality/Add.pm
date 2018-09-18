@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Command::Quality';
 
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 use constant {
 	TYPE_OPT => ['raw', 'fastq']
@@ -101,7 +101,7 @@ App::Sandy::Command::Quality::Add - quality subcommand class. Add a quality prof
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 SYNOPSIS
 
@@ -138,6 +138,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

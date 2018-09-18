@@ -3,7 +3,7 @@ package App::Sandy::Types;
 
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 subtype 'My:IntGt0'
 	=> as      'Int'
@@ -105,6 +105,11 @@ subtype 'My:Format'
 	=> where   { $_ eq 'fastq' || $_ eq 'fastq.gz' || $_ eq 'bam' || $_ eq 'sam' }
 	=> message { "Invalid output format: '$_': 'fastq', 'fastq.gz', 'bam', 'sam'" };
 
+subtype 'My:Level'
+	=> as      'Int'
+	=> where   { /^[1-9]$/ }
+	=> message { "Invalid compression level: '$_': 1-9"};
+
 1; ## --- end class App::Sandy::Types
 
 __END__
@@ -119,7 +124,7 @@ App::Sandy::Types - Moose type constraints for App::Sandy project
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 AUTHORS
 
@@ -132,6 +137,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

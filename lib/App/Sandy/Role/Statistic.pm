@@ -4,6 +4,8 @@ package App::Sandy::Role::Statistic;
 use App::Sandy::Base 'role';
 use List::Util 'sum';
 
+our $VERSION = '0.21'; # VERSION
+
 sub with_mean {
 	my ($self, $vet) = @_;
 
@@ -49,7 +51,7 @@ App::Sandy::Role::Statistic - Basic statistics
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 AUTHORS
 
@@ -62,6 +64,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

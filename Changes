@@ -1,5 +1,14 @@
 Revision history for App-Sandy
 
+0.21      2018-09-18 20:07:39-03:00 America/Sao_Paulo
+
+	- Set expression-matrix as optional
+	- Fix bash/zsh completion installation
+	- Distinguish count file between genome (coverage)
+	  and transcriptome (abundance)
+	- Add compression level option
+	- Set minimum perl version to 5.014
+
 0.19      2018-08-10 21:10:27-03:00 America/Sao_Paulo
 
 	- Implement structural variation

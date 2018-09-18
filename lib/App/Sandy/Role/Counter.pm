@@ -3,6 +3,8 @@ package App::Sandy::Role::Counter;
 
 use App::Sandy::Base 'role';
 
+our $VERSION = '0.21'; # VERSION
+
 sub with_make_counter {
 	# ALgorithm based in perlfaq:
 	# How do I select a random line from a file?
@@ -38,7 +40,7 @@ App::Sandy::Role::Counter - Bayes counter
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 AUTHORS
 
@@ -51,6 +53,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 

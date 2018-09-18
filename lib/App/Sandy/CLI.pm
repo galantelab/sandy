@@ -4,7 +4,7 @@ package App::Sandy::CLI;
 use App::Sandy::Base 'class';
 use Path::Class 'file';
 
-our $VERSION = '0.19'; # VERSION
+our $VERSION = '0.21'; # VERSION
 
 has 'argv' => (
 	is      => 'ro',
@@ -35,7 +35,7 @@ App::Sandy::CLI - Base class for command line interface.
 
 =head1 VERSION
 
-version 0.19
+version 0.21
 
 =head1 SYNOPSIS
 
@@ -85,6 +85,14 @@ Thiago L. A. Miller <tmiller@mochsl.org.br>
 =item *
 
 J. Leonel Buzzo <lbuzzo@mochsl.org.br>
+
+=item *
+
+Felipe R. C. dos Santos <fsantos@mochsl.org.br>
+
+=item *
+
+Helena B. Conceição <hconceicao@mochsl.org.br>
 
 =item *
 
