@@ -18,15 +18,26 @@ In order to run this container you'll need docker installed.
 
 #### Manual Installation
 
-Inside the docker folder:
+Clone **Sandy** repository:
 
-`$ docker build -t sandy .`
+`$ git clone https://github.com/galantelab/sandy.git`
+
+Inside `sandy/` folder:
+
+`$ docker build -t sandy -f docker/Dockerfile .`
 
 #### Pulling Image
 
 Pull **Sandy** image from [dockerhub](https://hub.docker.com) registry:
 
 `$ docker pull thiagomiller/sandy`
+
+It's possible to pull a specific image version by appending a colon with the required tag.
+For example:
+
+`$ docker pull thiagomiller/sandy:release-v0.18`
+
+For a complete list of **Sandy** versions, please access the dockerhub tag page: <https://hub.docker.com/r/thiagomiller/sandy/tags/>
 
 ### Usage
 
