@@ -17,7 +17,7 @@ before_install:
   - source ~/travis-perl-helpers/init
   - build-perl
   - perl -V
-  - [ -f 'Makefile.PL' ] && rm -v dist.ini
+  - if [ -f 'Makefile.PL' ]; then rm -v dist.ini; fi
   - build-dist
   - cd $BUILD_DIR
 install:
