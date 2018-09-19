@@ -9,6 +9,12 @@ Revision history for App-Sandy
 	- Add compression level option
 	- Set minimum perl version to 5.014
 
+0.20      2018-09-14 01:49:09-03:00 America/Sao_Paulo
+
+	- Add .travis.yml
+	- Fix count file names
+	- Testing compression level option
+
 0.19      2018-08-10 21:10:27-03:00 America/Sao_Paulo
 
 	- Implement structural variation
