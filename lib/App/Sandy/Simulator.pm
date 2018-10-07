@@ -737,10 +737,12 @@ sub _populate_piece_table {
 	my ($self, $table, $snvs) = @_;
 
 	for my $snv (@$snvs) {
-
+		# If there is an ID, make sure that it is not a comma, colon
+		# separated list. Else, make sure to keep the ref/alt length
+		# to max 25+25+1=51
 		my $annot = defined $snv->{id} && $snv->{id} ne '.'
-			? sprintf "%d:%s"    => $snv->{pos} + 1, $snv->{id}
-			: sprintf "%d:%s/%s" => $snv->{pos} + 1, $snv->{ref}, $snv->{alt};
+			? sprintf "%d:%s" => $snv->{pos} + 1, (split(/[,;]/, $snv->{id}))[0]
+			: sprintf "%d:%.25s/%.25s" => $snv->{pos} + 1, $snv->{ref}, $snv->{alt};
 
 		# Insertion
 		if ($snv->{ref} eq '-') {
