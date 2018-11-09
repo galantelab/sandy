@@ -28,6 +28,8 @@ sub execute {
 	for my $id (sort keys %$variation) {
 		my $data = $variation->{$id};
 		for my $entry (@$data) {
+			# Index begins at 1 outside perl
+			$entry->{pos}++;
 			print "$entry->{seq_id}\t$entry->{pos}\t$entry->{id}\t$entry->{ref}\t$entry->{alt}\t$entry->{plo}\n";
 		}
 	}
