@@ -1,4 +1,4 @@
-## Welcome to Sandy simulator! ##
+## Welcome to *Sandy* simulator! ##
 
 
 If you're looking for a bioinformatics tool that provides a simple engine to generate
@@ -19,8 +19,8 @@ are very slow to run in a standard computer. Here, we present *Sandy*, a
 straightforward, easy to use, fast, complete set of tools to generate
 synthetic next-generation sequencing reads. Sandy simulates whole genome
 sequencing, whole exome sequencing, RNAseq reads and it presents several
-features to the users manipulate the data. One of the most impressive features
-of Sandy is the power to simulate polymorphisms as snvs, indels and structural
+features to the users to manipulate the data. One of the most impressive features
+of *Sandy* is the power to simulate polymorphisms as snvs, indels and structural
 variations along with the sequencing reads - with no need of further processing
 steps. *Sandy* can be used therefore for benchmarking results of a variety of
 pipelines in genomics and trancriptomics.

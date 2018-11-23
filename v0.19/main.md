@@ -660,6 +660,21 @@ the vendor's data), use the `restore` sub-command.
 	```bash
 	sandy variation restore
 	```
+5. Finally, if you want to simulate a reference genome with a high coverage
+(ex. 50x) and insert some variations in it (maybe to abtain a positive control
+for some other algorithm you're using), try this:
+	```bash
+	sandy genome -c 50 -a NA12878_hg38_chrX hg38.fa
+	```
+In this example, you've simulated reads for the whole genome, but the variations
+are only in the X chromosome of the individual NA12878. An even better way to
+insert variations to your simulations is to use a *regular expression* to search
+the entire database, like this:
+	```bash
+	sandy genome -c 50 -A NA12878* -a fusion_hg38_BCR-ABL1 hg38.fa
+	```
+This way you take all entries that match NA12878 variations and additionally
+introduce a well studied gene fusion fusion_hg38_BCR-ABL1.
 
 See our [case study](case.md#case-study-examples) to find out how to construct
 a complex genome with on demand variations in it.
