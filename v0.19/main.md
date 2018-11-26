@@ -129,10 +129,13 @@ or
 	```bash
 	$ sandy expression -h
 	```
-2. To simulate 30M reads from a transcriptomic data file `my_fasta.fa` using,
-for example, the built-in kidney expression profile, just type:
+2. To view the verion of *Sandy* in use, just type:
 	```bash
-	$ sandy trascriptome 
+	$ sandy version
+	```
+3. And, to take a BibTex entry to cite *Sandy* in your work, type:
+	```bash
+	$ sandy citation
 	```
 
 
@@ -183,7 +186,7 @@ Options							| Description
 **Some examples:**
 1. These two commands, with equal effects, will produce two FASTq-files
 (sequencing-type default is "paired-end"), both with a coverage of 20x
-(coverage default is 8), and a simple text reads-count file in a tab separated
+(coverage default is 8), and a plain-text reads-count file in a tab separated
 fashion.
 	```bash
 	$ sandy genome --verbose --sequencing-type=paired-end --coverage=20 hg38.fa 2> sim.log
@@ -198,7 +201,7 @@ for example:
 	```bash
 	$ sandy genome -s 1220 my_fasta.fa
 	```
-3. To simulate reads with a ready database registered specific quality
+3. To simulate reads from a ready registered database with a specific quality
 profile other than default's one, type, for example:
 	```bash
 	$ sandy genome --quality-profile=hiseq_101 hg19.fa
@@ -305,9 +308,10 @@ or, equivalently
 	```bash
 	$ sandy transcriptome -v -n 1000000 -f brain_cortex gencode_pc_v26.fa.gz
 	```
-will generate a FASTq file with 1000000 reads on the *gencode_pc_v26.fa.gz*
+will both generate a FASTq file with 1000000 reads from the *gencode_pc_v26.fa.gz*
 file and a plain text file with the raw counts of the reads per gene,
-according to the expression matrix provided by the *brain_cortex* entry.
+according to the expression matrix provided by the *brain_cortex* entry
+already registered in the database.
 2. To demonstrate some other features, think about the sequencing error rate
 that can be set between 0 and 1. By default, *Sandy* set this value to
 0.005, which means 1 error every 200 bases.	To set it to another value,
@@ -643,7 +647,7 @@ Note that, before the new entry can appear in the database's list, the new
 variation's file needs to be validated, and if it can't, an error message will
 be show. Sandy will prevent you to overwrite any existing entry, and *Sandy*
 require these variations files to be in a GTF like format, specifying
-coordinates on a reference genome with a variation perl line (INDELs, SNVs and
+coordinates on a reference genome with one variation per line (INDELs, SNVs and
 gene fusions).
 3. Now, to use your recently added variations specifications in a genomic
 project, you can use the `-a` option with the id you registered for your file:
@@ -667,9 +671,9 @@ for some other algorithm you're using), try this:
 	sandy genome -c 50 -a NA12878_hg38_chrX hg38.fa
 	```
 In this example, you've simulated reads for the whole genome, but the variations
-are only in the X chromosome of the individual NA12878. An even better way to
-insert variations to your simulations is to use a *regular expression* to search
-the entire database, like this:
+are only in the X chromosome of the NA12878 individue in *Sandy's* database. An
+even better way to insert variations to your simulations is to use a
+*regular expression* to search the entire database, like this:
 	```bash
 	sandy genome -c 50 -A NA12878* -a fusion_hg38_BCR-ABL1 hg38.fa
 	```
