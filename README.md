@@ -2,6 +2,10 @@
 
 Sandy - A straightforward and complete next-generation sequencing read simulator
 
+[![Build Status](https://travis-ci.org/galantelab/sandy.svg?branch=master)](https://travis-ci.org/galantelab/sandy)
+[![CPAN version](https://badge.fury.io/pl/App-Sandy.svg)](https://badge.fury.io/pl/App-Sandy)
+[![DOI](https://zenodo.org/badge/90221400.svg)](https://zenodo.org/badge/latestdoi/90221400)
+
 # VERSION
 
 version 0.22
