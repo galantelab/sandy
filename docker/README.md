@@ -30,20 +30,20 @@ Inside `sandy/` folder:
 
 Pull **Sandy** image from [dockerhub](https://hub.docker.com) registry:
 
-`$ docker pull thiagomiller/sandy`
+`$ docker pull galantelab/sandy`
 
 It's possible to pull a specific image version by appending a colon with the required tag.
 For example:
 
-`$ docker pull thiagomiller/sandy:release-v0.18`
+`$ docker pull galantelab/sandy:release-v0.18`
 
-For a complete list of **Sandy** versions, please access the dockerhub tag page: <https://hub.docker.com/r/thiagomiller/sandy/tags/>
+For a complete list of **Sandy** versions, please access the dockerhub tag page: <https://hub.docker.com/r/galantelab/sandy/tags/>
 
 ### Usage
 
 #### Container Examples
 
-`$ docker run thiagomiller/sandy`
+`$ docker run galantelab/sandy`
 
 By default **Sandy** runs in a container-private folder. You can change this using flags, like user (-u),
 current directory, and volumes (-w and -v). E.g. this behaves like an executable standalone and gives you
@@ -55,12 +55,12 @@ $ docker run \
 	-u $(id -u):$(id -g) \
 	-v $(pwd):$(pwd) \
 	-w $(pwd) \
-	thiagomiller/sandy genome example.fa
+	galantelab/sandy genome example.fa
 ```
 
 How to get a shell started in your container:
 
-`$ docker run -ti --entrypoint bash thiagomiller/sandy`
+`$ docker run -ti --entrypoint bash galantelab/sandy`
 
 ### Thank You
 
