@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Command::Variation';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 use constant {
 	TYPE_OPT => ['raw', 'vcf']
@@ -93,7 +93,7 @@ App::Sandy::Command::Variation::Add - variation subcommand class. Add structural
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 SYNOPSIS
 

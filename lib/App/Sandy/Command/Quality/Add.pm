@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Command::Quality';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 use constant {
 	TYPE_OPT => ['raw', 'fastq']
@@ -101,7 +101,7 @@ App::Sandy::Command::Quality::Add - quality subcommand class. Add a quality prof
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 SYNOPSIS
 

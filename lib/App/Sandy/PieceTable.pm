@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 with 'App::Sandy::Role::BSearch';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 has 'orig' => (
 	is         => 'ro',
@@ -425,7 +425,7 @@ App::Sandy::PieceTable - Implement a piece table data structure class
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

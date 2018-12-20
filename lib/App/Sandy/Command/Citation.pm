@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::CLI::Command';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub validate_args {
 	my ($self, $args) = @_;
@@ -49,7 +49,7 @@ App::Sandy::Command::Citation - citation command class. Print citation
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

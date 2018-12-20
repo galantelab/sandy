@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Command::Variation';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub validate_args {
 	my ($self, $args) = @_;
@@ -28,6 +28,8 @@ sub execute {
 	for my $id (sort keys %$variation) {
 		my $data = $variation->{$id};
 		for my $entry (@$data) {
+			# Index begins at 1 outside perl
+			$entry->{pos}++;
 			print "$entry->{seq_id}\t$entry->{pos}\t$entry->{id}\t$entry->{ref}\t$entry->{alt}\t$entry->{plo}\n";
 		}
 	}
@@ -45,7 +47,7 @@ App::Sandy::Command::Variation::Dump - variation subcommand class. Dump structur
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 SYNOPSIS
 

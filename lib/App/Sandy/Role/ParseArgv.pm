@@ -4,7 +4,7 @@ package App::Sandy::Role::ParseArgv;
 use App::Sandy::Base 'role';
 use Getopt::Long 'GetOptionsFromArray';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub with_parser {
 	my ($self, $argv, @opt_spec) = @_;
@@ -34,7 +34,7 @@ App::Sandy::Role::ParseArgv - Getopt::Long wrapper.
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

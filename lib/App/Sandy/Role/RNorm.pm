@@ -4,7 +4,7 @@ package App::Sandy::Role::RNorm;
 use App::Sandy::Base 'role';
 use Math::Random 'random_normal';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub with_random_half_normal {
 	my ($self, $mean, $stdd) = @_;
@@ -23,7 +23,7 @@ App::Sandy::Role::RNorm - Random normal distribution
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

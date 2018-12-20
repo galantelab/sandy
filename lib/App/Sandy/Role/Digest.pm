@@ -14,7 +14,7 @@ use List::Util 'uniq';
 
 requires qw/default_opt opt_spec rm_opt/;
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 use constant {
 	COUNT_LOOPS_BY_OPT    => ['coverage', 'number-of-reads'],
@@ -51,8 +51,8 @@ override 'opt_spec' => sub {
 		'seqid-weight'               => 'seqid-weight|w=s',
 		'number-of-reads'            => 'number-of-reads|n=i',
 		'expression-matrix'          => 'expression-matrix|f=s',
-		'structural-variation'       => 'structural-variation|a=s@',
-		'structural-variation-regex' => 'structural-variation-regex|A=s@'
+		'genomic-variation'          => 'genomic-variation|a=s@',
+		'genomic-variation-regex'    => 'genomic-variation-regex|A=s@'
 	);
 
 	for my $opt (@rm_opt) {
@@ -89,7 +89,7 @@ sub _expression_matrix_report {
 	return $report;
 }
 
-sub _structural_variation_report {
+sub _genomic_variation_report {
 	state $report = App::Sandy::DB::Handle::Variation->new->make_report;
 	return $report;
 }
@@ -130,7 +130,7 @@ sub validate_opts {
 	my %OUTPUT_FORMAT        = map { $_ => 1 } @{ &OUTPUT_FORMAT_OPT   };
 	my %QUALITY_PROFILE      = %{ $self->_quality_profile_report      };
 	my %EXPRESSION_MATRIX    = %{ $self->_expression_matrix_report    };
-	my %STRUCTURAL_VARIATION = %{ $self->_structural_variation_report };
+	my %STRUCTURAL_VARIATION = %{ $self->_genomic_variation_report };
 
 	#  prefix
 	if ($opts->{prefix} =~ /([\/\\])/) {
@@ -174,19 +174,19 @@ sub validate_opts {
 		}
 	}
 
-	# structural-variation
-	if (exists $opts->{'structural-variation'}) {
-		for my $sv (split(/,/ => join(',', @{ $opts->{'structural-variation'} }))) {
+	# genomic-variation
+	if (exists $opts->{'genomic-variation'}) {
+		for my $sv (split(/,/ => join(',', @{ $opts->{'genomic-variation'} }))) {
 			unless (%STRUCTURAL_VARIATION && exists $STRUCTURAL_VARIATION{$sv}) {
-				die "Option structural-variation='$sv' does not exist into the database.\n",
-					"Please check '$progname variation' to see the available structural variations\n";
+				die "Option genomic-variation='$sv' does not exist into the database.\n",
+					"Please check '$progname variation' to see the available genomic variations\n";
 			}
 		}
 	}
 
-	# structural-variation-regex
-	if (exists $opts->{'structural-variation-regex'}) {
-		for my $sv_pattern (split(/,/ => join(',', @{ $opts->{'structural-variation-regex'} }))) {
+	# genomic-variation-regex
+	if (exists $opts->{'genomic-variation-regex'}) {
+		for my $sv_pattern (split(/,/ => join(',', @{ $opts->{'genomic-variation-regex'} }))) {
 			my $pattern = qr/$sv_pattern/;
 			my $fail = 1;
 			for my $sv (keys %STRUCTURAL_VARIATION) {
@@ -197,8 +197,8 @@ sub validate_opts {
 			}
 
 			if ($fail) {
-				die "Option structural-variation-regex='$sv_pattern' does not exist into the database.\n",
-					"Please check '$progname variation' to see the available structural variations\n";
+				die "Option genomic-variation-regex='$sv_pattern' does not exist into the database.\n",
+					"Please check '$progname variation' to see the available genomic variations\n";
 			}
 		}
 	}
@@ -355,16 +355,16 @@ sub execute {
 	}
 
 	# Structural Variation
-	if ($opts->{'structural-variation'}) {
-		my @svs = split(/,/ => join(',', @{ $opts->{'structural-variation'} }));
+	if ($opts->{'genomic-variation'}) {
+		my @svs = split(/,/ => join(',', @{ $opts->{'genomic-variation'} }));
 		@svs = uniq sort @svs;
-		$opts->{'structural-variation'} = \@svs;
+		$opts->{'genomic-variation'} = \@svs;
 	}
 
 	# Structural Variation Regex
-	if ($opts->{'structural-variation-regex'}) {
-		my @sv_list = keys %{ $self->_structural_variation_report };
-		my @sv_patterns = split(/,/ => join(',', @{ $opts->{'structural-variation-regex'} }));
+	if ($opts->{'genomic-variation-regex'}) {
+		my @sv_list = keys %{ $self->_genomic_variation_report };
+		my @sv_patterns = split(/,/ => join(',', @{ $opts->{'genomic-variation-regex'} }));
 		my @svs_rg;
 
 		for my $sv_pattern (@sv_patterns) {
@@ -378,13 +378,13 @@ sub execute {
 
 		my @svs;
 
-		if ($opts->{'structural-variation'}) {
-			push @svs => @{ $opts->{'structural-variation'} };
+		if ($opts->{'genomic-variation'}) {
+			push @svs => @{ $opts->{'genomic-variation'} };
 		}
 
 		push @svs => @svs_rg;
 		@svs = uniq sort @svs;
-		$opts->{'structural-variation'} = \@svs;
+		$opts->{'genomic-variation'} = \@svs;
 	}
 
 	# Create output directory if it not exist
@@ -467,7 +467,7 @@ HEADER
 		strand_bias          => $opts->{'strand-bias'},
 		seqid_weight         => $opts->{'seqid-weight'},
 		expression_matrix    => $opts->{'expression-matrix'},
-		structural_variation => $opts->{'structural-variation'}
+		genomic_variation    => $opts->{'genomic-variation'}
 	);
 
 	my $simulator;
@@ -496,7 +496,7 @@ App::Sandy::Role::Digest - Wrapper on Simulator class for genome/transcriptome s
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

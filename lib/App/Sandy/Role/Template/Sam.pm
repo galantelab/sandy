@@ -19,7 +19,7 @@ use constant {
 	SAM_VERSION   => '1.0'
 };
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 has '_flags' => (
 	traits     => ['Array'],
@@ -132,7 +132,7 @@ App::Sandy::Role::Template::Sam - Sam template role
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

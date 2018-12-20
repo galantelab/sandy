@@ -3,7 +3,7 @@ package App::Sandy::Role::Counter;
 
 use App::Sandy::Base 'role';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub with_make_counter {
 	# ALgorithm based in perlfaq:
@@ -40,7 +40,7 @@ App::Sandy::Role::Counter - Bayes counter
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

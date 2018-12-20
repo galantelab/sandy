@@ -7,7 +7,7 @@ use Text::ASCIITable;
 
 extends 'App::Sandy::CLI::Command';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 has 'db' => (
 	is         => 'ro',
@@ -68,7 +68,7 @@ App::Sandy::Command::Quality - quality command class. Manage quality profile dat
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 SYNOPSIS
 

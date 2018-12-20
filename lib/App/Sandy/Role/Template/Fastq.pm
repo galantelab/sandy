@@ -3,7 +3,7 @@ package App::Sandy::Role::Template::Fastq;
 
 use App::Sandy::Base 'role';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub with_fastq_template {
 	my ($self, $seqid_ref, $read_ref, $quality_ref) = @_;
@@ -23,7 +23,7 @@ App::Sandy::Role::Template::Fastq - Fastq template role
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

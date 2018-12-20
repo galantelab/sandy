@@ -6,7 +6,7 @@ use App::Sandy::Read::SingleEnd;
 
 extends 'App::Sandy::Seq';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 has '_read' => (
 	is         => 'ro',
@@ -95,7 +95,7 @@ App::Sandy::Seq::SingleEnd - App::Sandy::Seq subclass for simulate single-end en
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

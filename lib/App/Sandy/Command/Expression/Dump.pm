@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Command::Expression';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub validate_args {
 	my ($self, $args) = @_;
@@ -43,7 +43,7 @@ App::Sandy::Command::Expression::Dump - expression subcommand class. Dump an exp
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 SYNOPSIS
 

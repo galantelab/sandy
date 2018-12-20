@@ -9,7 +9,7 @@ extends 'App::Sandy::Read';
 
 with 'App::Sandy::Role::RNorm';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 has 'fragment_mean' => (
 	is       => 'ro',
@@ -88,7 +88,7 @@ App::Sandy::Read::PairedEnd - App::Sandy::Read subclass for simulate paired-end 
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

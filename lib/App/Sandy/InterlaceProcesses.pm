@@ -3,7 +3,7 @@ package App::Sandy::InterlaceProcesses;
 
 use App::Sandy::Base 'class';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 has 'foreign_pid' => (
 	is       => 'ro',
@@ -53,7 +53,7 @@ App::Sandy::InterlaceProcesses - Interlaces the processe id for differents proce
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

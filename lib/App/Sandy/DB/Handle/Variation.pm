@@ -11,7 +11,7 @@ use List::Util 'max';
 
 with qw/App::Sandy::Role::IO App::Sandy::Role::SeqID/;
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub insertdb {
 	my ($self, $file, $name, $source, $is_user_provided, $type, @args) = @_;
@@ -518,7 +518,7 @@ App::Sandy::DB::Handle::Variation - Class to handle structural variation databas
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

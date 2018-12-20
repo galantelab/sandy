@@ -50,7 +50,7 @@ _sandy_database() {
 				short_opts+=" -f -s"
 				;;
 			variation)
-				long_opts+=" --structural-variation --source"
+				long_opts+=" --genomic-variation --source"
 				short_opts+=" -a -s"
 				;;
 		esac
@@ -105,14 +105,14 @@ _sandy_genome() {
 		--read-stdd
 		--fragment-mean
 		--fragment-stdd
-		--structural-variation
-		--structural-variation-regex
+		--genomic-variation
+		--genomic-variation-regex
 	"
 
 	local short_opts="-h -u -v -p -o -O -1 -x -i -I -j -s -t -q -e -m -d -M -D -A -a -c"
 
 	case "$prev" in
-		--structural-variation|-a)
+		--genomic-variation|-a)
 			COMPREPLY=($(compgen -W "$(_sandy_database_option "variation")" -- "$cur"))
 			;;
 		--quality-profile|-q)

@@ -4,7 +4,7 @@ package App::Sandy::Role::Statistic;
 use App::Sandy::Base 'role';
 use List::Util 'sum';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub with_mean {
 	my ($self, $vet) = @_;
@@ -51,7 +51,7 @@ App::Sandy::Role::Statistic - Basic statistics
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

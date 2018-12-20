@@ -18,7 +18,7 @@ _sandy_help() {
 			'2:command:((
 				quality:manage\ quality\ profile\ database
 				expression:manage\ expression-matrix\ database
-				variation:manage\ structural\ variation\ database
+				variation:manage\ genomic\ variation\ database
 				genome:simulate\ genome\ sequencing
 				transcriptome:simulate\ transcriptome\ sequencing
 			))'
@@ -85,7 +85,7 @@ _sandy_database() {
 						;;
 					variation)
 						args+=(
-							{'(--structural-variation)-a','(-a)--structural-variation'}'[a structural variation name]:str:'
+							{'(--genomic-variation)-a','(-a)--genomic-variation'}'[a genomic variation name]:str:'
 						)
 						;;
 				esac
@@ -135,8 +135,8 @@ _sandy_simulation() {
 	case $cmd in
 		genome)
 			args+=(
-				{'(*--structural-variation)*-a','(*-a)*--structural-variation'}'[a list of structural variation from database]:str:->variation'
-				{'(*--structural-variation-regex)*-A','(*-A)*--structural-variation-regex'}'[a list of perl-like regex to match variations from database]:str:'
+				{'(*--genomic-variation)*-a','(*-a)*--genomic-variation'}'[a list of genomic variation from database]:str:->variation'
+				{'(*--genomic-variation-regex)*-A','(*-A)*--genomic-variation-regex'}'[a list of perl-like regex to match variations from database]:str:'
 				{'(--coverage)-c','(-c)--coverage'}'[fastq-file coverage]:float:'
 			)
 			;;
@@ -182,7 +182,7 @@ _sandy() {
 				citation:export\ citation\ in\ BibTeX\ format
 				quality:manage\ quality\ profile\ database
 				expression:manage\ expression-matrix\ database
-				variation:manage\ structural\ variation\ database
+				variation:manage\ genomic\ variation\ database
 				genome:simulate\ genome\ sequencing
 				transcriptome:simulate\ transcriptome\ sequencing
 			))'

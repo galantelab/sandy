@@ -7,7 +7,7 @@ extends 'App::Sandy::CLI::Command';
 
 with 'App::Sandy::Role::Digest';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub default_opt {
 	'paired-end-id'     => '%i.%U:%c:%F:%X-%Z',
@@ -52,7 +52,7 @@ App::Sandy::Command::Genome - simulate command class. Simulate genome sequencing
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 SYNOPSIS
 
@@ -91,10 +91,10 @@ version 0.21
                                      [default:"300"; Integer]
   -D, --fragment-stdd                the fragment standard deviation size for
                                      paired-end reads [default:"50"; Integer]
-  -a, --structural-variation         a list of structural variation entries from
+  -a, --genomic-variation            a list of genomic variation entries from
                                      variation database. This option may be passed
                                      multiple times [default:"none"]
-  -A, --structural-variation-regex   a list of perl-like regex to match structural
+  -A, --genomic-variation-regex      a list of perl-like regex to match genomic
                                      variation entries in variation database.
                                      This option may be passed multiple times
                                      [default:"none"]
@@ -194,9 +194,9 @@ B<Common escape characters>
 	 %n           read end position
 	 %a           read start position regarding reference genome ***
 	 %b           read end position regarding reference genome ***
-	 %v           structural variation position ***
+	 %v           genomic variation position ***
 	----------------------------------------------------------------------------
-	*** specific for structural variation (genome simulation only)
+	*** specific for genomic variation (genome simulation only)
 
 B<Paired-end specific escape characters>
 
@@ -217,7 +217,7 @@ B<Paired-end specific escape characters>
 	 %X           fragment start position regarding reference genome ***
 	 %Z           fragment end position regarding reference genome ***
 	----------------------------------------------------------------------------
-	*** specific for structural variation (genome simulation only)
+	*** specific for genomic variation (genome simulation only)
 
 =item B<--jobs>
 
@@ -273,25 +273,25 @@ distribution, but the user can choose among several profiles stored into the
 database or import his own data.
 See B<quality> command for more details
 
-=item B<--structural-variation>
+=item B<--genomic-variation>
 
-Sets the structural variation to be applied on the genome feeded. By
+Sets the genomic variation to be applied on the genome feeded. By
 default no variation is included to the simulation, but the user has
 the power to point some entries from B<variation> database or index his
 own data. This option accepts a list with comma separated values
 and can be passed multiple times, which is useful in order to join
-various types of structural variation into the same simulation. It is
-possible to combine this option with B<--structural-variation-regex>
-See B<variation> command for the available list of structural variation
+various types of genomic variation into the same simulation. It is
+possible to combine this option with B<--genomic-variation-regex>
+See B<variation> command for the available list of genomic variation
 entries
 
-=item B<--structural-variation-regex>
+=item B<--genomic-variation-regex>
 
 Applies perl-regex in the variation database and selects all entryes
 that match the pattern. This option accepts a list with comma separated
 values and can be passed multiple times. It is possible to combine this
-option with B<--structural-variation>
-See B<variation> command for the available list of structural variation
+option with B<--genomic-variation>
+See B<variation> command for the available list of genomic variation
 entries
 
 =back

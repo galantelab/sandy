@@ -15,7 +15,7 @@ use Parallel::ForkManager;
 
 with qw/App::Sandy::Role::IO App::Sandy::Role::SeqID/;
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 has 'argv' => (
 	is       => 'ro',
@@ -107,16 +107,16 @@ has 'expression_matrix' => (
 	required   => 0
 );
 
-has 'structural_variation' => (
+has 'genomic_variation' => (
 	is         => 'ro',
 	isa        => 'ArrayRef[Str]',
 	required   => 0
 );
 
-has '_structural_variation_names' => (
+has '_genomic_variation_names' => (
 	is         => 'ro',
 	isa        => 'Maybe[Str]',
-	builder    => '_build_structural_variation_names',
+	builder    => '_build_genomic_variation_names',
 	lazy_build => 1
 );
 
@@ -446,7 +446,7 @@ sub _build_seqid_raffle {
 			my $fasta_size = $indexed_fasta->{$seq_id}{size};
 
 			# Correct the weight according to the
-			# structural variation change by the ratio
+			# genomic variation change by the ratio
 			# between the table size and fasta size
 			my $factor = $size / $fasta_size;
 
@@ -601,29 +601,29 @@ sub _populate_key_weight {
 	return (\@keys, \@weights);
 }
 
-sub _build_structural_variation_names {
+sub _build_genomic_variation_names {
 	my $self = shift;
-	if ($self->structural_variation) {
-		return sprintf "[%s]", => join ", ", @{ $self->structural_variation };
+	if ($self->genomic_variation) {
+		return sprintf "[%s]", => join ", ", @{ $self->genomic_variation };
 	}
 }
 
-sub _retrieve_structural_variation {
+sub _retrieve_genomic_variation {
 	my $self = shift;
 	my $variation = App::Sandy::DB::Handle::Variation->new;
-	return $variation->retrievedb($self->structural_variation);
+	return $variation->retrievedb($self->genomic_variation);
 }
 
 sub _build_piece_table {
 	my $self = shift;
 
-	my $structural_variation = $self->_structural_variation_names;
+	my $genomic_variation = $self->_genomic_variation_names;
 	my $indexed_snv;
 
-	# Retrieve structural variation if the user provided it
-	if (defined $structural_variation) {
-		$indexed_snv = $self->_retrieve_structural_variation;
-		log_msg ":: Validate structural variation '$structural_variation' against indexed fasta ...";
+	# Retrieve genomic variation if the user provided it
+	if (defined $genomic_variation) {
+		$indexed_snv = $self->_retrieve_genomic_variation;
+		log_msg ":: Validate genomic variation '$genomic_variation' against indexed fasta ...";
 		$self->_validate_indexed_snv_against_fasta($indexed_snv);
 	}
 
@@ -664,7 +664,7 @@ sub _build_piece_table {
 	}
 
 	# Initialize the logical offsets and valodate the
-	# new size due to the structural variation
+	# new size due to the genomic variation
 
 	my @blacklist;
 
@@ -717,7 +717,7 @@ sub _build_piece_table {
 
 	unless (%piece_table) {
 		die "All fasta entries were removed due to deletions. ",
-			"Please, verify the structural variation '$structural_variation'\n";
+			"Please, verify the genomic variation '$genomic_variation'\n";
 	}
 
 	# If fasta_rtree has entries
@@ -737,10 +737,12 @@ sub _populate_piece_table {
 	my ($self, $table, $snvs) = @_;
 
 	for my $snv (@$snvs) {
-
+		# If there is an ID, make sure that it is not a comma, colon
+		# separated list. Else, make sure to keep the ref/alt length
+		# to max 25+25+1=51
 		my $annot = defined $snv->{id} && $snv->{id} ne '.'
-			? sprintf "%d:%s"    => $snv->{pos} + 1, $snv->{id}
-			: sprintf "%d:%s/%s" => $snv->{pos} + 1, $snv->{ref}, $snv->{alt};
+			? sprintf "%d:%s" => $snv->{pos} + 1, (split(/[,;]/, $snv->{id}))[0]
+			: sprintf "%d:%.25s/%.25s" => $snv->{pos} + 1, $snv->{ref}, $snv->{alt};
 
 		# Insertion
 		if ($snv->{ref} eq '-') {
@@ -761,7 +763,7 @@ sub _validate_indexed_snv_against_fasta {
 	my ($self, $indexed_snv) = @_;
 
 	my $indexed_fasta = $self->_fasta;
-	my $structural_variation = $self->_structural_variation_names;
+	my $genomic_variation = $self->_genomic_variation_names;
 
 	for my $std_seq_id (keys %$indexed_snv) {
 		my $snvs = delete $indexed_snv->{$std_seq_id};
@@ -781,7 +783,7 @@ sub _validate_indexed_snv_against_fasta {
 			# end of the sequence, not more
 			if (($snv->{ref} eq '-' && $snv->{pos} > $size) || ($snv->{ref} ne '-' && $snv->{pos} >= $size)) {
 				log_msg sprintf ":: In validating '%s': Position, %s/%s at %s:%d, outside fasta sequence",
-					$structural_variation, $snv->{ref}, $snv->{alt}, $seq_id, $snv->{pos} + 1;
+					$genomic_variation, $snv->{ref}, $snv->{alt}, $seq_id, $snv->{pos} + 1;
 
 				# Next snv
 				next;
@@ -791,7 +793,7 @@ sub _validate_indexed_snv_against_fasta {
 
 				if (uc($ref) ne uc($snv->{ref})) {
 					log_msg sprintf ":: In validating '%s': Not found reference '%s' at fasta position %s:%d",
-						$structural_variation, $snv->{ref}, $seq_id, $snv->{pos} + 1;
+						$genomic_variation, $snv->{ref}, $seq_id, $snv->{pos} + 1;
 
 					# Next snv
 					next;
@@ -1166,7 +1168,7 @@ App::Sandy::Simulator - Class responsible to make the simulation
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 

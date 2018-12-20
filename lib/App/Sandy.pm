@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::CLI::App';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub command_map {
 	genome        => 'App::Sandy::Command::Genome',
@@ -29,7 +29,7 @@ App::Sandy - App builder that simulates single-end and paired-end reads.
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 SYNOPSIS
 

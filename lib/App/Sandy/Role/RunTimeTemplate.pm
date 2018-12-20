@@ -3,7 +3,7 @@ package App::Sandy::Role::RunTimeTemplate;
 
 use App::Sandy::Base 'role';
 
-our $VERSION = '0.21'; # VERSION
+our $VERSION = '0.22'; # VERSION
 
 sub with_compile_template {
 	my ($self, $template, $input_name, $sym_table) = @_;
@@ -38,7 +38,7 @@ App::Sandy::Role::RunTimeTemplate - Extends class with runtime printf like funct
 
 =head1 VERSION
 
-version 0.21
+version 0.22
 
 =head1 AUTHORS
 
