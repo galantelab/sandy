@@ -37,7 +37,7 @@ sub rm_opt {
 	'strand-bias',
 	'coverage',
 	'seqid-weight',
-	'structural-variation'
+	'genomic-variation'
 }
 
 __END__
@@ -174,9 +174,9 @@ B<Common escape characters>
 	 %n           read end position
 	 %a           read start position regarding reference genome ***
 	 %b           read end position regarding reference genome ***
-	 %v           structural variation position ***
+	 %v           genomic variation position ***
 	----------------------------------------------------------------------------
-	*** specific for structural variation (genome simulation only)
+	*** specific for genomic variation (genome simulation only)
 
 B<Paired-end specific escape characters>
 
@@ -197,7 +197,7 @@ B<Paired-end specific escape characters>
 	 %X           fragment start position regarding reference genome ***
 	 %Z           fragment end position regarding reference genome ***
 	----------------------------------------------------------------------------
-	*** specific for structural variation (genome simulation only)
+	*** specific for genomic variation (genome simulation only)
 
 =item B<--jobs>
 
