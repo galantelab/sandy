@@ -37,6 +37,7 @@ an others) in a easy to use fashion.
 * Choose from a bulk of ready included databases for *quality profiles*,
 *expression matrixes* and *genomic variations*.
 * Import and record your own datasets to fit real experimental data.
+* Run many instances of *Sandy* in a scalable way by pulling its Docker [image](https://hub.docker.com/r/galantelab/sandy).
 
 
 
@@ -113,12 +114,12 @@ Finally install *Sandy* with:
 #### Or get Sandy in a Docker image ####
 
 If you prefer to avoid any intallation process and have Docker, you can just
-pull *Sandy's* image from Docker Hub with:
+pull *Sandy's* [image](https://hub.docker.com/r/galantelab/sandy) from Docker Hub with:
 ```bash
 	$ docker pull galantelab/sandy
 ```
 
-And you will take the latest version os *Sandy*, ready to rock!
+And you will take the latest version of *Sandy*, ready to rock!
 So, to view some instructions about how to use *Sandy* from a docker image, see
 the manual or consult the web [tutorial about Sandy usage from docker](https://galantelab.github.io/sandy/v0.22/main.html#docker-usage).
 

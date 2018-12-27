@@ -35,6 +35,7 @@ quality profiles alike.
 * Simulate reads adding many kinds of genomic variations (SNPs, INDELs, Fusions
 an others) in a easy to use fashion.
 * Improved way to record your own experimental data to the datasets entries.
+* Run many instances of *Sandy* in a scalable way by pulling its Docker [image](https://hub.docker.com/r/galantelab/sandy).
 
 
 
@@ -89,12 +90,12 @@ file on *Sandy's* GitHub [repository](https://github.com/galantelab/sandy).
 #### Or get Sandy in a Docker image ####
 
 If you prefer to avoid any intallation process and have Docker, you can just
-pull *Sandy's* image from Docker Hub with:
+pull *Sandy's* [image](https://hub.docker.com/r/galantelab/sandy) from Docker Hub with:
 ```bash
 	$ docker pull galantelab/sandy
 ```
 
-And you will take the latest version os *Sandy*, ready to rock!
+And you will take the latest version of *Sandy*, ready to rock!
 So, to view some instructions about how to use *Sandy* from a docker image, see
 the manual or consult this web [tutorial about Sandy usage from docker](#docker-usage).
 
@@ -768,8 +769,74 @@ builtin documentations with `man sandy` or `info sandy` commands.
 
 ### Docker Usage ###
 
-kdflkajsdfl
+The user can run many instances of *Sandy* in a scalable way by pulling its
+Docker [image](https://hub.docker.com/r/galantelab/sandy) from Docker Hub in
+a way aforementioned in the [Installation](#or-get-sandy-in-a-docker-image) section.
+
+Here, we describe how to port all the commands shown above to be used in a Docker
+cointainer in a very straightforward way. For example, given the command:
+```bash
+$ sandy help genome
+```
+
+All you have to do is substitute the word `sandy` by `docker run --rm -ti [options] galantelab/sandy`,
+like:
+```bash
+$ docker run --rm -ti [options] galantelab/sandy help genome
+```
+And the *options* are about the folders which you want to map inside the container.
+
+Let's see another example, supose you are in a directory like
+`host_path/folder1/` containing the file `gencode_pc_v26.fai.gz` on which you
+are trying to use the command bellow:
+```bash
+$ sandy transcriptome \
+		--expression-matrix=pancreas \
+		--quality-profile=hiseq_101 \
+		--sequencing-type=paired-end \
+		--fragment-mean=350 \
+		--fragment-stdd=100 \
+		--prefix=pancreas_sim \
+		--output-dir=sim_dir \
+		--id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
+		--verbose \
+		--seed=123 \
+		--jobs=30 \
+		--no-gzip \
+		gencode_pc_v26.fa.gz
+```
+
+So, to adapt such a command to a Docker usage looking up to the correct path of
+the directories containing your data, only substitute the first line with:
+```bash
+$ docker run --rm -ti -v /ABSOLUTE/host_path/folder1:/ABSOLUTE/container_path/folder2 galantelab/sandy transcriptome \
+		--expression-matrix=pancreas \
+		--quality-profile=hiseq_101 \
+		--sequencing-type=paired-end \
+		--fragment-mean=350 \
+		--fragment-stdd=100 \
+		--prefix=pancreas_sim \
+		--output-dir=sim_dir \
+		--id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
+		--verbose \
+		--seed=123 \
+		--jobs=30 \
+		--no-gzip \
+		gencode_pc_v26.fa.gz
+```
+
+The `-v /ABSOLUTE/host_path:/ABSOLUTE/container_path/folder1` option maps the
+directory `folder1` (adding its absolute path) in the host to the `folder2`, in
+the container, at `/ABSOLUTE/container_path/` directory. Obviously those paths
+could be something like `/home/user/dataset/`, we are just highlighting the
+importance of using the absolute paths here, otherwise it won't work correctly.
+Additionally, you can map, using the `-v` option, as many directories as your
+data needs.
+
+See [Docker documentation](https://docs.docker.com/) for more information about
+options and commands for Docker.
 
 
 
+--------------------------------------------------------------------------------
 [Back to Top](#contents-at-a-glance) | [Back to main page](../README.md)
