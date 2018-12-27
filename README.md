@@ -54,12 +54,13 @@ an others) in a easy to use fashion.
 
 ### Documentations ###
 
-1. [Version 0.19 (*current*)](v0.19/main.md)
+1. [Version 0.22 - *latest*](v0.22/main.md)
+
+2. [Version 0.19](v0.19/main.md)
 	1. [Case study: Under Construction](v0.19/case.md)
 
-2. [Version 0.18](v0.18/main.md)
+3. [Version 0.18](v0.18/main.md)
 	1. [Case study: Sandy's Performance](v0.18/case.md)
-
 
 
 ### Installation ###
@@ -107,7 +108,22 @@ Finally install *Sandy* with:
 	$ cpanm App::Sandy
 ```
 
-For more details, see the [INSTALL](https://github.com/galantelab/sandy/blob/master/INSTALL)
+
+
+#### Or get Sandy in a Docker image ####
+
+If you prefer to avoid any intallation process and have Docker, you can just
+pull *Sandy's* image from Docker Hub with:
+```bash
+	$ docker pull galantelab/sandy
+```
+
+And you will take the latest version os *Sandy*, ready to rock!
+So, to view some instructions about how to use *Sandy* from a docker image, see
+the manual or consult the web [tutorial about Sandy usage from docker](https://galantelab.github.io/sandy/v0.22/main.html#docker-usage).
+
+
+For many more details, see the [INSTALL](https://github.com/galantelab/sandy/blob/master/INSTALL)
 file on *Sandy's* GitHub [repository](https://github.com/galantelab/sandy).
 
 
