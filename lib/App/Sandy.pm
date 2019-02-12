@@ -57,7 +57,7 @@ present Sandy, a straightforward, easy to use, fast, complete set of tools
 to generate synthetic second and third-generation sequencing reads. Sandy
 simulates whole genome sequencing, whole exome sequencing, RNAseq reads.
 Sandy presents also several features to the users manipulate the data, as
-well as well-organized database containing the ‘true’ information (based on
+well as well-organized database containing the 'true' information (based on
 the generated data) of the reads position into the genome, gene and transcript
 expression, sequencing errors, and the sequencing coverage. One of the most
 impressive features of Sandy is the power to simulate polymorphisms as snvs,
