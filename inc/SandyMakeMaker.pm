@@ -1,5 +1,5 @@
 package inc::SandyMakeMaker;
-# ABSTRACT: Install bash/zsh completion for sandy
+# ABSTRACT: Install bash/zsh completion and database
 
 use Moose;
 
@@ -20,9 +20,24 @@ sub postamble {
 
 	my $cmd = q{
 # --- App::Sandy custom postamble section:
+INST_DB = $(INST_LIB)/auto/share/dist/$(DISTNAME)
 INST_SHARE = blib/share
 INSTALLSHARE = /usr/share
 DESTINSTALLSHARE = $(DESTDIR)$(INSTALLSHARE)
+PERM_DB_DIR = 0777
+PERM_DB = 666
+
+pure_perl_install :: all
+	$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLPRIVLIB)/auto/share/dist/$(DISTNAME)"
+	$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLPRIVLIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
+
+pure_site_install :: all
+	$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLSITELIB)/auto/share/dist/$(DISTNAME)"
+	$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLSITELIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
+
+pure_vendor_install :: all
+	$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLVENDORLIB)/auto/share/dist/$(DISTNAME)"
+	$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLVENDORLIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
 
 pure_perl_install :: all
 	-$(NOECHO) $(MOD_INSTALL) \
@@ -43,11 +58,13 @@ pure_vendor_install :: all
 		"$(INST_SHARE)" "$(DESTINSTALLSHARE)"
 
 config ::
-	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_SHARE)'\'')' -- \
-		'share/completions/sandy-completion.bash' '$(INST_SHARE)/bash-completion/completions/sandy'
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_DB)'\'')' -- \
+		'share/assets/db.sql' '$(INST_DB)/db.sql' \
+		'share/assets/db.sqlite3' '$(INST_DB)/db.sqlite3'
 
 config ::
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_SHARE)'\'')' -- \
+		'share/completions/sandy-completion.bash' '$(INST_SHARE)/bash-completion/completions/sandy' \
 		'share/completions/sandy-completion.zsh' '$(INST_SHARE)/zsh/site-functions/_sandy'
 
 # --- END: App::Sandy custom postamble section
