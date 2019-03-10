@@ -1,28 +1,28 @@
-## Welcome to *Sandy* simulator! ##
+## Welcome to **SANDY** simulator! ##
 
 
 If you're looking for a bioinformatics tool that provides a simple engine to generate
 single-end/paired-end reads from a given FASTA file or expression matrix file,
-then *Sandy* is your choice!
+then **SANDY** is your choice!
 
 
 
 ### Introduction ###
-*Sandy* is a bioinformatics tool that provides a simple engine to generate
+**SANDY** is a bioinformatics tool that provides a simple engine to generate
 single-end/paired-end reads from a given FASTA file. Many next-generation
 sequencing (NGS) analyses rely on hypothetical models and principles that
 are not precisely satisfied in practice. Simulated data, which provides
 positive controls would be a perfect way to overcome these difficulties.
 Nevertheless, most of NGS simulators are extremely complex to use, they do
 not cover all kinds of the desired features needed by the users, and (some)
-are very slow to run in a standard computer. Here, we present *Sandy*, a
+are very slow to run in a standard computer. Here, we present **SANDY**, a
 straightforward, easy to use, fast, complete set of tools to generate
 synthetic next-generation sequencing reads. Sandy simulates whole genome
 sequencing, whole exome sequencing, RNAseq reads and it presents several
 features to the users to manipulate the data. One of the most impressive features
-of *Sandy* is the power to simulate polymorphisms as snvs, indels and structural
+of **SANDY** is the power to simulate polymorphisms as snvs, indels and structural
 variations along with the sequencing reads - with no need of further processing
-steps. *Sandy* can be used therefore for benchmarking results of a variety of
+steps. **SANDY** can be used therefore for benchmarking results of a variety of
 pipelines in genomics and trancriptomics.
 
 So, among the most killing features, we would like to highlight these:
@@ -37,7 +37,7 @@ an others) in a easy to use fashion.
 * Choose from a bulk of ready included databases for *quality profiles*,
 *expression matrixes* and *genomic variations*.
 * Import and record your own datasets to fit real experimental data.
-* Run many instances of *Sandy* in a scalable way by pulling its Docker [image](https://hub.docker.com/r/galantelab/sandy).
+* Run many instances of *SANDY** in a scalable way by pulling its Docker [image](https://hub.docker.com/r/galantelab/sandy).
 
 
 
@@ -86,7 +86,7 @@ installed. To install them according to your distro, use:
 	$ pacman -S perl zlib gcc make
 ```
 
-*Sandy* uses the *Comprehensive Perl Archive Network*, CPAN, as its package
+**SANDY** uses the *Comprehensive Perl Archive Network*, CPAN, as its package
 manager, which allows a good control over all dependencies needed. If you have
 Perl installed, then you may have the cpan command utility. At the first run,
 cpan will interactively configure your environment and mirror.
@@ -102,9 +102,9 @@ install not only Sandy, but also all its dependencies, recursively.
 
 
 
-#### Installing *Sandy* properly ####
+#### Installing **SANDY** properly ####
 
-Finally install *Sandy* with:
+Finally install **SANDY** with:
 ```bash
 	$ cpanm App::Sandy
 ```
@@ -118,14 +118,14 @@ this:
 #### Or get Sandy in a Docker image ####
 
 If the user prefer to avoid any intallation process and have Docker, you can just
-pull *Sandy's* [image](https://hub.docker.com/r/galantelab/sandy) from Docker
+pull *SANDY*'s* [image](https://hub.docker.com/r/galantelab/sandy) from Docker
 Hub with:
 ```bash
 	$ docker pull galantelab/sandy
 ```
 
-And will take the latest version of *Sandy*, ready to rock!
-So, to view some instructions about how to use *Sandy* from a docker image, see
+And will take the latest version of **SANDY**, ready to rock!
+So, to view some instructions about how to use **SANDY** from a docker image, see
 the manual or consult the web [tutorial about Sandy usage from docker](https://galantelab.github.io/sandy/v0.22/main.html#docker-usage).
 
 **Important:** Docker has some strict default configurations for memory and CPU
@@ -134,7 +134,7 @@ behalf by accessing the [Preferences menu](https://docs.docker.com/docker-for-ma
 on the Docker icon at top right corner of their desktops.
 
 For many more details, see the [INSTALL](https://github.com/galantelab/sandy/blob/master/INSTALL)
-file on *Sandy's* GitHub [repository](https://github.com/galantelab/sandy).
+file on *SANDY*'s* GitHub [repository](https://github.com/galantelab/sandy).
 
 
 
@@ -158,7 +158,7 @@ file on *Sandy's* GitHub [repository](https://github.com/galantelab/sandy).
 
 ### Citation ###
 
-If *Sandy* was somehow useful in your research, please cite it:
+If **SANDY** was somehow useful in your research, please cite it:
 
 **DOI**
 
