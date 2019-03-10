@@ -35,9 +35,14 @@ Pull **Sandy** image from [dockerhub](https://hub.docker.com) registry:
 It's possible to pull a specific image version by appending a colon with the required tag.
 For example:
 
-`$ docker pull galantelab/sandy:release-v0.18`
+`$ docker pull galantelab/sandy:release-v0.22`
 
 For a complete list of **Sandy** versions, please access the dockerhub tag page: <https://hub.docker.com/r/galantelab/sandy/tags/>
+
+### Setting
+
+Mac users may need to change the default settings in order to make use
+of all CPUs and memory. For a complete tutorial, see: [Get started with Docker Desktop for Mac](https://docs.docker.com/docker-for-mac/#preferences-menu)
 
 ### Usage
 
