@@ -5,6 +5,7 @@
       "J. Leonel Buzzo <lbuzzo@mochsl.org.br>",
       "Felipe R. C. dos Santos <fsantos@mochsl.org.br>",
       "Helena B. Concei\u00e7\u00e3o <hconceicao@mochsl.org.br>",
+      "Rodrigo Barreiro <rbarreiro@mochsl.org.br>",
       "Gabriela Guardia <gguardia@mochsl.org.br>",
       "Fernanda Orpinelli <forpinelli@mochsl.org.br>",
       "Pedro A. F. Galante <pgalante@mochsl.org.br>"
@@ -23,7 +24,6 @@
       "configure" : {
          "requires" : {
             "ExtUtils::MakeMaker" : "0",
-            "File::ShareDir::Install" : "0.03",
             "perl" : "5.004"
          }
       },
@@ -104,7 +104,7 @@
          "web" : "https://github.com/galantelab/sandy"
       }
    },
-   "version" : "0.22",
+   "version" : "0.23",
    "x_generated_by_perl" : "v5.28.0",
    "x_serialization_backend" : "Cpanel::JSON::XS version 4.06"
 }

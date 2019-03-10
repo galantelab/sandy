@@ -5,6 +5,7 @@ author:
   - 'J. Leonel Buzzo <lbuzzo@mochsl.org.br>'
   - 'Felipe R. C. dos Santos <fsantos@mochsl.org.br>'
   - 'Helena B. Conceição <hconceicao@mochsl.org.br>'
+  - 'Rodrigo Barreiro <rbarreiro@mochsl.org.br>'
   - 'Gabriela Guardia <gguardia@mochsl.org.br>'
   - 'Fernanda Orpinelli <forpinelli@mochsl.org.br>'
   - 'Pedro A. F. Galante <pgalante@mochsl.org.br>'
@@ -17,7 +18,6 @@ build_requires:
   perl: '5.014'
 configure_requires:
   ExtUtils::MakeMaker: '0'
-  File::ShareDir::Install: '0.03'
   perl: '5.004'
 dynamic_config: 0
 generated_by: 'Dist::Zilla version 6.012, CPAN::Meta::Converter version 2.150010'
@@ -70,6 +70,6 @@ resources:
   bugtracker: https://github.com/galantelab/sandy/issues
   homepage: https://galantelab.github.io/sandy/
   repository: git://github.com/galantelab/sandy.git
-version: '0.22'
+version: '0.23'
 x_generated_by_perl: v5.28.0
 x_serialization_backend: 'YAML::Tiny version 1.73'

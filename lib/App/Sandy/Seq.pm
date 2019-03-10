@@ -13,7 +13,7 @@ with qw{
 	App::Sandy::Role::RNorm
 };
 
-our $VERSION = '0.22'; # VERSION
+our $VERSION = '0.23'; # VERSION
 
 has 'format' => (
 	is         => 'ro',
@@ -256,7 +256,7 @@ App::Sandy::Seq - Base class to simulate seq entries
 
 =head1 VERSION
 
-version 0.22
+version 0.23
 
 =head1 AUTHORS
 
@@ -277,6 +277,10 @@ Felipe R. C. dos Santos <fsantos@mochsl.org.br>
 =item *
 
 Helena B. Conceição <hconceicao@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
 
 =item *
 

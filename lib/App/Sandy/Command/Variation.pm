@@ -7,7 +7,7 @@ use Text::ASCIITable;
 
 extends 'App::Sandy::CLI::Command';
 
-our $VERSION = '0.22'; # VERSION
+our $VERSION = '0.23'; # VERSION
 
 has 'db' => (
 	is         => 'ro',
@@ -67,7 +67,7 @@ App::Sandy::Command::Variation - variation command class. Manage structural vari
 
 =head1 VERSION
 
-version 0.22
+version 0.23
 
 =head1 SYNOPSIS
 
@@ -108,6 +108,10 @@ Felipe R. C. dos Santos <fsantos@mochsl.org.br>
 =item *
 
 Helena B. Conceição <hconceicao@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
 
 =item *
 

@@ -2,13 +2,9 @@
 
 Sandy - A straightforward and complete next-generation sequencing read simulator
 
-[![Build Status](https://travis-ci.org/galantelab/sandy.svg?branch=master)](https://travis-ci.org/galantelab/sandy)
-[![CPAN version](https://badge.fury.io/pl/App-Sandy.svg)](https://badge.fury.io/pl/App-Sandy)
-[![DOI](https://zenodo.org/badge/90221400.svg)](https://zenodo.org/badge/latestdoi/90221400)
-
 # VERSION
 
-version 0.22
+version 0.23
 
 # SYNOPSIS
 
@@ -16,25 +12,16 @@ version 0.22
 
 # DESCRIPTION
 
-**Sandy** is a bioinformatic tool that provides a simple engine to generate
-single-end/paired-end reads from a given fasta file. Many next-generation
-sequencing analyses rely on hypothetical models and principles that are
-not precisely satisfied in practice. Simulated data, which provides positive
-controls, would be a perfect way to overcome these difficulties. Here, we
-present Sandy, a straightforward, easy to use, fast, complete set of tools
-to generate synthetic second and third-generation sequencing reads. Sandy
-simulates whole genome sequencing, whole exome sequencing, RNAseq reads.
-Sandy presents also several features to the users manipulate the data, as
-well as well-organized database containing the ‘true’ information (based on
-the generated data) of the reads position into the genome, gene and transcript
-expression, sequencing errors, and the sequencing coverage. One of the most
-impressive features of Sandy is the power to simulate polymorphisms as snvs,
-indels and structural variations (e.g. gene duplication, retro-duplication,
-gene-fusion) along with the sequencing reads - with no need of further processing
-steps. Sandy can be used therefore for benchmarking results of a variety of
-pipelines in the genomics or transcriptomics, as well as in generating new
-hypotheses and helping in the best designing of sequencing projects, possibly
-optimizing time and costs.
+**SANDY** is a bioinformatics tool that provides a simple engine to simulate next-generation
+sequencing for genomic and transcriptomic data. Simulated data works as experimental control
+\- a key step to optimize NGS analysis - in comparison to hypothetical models. SANDY is a
+straightforward, easy-to-use, fast and highly customizable tool that generates reads requiring
+only a FASTA file as input. SANDY can simulate single/paired-end reads from both whole exome
+sequencing and RNA-seq as if produced from the most used second and third-generation sequencing
+platforms. SANDY’s reads can be simulated with genetic variations such as SNVs, indels and gene
+fusions. For customization purposes, SANDY have built-in (native) databases that can be easily
+extended with varying gene/transcript expression profiles, sequencing errors, sequencing
+coverages and genomic variations.
 
 # INSTALLATION
 
@@ -76,6 +63,14 @@ Finally install **Sandy**:
 
     % cpanm App::Sandy
 
+In some cases, you may need to pass the flag '--force' to **cpanm**:
+
+    % cpanm --force App::Sandy
+
+If you concern about speed, you can avoid testing with the flag '--notest':
+
+    % cpanm --notest App::Sandy
+
 For more details, see [INSTALL](https://github.com/galantelab/sandy/blob/master/INSTALL) file
 
 # ACKNOWLEDGMENTS
@@ -89,6 +84,7 @@ For more details, see [INSTALL](https://github.com/galantelab/sandy/blob/master/
 - J. Leonel Buzzo <lbuzzo@mochsl.org.br>
 - Felipe R. C. dos Santos <fsantos@mochsl.org.br>
 - Helena B. Conceição <hconceicao@mochsl.org.br>
+- Rodrigo Barreiro <rbarreiro@mochsl.org.br>
 - Gabriela Guardia <gguardia@mochsl.org.br>
 - Fernanda Orpinelli <forpinelli@mochsl.org.br>
 - Pedro A. F. Galante <pgalante@mochsl.org.br>

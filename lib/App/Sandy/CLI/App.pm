@@ -10,7 +10,7 @@ extends 'App::Sandy::CLI';
 
 with 'App::Sandy::Role::ParseArgv';
 
-our $VERSION = '0.22'; # VERSION
+our $VERSION = '0.23'; # VERSION
 
 has 'command_stack' => (
 	traits  => ['Array'],
@@ -240,7 +240,7 @@ App::Sandy::CLI::App - App::Sandy::CLI subclass for command line application int
 
 =head1 VERSION
 
-version 0.22
+version 0.23
 
 =head1 SYNOPSIS
 
@@ -336,6 +336,10 @@ Felipe R. C. dos Santos <fsantos@mochsl.org.br>
 =item *
 
 Helena B. Conceição <hconceicao@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
 
 =item *
 

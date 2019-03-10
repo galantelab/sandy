@@ -1,5 +1,10 @@
 Revision history for App-Sandy
 
+0.23      2019-03-10 17:20:19-03:00 America/Sao_Paulo
+
+	- Fix database permissions
+	- Improve README.md and docker/README.md
+
 0.22      2018-12-20 16:18:05-02:00 America/Sao_Paulo
 
 	- Change docker repository to the namespace galantelab

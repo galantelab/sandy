@@ -6,7 +6,7 @@ use App::Sandy::Read::PairedEnd;
 
 extends 'App::Sandy::Seq';
 
-our $VERSION = '0.22'; # VERSION
+our $VERSION = '0.23'; # VERSION
 
 has 'fragment_mean' => (
 	is         => 'ro',
@@ -176,7 +176,7 @@ App::Sandy::Seq::PairedEnd - App::Sandy::Seq subclass for simulate paired-end en
 
 =head1 VERSION
 
-version 0.22
+version 0.23
 
 =head1 AUTHORS
 
@@ -197,6 +197,10 @@ Felipe R. C. dos Santos <fsantos@mochsl.org.br>
 =item *
 
 Helena B. Conceição <hconceicao@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
 
 =item *
 

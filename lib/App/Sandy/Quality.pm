@@ -6,7 +6,7 @@ use App::Sandy::DB::Handle::Quality;
 
 with 'App::Sandy::Role::Counter';
 
-our $VERSION = '0.22'; # VERSION
+our $VERSION = '0.23'; # VERSION
 
 has 'quality_profile' => (
 	is         => 'ro',
@@ -175,7 +175,7 @@ App::Sandy::Quality - Class to simulate quality entries
 
 =head1 VERSION
 
-version 0.22
+version 0.23
 
 =head1 AUTHORS
 
@@ -196,6 +196,10 @@ Felipe R. C. dos Santos <fsantos@mochsl.org.br>
 =item *
 
 Helena B. Conceição <hconceicao@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
 
 =item *
 

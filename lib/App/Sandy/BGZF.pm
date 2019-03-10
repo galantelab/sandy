@@ -5,7 +5,7 @@ package App::Sandy::BGZF;
 use App::Sandy::Base 'class';
 use Compress::BGZF::Writer;
 
-our $VERSION = '0.22'; # VERSION
+our $VERSION = '0.23'; # VERSION
 
 sub TIEHANDLE {
 	my ($class, $file, $level) = @_;
@@ -34,7 +34,7 @@ App::Sandy::BGZF - Wrapper around Compress::BGZF::Writer in order
 
 =head1 VERSION
 
-version 0.22
+version 0.23
 
 =head1 AUTHORS
 
@@ -55,6 +55,10 @@ Felipe R. C. dos Santos <fsantos@mochsl.org.br>
 =item *
 
 Helena B. Conceição <hconceicao@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
 
 =item *
 

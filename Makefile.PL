@@ -8,15 +8,11 @@ use warnings;
 
 use ExtUtils::MakeMaker;
 
-use File::ShareDir::Install;
-install_share dist => "share\/assets";
-
 my %WriteMakefileArgs = (
   "ABSTRACT" => "A straightforward and complete next-generation sequencing read simulator",
-  "AUTHOR" => "Thiago L. A. Miller <tmiller\@mochsl.org.br>, J. Leonel Buzzo <lbuzzo\@mochsl.org.br>, Felipe R. C. dos Santos <fsantos\@mochsl.org.br>, Helena B. Concei\x{e7}\x{e3}o <hconceicao\@mochsl.org.br>, Gabriela Guardia <gguardia\@mochsl.org.br>, Fernanda Orpinelli <forpinelli\@mochsl.org.br>, Pedro A. F. Galante <pgalante\@mochsl.org.br>",
+  "AUTHOR" => "Thiago L. A. Miller <tmiller\@mochsl.org.br>, J. Leonel Buzzo <lbuzzo\@mochsl.org.br>, Felipe R. C. dos Santos <fsantos\@mochsl.org.br>, Helena B. Concei\x{e7}\x{e3}o <hconceicao\@mochsl.org.br>, Rodrigo Barreiro <rbarreiro\@mochsl.org.br>, Gabriela Guardia <gguardia\@mochsl.org.br>, Fernanda Orpinelli <forpinelli\@mochsl.org.br>, Pedro A. F. Galante <pgalante\@mochsl.org.br>",
   "CONFIGURE_REQUIRES" => {
-    "ExtUtils::MakeMaker" => 0,
-    "File::ShareDir::Install" => "0.03"
+    "ExtUtils::MakeMaker" => 0
   },
   "DISTNAME" => "App-Sandy",
   "EXE_FILES" => [
@@ -71,7 +67,7 @@ my %WriteMakefileArgs = (
     "Test::UseAllModules" => 0,
     "autodie" => 0
   },
-  "VERSION" => "0.22",
+  "VERSION" => "0.23",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -134,12 +130,6 @@ delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
 
 WriteMakefile(%WriteMakefileArgs);
 
-{
-package
-MY;
-use File::ShareDir::Install qw(postamble);
-}
-
 package MY;
 
 use File::ShareDir::Install;
@@ -150,9 +140,24 @@ sub postamble {
 
 	my $cmd = q{
 # --- App::Sandy custom postamble section:
+INST_DB = $(INST_LIB)/auto/share/dist/$(DISTNAME)
 INST_SHARE = blib/share
 INSTALLSHARE = /usr/share
 DESTINSTALLSHARE = $(DESTDIR)$(INSTALLSHARE)
+PERM_DB_DIR = 0777
+PERM_DB = 666
+
+pure_perl_install :: all
+	$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLPRIVLIB)/auto/share/dist/$(DISTNAME)"
+	$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLPRIVLIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
+
+pure_site_install :: all
+	$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLSITELIB)/auto/share/dist/$(DISTNAME)"
+	$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLSITELIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
+
+pure_vendor_install :: all
+	$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLVENDORLIB)/auto/share/dist/$(DISTNAME)"
+	$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLVENDORLIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
 
 pure_perl_install :: all
 	-$(NOECHO) $(MOD_INSTALL) \
@@ -173,11 +178,13 @@ pure_vendor_install :: all
 		"$(INST_SHARE)" "$(DESTINSTALLSHARE)"
 
 config ::
-	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_SHARE)'\'')' -- \
-		'share/completions/sandy-completion.bash' '$(INST_SHARE)/bash-completion/completions/sandy'
+	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_DB)'\'')' -- \
+		'share/assets/db.sql' '$(INST_DB)/db.sql' \
+		'share/assets/db.sqlite3' '$(INST_DB)/db.sqlite3'
 
 config ::
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_SHARE)'\'')' -- \
+		'share/completions/sandy-completion.bash' '$(INST_SHARE)/bash-completion/completions/sandy' \
 		'share/completions/sandy-completion.zsh' '$(INST_SHARE)/zsh/site-functions/_sandy'
 
 # --- END: App::Sandy custom postamble section

@@ -28,7 +28,7 @@ with qw{
 	App::Sandy::Role::Counter
 };
 
-our $VERSION = '0.22'; # VERSION
+our $VERSION = '0.23'; # VERSION
 
 sub insertdb {
 	my ($self, $file, $name, $source, $is_user_provided, $error, $single_molecule, $type) = @_;
@@ -329,7 +329,7 @@ App::Sandy::DB::Handle::Quality - Class to handle quality database schemas.
 
 =head1 VERSION
 
-version 0.22
+version 0.23
 
 =head1 AUTHORS
 
@@ -350,6 +350,10 @@ Felipe R. C. dos Santos <fsantos@mochsl.org.br>
 =item *
 
 Helena B. Conceição <hconceicao@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
 
 =item *
 
