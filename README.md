@@ -186,3 +186,8 @@ This software is Copyright (c) 2018 by Teaching and Research Institute from Sír
 This is free software, licensed under:
 
 `The GNU General Public License, Version 3, June 2007`
+
+--------------------------------------------------------------------------------
+*So long and thanks for all the fish!*
+
+[Back to Top](README.md)
