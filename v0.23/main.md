@@ -675,7 +675,7 @@ and all entries for variations will be shown:
 2. To increase the database with user's own data, use the `add` sub-command,
 like this:
 	```bash
-	sandy variation add -a 'my_variations_id' my_vatiations.txt
+	$ sandy variation add -a 'my_variations_id' my_vatiations.txt
 	```
 Note that, before the new entry can appear in the database's list, the new
 variation's file needs to be validated, and if it can't, an error message will
@@ -686,30 +686,30 @@ gene fusions).
 3. Now, to use the recently added variations specifications in a genomic
 project, the user can use the `-a` option with the id registered for that file:
 	```bash
-	sandy genome -a 'my_variations_id' hg38.fa
+	$ sandy genome -a 'my_variations_id' hg38.fa
 	```
 3. User can remove no-vendors entries from database as well:
 	```bash
-	sandy variation remove 'my_vatiations_id'
+	$ sandy variation remove 'my_vatiations_id'
 	```
 Note that the user can't remove any vendor's entry.
 4. Also, to reset all your variation entries to the original state (only with
 the vendor's data), use the `restore` sub-command.
 	```bash
-	sandy variation restore
+	$ sandy variation restore
 	```
 5. Finally, when an user wants to simulate a reference genome with a high
 coverage (ex. 50x) and insert some variations in it (maybe to abtain a positive
 control for some other algorithm he's using), he can try this:
 	```bash
-	sandy genome -c 50 -a NA12878_hg38_chrX hg38.fa
+	$ sandy genome -c 50 -a NA12878_hg38_chrX hg38.fa
 	```
 In this example, he has simulated reads for the whole genome, but the variations
 are only in the X chromosome of the NA12878 individue in *SANDY's* database. An
 even better way to insert variations to simulations is to use a
 *regular expression* to search the entire database, like this:
 	```bash
-	sandy genome -c 50 -A NA12878* -a fusion_hg38_BCR-ABL1 hg38.fa
+	$ sandy genome -c 50 -A NA12878* -a fusion_hg38_BCR-ABL1 hg38.fa
 	```
 This way, all entries that match NA12878 variations will be taken and,
 additionally, a well studied gene fusion fusion_hg38_BCR-ABL1 introduced.
@@ -729,7 +729,7 @@ in it with a few words!
 *SANDY* project is made in a rolling release way, so the user can easily find
 the version number he's using:
 ```bash
-sandy version
+$ sandy version
 ```
 
 ##### Command `citation` #####
@@ -738,7 +738,7 @@ If *SANDY* was somehow useful, please cite its authors. With the `citation`
 command, you can obtain a correct BibTeX entry and/or DOI number for the
 version of *SANDY* you're using:
 ```bash
-sandy citation
+$ sandy citation
 ```
 
 --------------------------------------------------------------------------------
@@ -858,4 +858,6 @@ options and commands for Docker.
 
 
 --------------------------------------------------------------------------------
+*So long and thanks for all the fish!*
+
 [Back to Top](#contents-at-a-glance) | [Back to main page](../README.md)
