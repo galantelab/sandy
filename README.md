@@ -37,7 +37,7 @@ an others) in a easy to use fashion.
 * Choose from a bulk of ready included databases for *quality profiles*,
 *expression matrixes* and *genomic variations*.
 * Import and record your own datasets to fit real experimental data.
-* Run many instances of *SANDY** in a scalable way by pulling its Docker [image](https://hub.docker.com/r/galantelab/sandy).
+* Run many instances of **SANDY** in a scalable way by pulling its Docker [image](https://hub.docker.com/r/galantelab/sandy).
 
 
 
@@ -68,22 +68,22 @@ an others) in a easy to use fashion.
 
 #### Prerequisites ####
 
-Along with **Perl**, the user must have **zlib**, **gcc** and **make** packages
-installed. To install them according to your distro, use:
+Along with **Perl**, the user must have **zlib**, **gcc**, **make** and
+**perldoc** packages installed. To install them according to your distro, use:
 
 * Debian/Ubuntu
 ```bash
-	$ apt-get install perl zlib1g-dev gcc make
+	$ apt-get install perl zlib1g-dev gcc make perl-doc
 ```
 
 * CentOS/Fedora
 ```bash
-	$ yum install perl zlib gcc make
+	$ yum install perl zlib gcc make perl-doc
 ```
 
 * Archlinux
 ```bash
-	$ pacman -S perl zlib gcc make
+	$ pacman -S perl zlib gcc make perl-doc
 ```
 
 **SANDY** uses the *Comprehensive Perl Archive Network*, CPAN, as its package
@@ -125,6 +125,7 @@ Hub with:
 ```
 
 And will take the latest version of **SANDY**, ready to rock!
+
 So, to view some instructions about how to use **SANDY** from a docker image, see
 the manual or consult the web [tutorial about Sandy usage from docker](https://galantelab.github.io/sandy/v0.22/main.html#docker-usage).
 

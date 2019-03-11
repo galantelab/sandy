@@ -176,9 +176,8 @@ Use it to generate simulated FASTq-files from a given FASTA-file.
 The `genome` command sets these default options for a genome sequencing
 simulation:
 * The strand is **randomly** chosen;
-* The number of reads is calculated by the coverage;
-* The chromossomes are raffled following a weighted raffle with the
-sequence length as the bias;
+* The total number of reads is calculated by the coverage;
+* Chromosome reads are proportional to sequence lengths;
 
 **Usage:**
 ```bash
@@ -186,7 +185,7 @@ $ sandy genome [options] <fasta-file>
 ```
 whose options' exaustive list can be consulted by `sandy genome -h` or
 even `sandy help genome` commands.
-At least one fasta-file must be given as the `<FILEs>` term. The results
+At least one fasta-file must be given as the `<fasta-file>` term. The results
 will be one or two fastaq-files, depending on the sequencing-type option,
 `-t`, for single-ended or paired-ended reads, and an additional file for
 the reads-counts.
@@ -217,14 +216,13 @@ Options							| Description
 -A, --genomic-variation-regex	| a list of perl-like regex to match structural <br />variation entries in variation database. <br />This option may be passed multiple times <br />[default:"none"]
 
 **Some examples:**
-1. These two commands, with equal effects, will produce two FASTq-files
-(sequencing-type default is "paired-end"), both with a coverage of 20x
-(coverage default is 8), and a plain-text reads-count file in a tab separated
-fashion.
+1. The following command will produce two FASTq files (default sequencing-type
+is “paired-end”), both with a coverage of 20x (default coverage is 8), and a
+plain text reads-count file in a tab-separated fashion.
 	```bash
 	$ sandy genome --verbose --sequencing-type=paired-end --coverage=20 hg38.fa 2> sim.log
 	```
-or
+or, equivalently
 	```bash
 	$ sandy genome -v -t paired-end -c 20 hg38.fa 2> sim.log
 	```
@@ -244,14 +242,12 @@ new profile on the database.
 **Note:** If the user uses the option `-v`, by default, the log messages will
 be directed to the standard error so, in the example above, it was redirected
 to a file. Whithout the `-v` option, only errors messages will be printed.
-4. The sequence identifier is the first and third line of a FASTq entry
-beggining with a **@** token, for a read identifier, and a **+**,
-for a quality identifier.
-*SANDY* has the capacity to customize it, with a format string passed by
-the user. This format is a combination of literal and escaped characters,
-in a similar fashion used in **C** programming language's `printf`
-function. For example, let's simulate a paired-end sequencing and put into it's
-identifier the read length, read position and mate position:
+4. Sequence identifiers (first lines of FASTq entries) may be customized in
+SANDY output using a format string passed by the user. This format is a
+combination of literal and escaped characters, in a similar fashion to that
+used in C programming language’s printf function. For example, let’s simulate a
+paired-end sequencing and add the read length, read position and mate position
+into all sequence identifiers:
 	```bash
 	$ sandy genome -s 123 --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" hg38.fa
 	```
@@ -268,9 +264,9 @@ In this case, results would	be:
 5. To change the sequencing quality profile, use the `-q` option and a
 string value (quality-profile default is "hiseq"):
 	```bash
-	$ sandy genome -q hiseq2 my_fasta_file.fa
+	$ sandy genome -q myseq_150 my_fasta_file.fa
 	```
-6. User can set the size of the reads with the `-r` option and an integer
+6. It is possible to set the size of the reads with the `-r` option and an integer
 number (reads-size default is 101):
 	```bash
 	$ sandy genome -r 151 my_fasta_file.fa
@@ -383,8 +379,8 @@ can run in parallel, splitting the task among jobs. For example, type:
 	```bash
 	$ sandy custom -f testis -q hiseq_101 -v -i "length=%r" --jobs 15 gencode_lnc.fa.gz
 	```
-and *SANDY* will allocate 15 jobs. This feature works for the `genome` and
-the `transcriptome` commands as well.
+and *SANDY* will allocate 15 jobs. This feature works for both `genome` and
+`transcriptome` simulations commands.
 
 
 
@@ -396,13 +392,12 @@ the `transcriptome` commands as well.
 
 ##### Command `quality` #####
 
-Use it to manage your quality profile database.
-The user can add or remove your own expression profiles in the builtin database
-and turn his simulations more realistic based on real experimental data.
-Or he can even clean it up to restore the vendor's original entries state.
-By default, *SANDY* uses a Poisson distribution when compiling the
-quality entries, but like many other features, this behavior can be
-overrided.
+Use the `quality` command to manage quality profiles database. With this command,
+it is possible to add or remove customized expression profiles in the built-in
+database and make simulations more suitable for your experimental data. By
+default, *SANDY* uses a Poisson distribution when compiling the quality entries,
+but like many other features, this behavior can be altered and restored to
+vendor’s profile by the user.
 
 **Usage:**
 ```bash
