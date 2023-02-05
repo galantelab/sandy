@@ -986,7 +986,7 @@ sub run_simulation {
 		my $sig = App::Sandy::InterlaceProcesses->new(foreign_pid => [$parent_pid]);
 
 		# Set child RNG
-		my $rng = App::Sandy::Rand(seed => $self->seed + $tid);
+		my $rng = App::Sandy::Rand->new(seed => $self->seed + $tid);
 
 		# Calculate the number of reads to this job and correct this local index
 		# to the global index

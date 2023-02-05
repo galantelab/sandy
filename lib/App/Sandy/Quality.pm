@@ -2,7 +2,6 @@ package App::Sandy::Quality;
 # ABSTRACT: Class to simulate quality entries
 
 use App::Sandy::Base 'class';
-use App::Sandy::DB::Handle::Quality;
 
 with 'App::Sandy::Role::Counter';
 
@@ -160,5 +159,5 @@ sub _poisson_dist {
 		$$quality_ref .= $phred_score->{score}[$rng->get($phred_score->{size})];
 	}
 
-	return $self->_poisson_dist($quality_ref, $size - $part, $countdown - 1);
+	return $self->_poisson_dist($quality_ref, $size - $part, $countdown - 1, $rng);
 }
