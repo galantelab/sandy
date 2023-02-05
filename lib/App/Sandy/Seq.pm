@@ -10,7 +10,6 @@ with qw{
 	App::Sandy::Role::RunTimeTemplate
 	App::Sandy::Role::Template::Fastq
 	App::Sandy::Role::Template::Sam
-	App::Sandy::Role::RNorm
 };
 
 # VERSION
@@ -190,14 +189,14 @@ sub _build_read_size {
 		$fun = sub { $self->read_mean };
 	} else {
 		$fun = sub {
+			my $rng = shift;
 			my $size = 0;
 			my $random_tries = 0;
 			until ($size > 0) {
 				if (++$random_tries > NUM_TRIES) {
 					croak "So many tries to calculate a seq size greater than zero ...";
 				}
-				$size = $self->with_random_half_normal($self->read_mean,
-					$self->read_stdd)
+				$size = $rng->get_norm($self->read_mean, $self->read_stdd);
 			}
 			return $size;
 		};

@@ -7,8 +7,6 @@ use constant NUM_TRIES => 1000;
 
 extends 'App::Sandy::Read';
 
-with 'App::Sandy::Role::RNorm';
-
 # VERSION
 
 has 'fragment_mean' => (
@@ -24,7 +22,7 @@ has 'fragment_stdd' => (
 );
 
 sub gen_read {
-	my ($self, $ptable, $ptable_size, $read_size, $is_leader) = @_;
+	my ($self, $ptable, $ptable_size, $read_size, $is_leader, $rng) = @_;
 
 	unless ($read_size <= $self->fragment_mean && $self->fragment_mean <= $ptable_size) {
 		croak sprintf
@@ -47,20 +45,19 @@ sub gen_read {
 					=> $ptable_size, $read_size;
 		}
 
-		$fragment_size = $self->with_random_half_normal($self->fragment_mean,
-			$self->fragment_stdd);
+		$fragment_size = $rng->get_norm($self->fragment_mean, $self->fragment_stdd);
 	}
 
 	# Build the fragment string
 	my ($fragment_ref, $attr) = $self->subseq_rand_ptable($ptable,
-		$ptable_size, $fragment_size, $read_size);
+		$ptable_size, $fragment_size, $read_size, $rng);
 
 	# Catch R1 substring
 	my $read1_ref = $self->subseq($fragment_ref, $fragment_size, $read_size, 0);
 	@$attr{qw/start1 end1/} = ($attr->{start}, $attr->{start} + $read_size - 1);
 
 	# Insert sequencing error
-	$attr->{error1} = $self->insert_sequencing_error($read1_ref, $read_size);
+	$attr->{error1} = $self->insert_sequencing_error($read1_ref, $read_size, $rng);
 
 	# Catch R2 substring
 	my $read2_ref = $self->subseq($fragment_ref, $fragment_size, $read_size,
@@ -71,7 +68,7 @@ sub gen_read {
 	$self->reverse_complement($read2_ref);
 
 	# Insert sequencing error
-	$attr->{error2} = $self->insert_sequencing_error($read2_ref, $read_size);
+	$attr->{error2} = $self->insert_sequencing_error($read2_ref, $read_size, $rng);
 
 	return ($read1_ref, $read2_ref, $attr);
 }

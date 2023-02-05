@@ -108,7 +108,7 @@ sub _build_quality_by_system {
 }
 
 sub _gen_quality_by_system {
-	my ($self, $read_size) = @_;
+	my ($self, $read_size, $rng) = @_;
 
 	my ($matrix, $deepth, $partil) = $self->_get_quality_by_system(
 		qw/matrix deepth partil/
@@ -133,9 +133,9 @@ sub _gen_quality_by_system {
 
 	for (my $i = 0; $i < $partil; $i++) {
 		for (my $j = 0; $j < $bin; $j++) {
-			$quality .= $matrix->[$i][int(rand($deepth))];
+			$quality .= $matrix->[$i][$rng->get($deepth)];
 			if ($pick_again->()) {
-				$quality .= $matrix->[$i][int(rand($deepth))];
+				$quality .= $matrix->[$i][$rng->get($deepth)];
 			}
 		}
 	}
@@ -144,20 +144,20 @@ sub _gen_quality_by_system {
 }
 
 sub _gen_quality_by_poisson_dist {
-	my ($self, $read_size) = @_;
+	my ($self, $read_size, $rng) = @_;
 	my $quality;
-	return $self->_poisson_dist(\$quality, $read_size, $self->_count_phred_score);
+	return $self->_poisson_dist(\$quality, $read_size, $self->_count_phred_score, $rng);
 }
 
 sub _poisson_dist {
-	my ($self, $quality_ref, $size, $countdown) = @_;
+	my ($self, $quality_ref, $size, $countdown, $rng) = @_;
 	return $quality_ref if not $countdown;
 
 	my $phred_score = $self->_get_phred_score($self->_count_phred_score - $countdown);
 	my $part = int($size / $phred_score->{ratio}) + ($size % $phred_score->{ratio});
 
 	for (my $i = 0; $i < $part; $i++) {
-		$$quality_ref .= $phred_score->{score}[int(rand($phred_score->{size}))];
+		$$quality_ref .= $phred_score->{score}[$rng->get($phred_score->{size})];
 	}
 
 	return $self->_poisson_dist($quality_ref, $size - $part, $countdown - 1);

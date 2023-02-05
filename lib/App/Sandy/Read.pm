@@ -59,17 +59,19 @@ sub subseq {
 }
 
 sub subseq_rand {
-	my ($self, $seq_ref, $seq_len, $slice_len) = @_;
+	my ($self, $seq_ref, $seq_len, $slice_len, $rng) = @_;
 	my $usable_len = $seq_len - $slice_len;
-	my $pos = int(rand($usable_len + 1));
+	# Use App::Sandy::Rand
+	my $pos = $rng->get($usable_len + 1);
 	my $read = substr $$seq_ref, $pos, $slice_len;
 	return (\$read, $pos);
 }
 
 sub subseq_rand_ptable {
-	my ($self, $ptable, $ptable_size, $slice_len, $sub_slice_len) = @_;
+	my ($self, $ptable, $ptable_size, $slice_len, $sub_slice_len, $rng) = @_;
 	my $usable_len = $ptable_size - $slice_len;
-	my $pos = int(rand($usable_len + 1));
+	# Use App::Sandy::Rand
+	my $pos = $rng->get($usable_len + 1);
 	my $pieces = $ptable->lookup($pos, $slice_len);
 	return $self->_build_subseq($pieces, $pos, $slice_len, $sub_slice_len);
 }
@@ -135,7 +137,7 @@ sub _is_pos_inside_piece {
 }
 
 sub insert_sequencing_error {
-	my ($self, $seq_ref, $read_size) = @_;
+	my ($self, $seq_ref, $read_size, $rng) = @_;
 	my @errors;
 
 	if ($self->sequencing_error) {
@@ -146,7 +148,7 @@ sub insert_sequencing_error {
 		for (my $i = 0; $i < $num_err; $i++) {
 			my $pos = $i * $self->_base + $self->_base - $self->_count_base - 1;
 			my $b = substr($$seq_ref, $pos, 1);
-			my $not_b = $self->_randb($b);
+			my $not_b = $self->_randb($b, $rng);
 			substr($$seq_ref, $pos, 1) = $not_b;
 			push @errors => sprintf("%d:%s/%s", $pos + 1, $b, $not_b);
 		}
@@ -164,6 +166,6 @@ sub reverse_complement {
 }
 
 sub _randb {
-	my ($self, $base) = @_;
-	return $self->_not_base->{$base}[int(rand(3))] || $base;
+	my ($self, $base, $rng) = @_;
+	return $self->_not_base->{$base}[$rng->get(3)] || $base;
 }

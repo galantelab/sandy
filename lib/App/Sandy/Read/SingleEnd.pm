@@ -8,7 +8,7 @@ extends 'App::Sandy::Read';
 # VERSION
 
 sub gen_read {
-	my ($self, $ptable, $ptable_size, $read_size, $is_leader) = @_;
+	my ($self, $ptable, $ptable_size, $read_size, $is_leader, $rng) = @_;
 
 	if ($ptable_size < $read_size) {
 		croak sprintf "ptable_size (%d) must be greater or equal to read_size (%d)"
@@ -16,13 +16,13 @@ sub gen_read {
 	}
 
 	my ($read_ref, $attr) = $self->subseq_rand_ptable($ptable,
-		$ptable_size, $read_size, $read_size);
+		$ptable_size, $read_size, $read_size, $rng);
 
 	unless ($is_leader) {
 		$self->reverse_complement($read_ref);
 	}
 
-	$attr->{error} = $self->insert_sequencing_error($read_ref, $read_size);
+	$attr->{error} = $self->insert_sequencing_error($read_ref, $read_size, $rng);
 
 	return ($read_ref, $attr);
 }

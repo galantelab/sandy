@@ -2,6 +2,7 @@ package App::Sandy::WeightedRaffle;
 # ABSTRACT: Weighted raffle interface.
 
 use App::Sandy::Base 'class';
+use App::Sandy::Rand;
 
 with 'App::Sandy::Role::BSearch';
 
@@ -86,10 +87,10 @@ sub _build_weights {
 }
 
 sub weighted_raffle {
-	my $self = shift;
+	my ($self, $rng) = @_;
 
 	# Raffle between 0 and max weight
-	my $range = int(rand($self->_max_weight + 1));
+	my $range = $rng->get($self->_max_weight + 1);
 
 	# Look for the index where the range is
 	my $index = $self->with_bsearch($range, $self->_weights,

@@ -30,9 +30,9 @@ sub _build_read {
 }
 
 sub sprint_seq {
-	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;
+	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader, $rng) = @_;
 
-	my $read_size = $self->_get_read_size;
+	my $read_size = $self->_get_read_size($rng);
 
 	# In order to work third gen sequencing
 	# simulator, it is necessary to truncate
@@ -41,7 +41,7 @@ sub sprint_seq {
 		$read_size = $ptable_size;
 	}
 
-	my ($read_ref, $attr) = $self->gen_read($ptable, $ptable_size, $read_size, $is_leader);
+	my ($read_ref, $attr) = $self->gen_read($ptable, $ptable_size, $read_size, $is_leader, $rng);
 
 	my $error_a = $attr->{error};
 	my $error = @$error_a
@@ -78,7 +78,7 @@ sub sprint_seq {
 	);
 
 	my $seqid = $self->_gen_id($self->_info);
-	my $quality_ref = $self->gen_quality($read_size);
+	my $quality_ref = $self->gen_quality($read_size, $rng);
 
 	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref, 0, $read_size);
 }

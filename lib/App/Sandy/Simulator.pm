@@ -5,6 +5,7 @@ use App::Sandy::Base 'class';
 use App::Sandy::Seq::SingleEnd;
 use App::Sandy::Seq::PairedEnd;
 use App::Sandy::InterlaceProcesses;
+use App::Sandy::Rand;
 use App::Sandy::WeightedRaffle;
 use App::Sandy::PieceTable;
 use App::Sandy::DB::Handle::Expression;
@@ -227,7 +228,8 @@ sub _build_strand {
 	} elsif ($self->strand_bias eq 'minus') {
 		$strand_sub = sub {0};
 	} elsif ($self->strand_bias eq 'random') {
-		$strand_sub = sub { int(rand(2)) };
+		# Use App::Sandy::Rand
+		$strand_sub = sub { $_[0]->get(2) };
 	} else {
 		croak sprintf "Unknown option '%s' for strand bias\n",
 			$self->strand_bias;
@@ -392,7 +394,8 @@ sub _build_seqid_raffle {
 		}
 
 		my $keys_size = scalar @$keys;
-		$seqid_sub = sub { $keys->[int(rand($keys_size))] };
+		# Use App::Sandy::Rand
+		$seqid_sub = sub { $keys->[$_[0]->get($keys_size)] };
 	} elsif ($self->seqid_weight eq 'count') {
 		# Catch expression-matrix entry from database
 		my $indexed_file = $self->_retrieve_expression_matrix;
@@ -520,7 +523,8 @@ sub _build_seqid_raffle {
 			'keys'    => $keys
 		);
 
-		$seqid_sub = sub { $raffler->weighted_raffle };
+		# Use App::Sandy::Rand
+		$seqid_sub = sub { $raffler->weighted_raffle($_[0]) };
 	} elsif ($self->seqid_weight eq 'length') {
 		my $calc_weight = sub {
 			my ($seq_id, $type) = @_;
@@ -538,7 +542,8 @@ sub _build_seqid_raffle {
 			keys    => $keys
 		);
 
-		$seqid_sub = sub { $raffler->weighted_raffle };
+		# Use App::Sandy::Rand
+		$seqid_sub = sub { $raffler->weighted_raffle($_[0]) };
 	} else {
 		croak sprintf "Unknown option '%s' for seqid_weight\n",
 			$self->seqid_weight;
@@ -839,14 +844,6 @@ sub _calculate_number_of_reads {
 	return $number_of_reads;
 }
 
-sub _set_seed {
-	my ($self, $inc) = @_;
-	my $seed = defined $inc ? $self->seed + $inc : $self->seed;
-	srand($seed);
-	require Math::Random;
-	Math::Random::random_set_seed_from_phrase($seed);
-}
-
 sub _calculate_parent_count {
 	my ($self, $counter_ref) = @_;
 	return if $self->_has_no_fasta_rtree;
@@ -988,8 +985,8 @@ sub run_simulation {
 		# Intelace child/parent processes
 		my $sig = App::Sandy::InterlaceProcesses->new(foreign_pid => [$parent_pid]);
 
-		# Set child seed
-		$self->_set_seed($tid);
+		# Set child RNG
+		my $rng = App::Sandy::Rand(seed => $self->seed + $tid);
 
 		# Calculate the number of reads to this job and correct this local index
 		# to the global index
@@ -1041,12 +1038,12 @@ sub run_simulation {
 
 		# Run simulation in child
 		for (my $i = $idx; $i <= $last_read_idx and not $sig->signal_catched; $i++) {
-			my $id = $seqid->();
+			my $id = $seqid->($rng);
 			my $ptable = $piece_table->{$id->{seq_id}}{$id->{type}};
 			my @seq_entry;
 			try {
 				@seq_entry = $self->sprint_seq($tid, $i, $id->{seq_id}, $id->{type},
-					$ptable->{table}, $ptable->{size}, $strand->());
+					$ptable->{table}, $ptable->{size}, $strand->($rng), $rng);
 			} catch {
 				die "Not defined entry for seqid '>$id->{seq_id}' at job $tid: $_";
 			} finally {

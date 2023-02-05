@@ -81,9 +81,9 @@ override '_build_info' => sub {
 };
 
 sub sprint_seq {
-	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;
+	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader, $rng) = @_;
 
-	my $read_size = $self->_get_read_size;
+	my $read_size = $self->_get_read_size($rng);
 
 	# In order to work third gen sequencing
 	# simulator, it is necessary to truncate
@@ -93,7 +93,7 @@ sub sprint_seq {
 	}
 
 	my ($read1_ref, $read2_ref, $attr) = $self->gen_read($ptable, $ptable_size,
-		$read_size, $is_leader);
+		$read_size, $is_leader, $rng);
 
 	my $annot_a = $attr->{annot};
 
@@ -113,12 +113,12 @@ sub sprint_seq {
 	);
 
 	return $is_leader
-		? ($self->_sprint_seq($read1_ref, $read_size, 1, $attr, 1), $self->_sprint_seq($read2_ref, $read_size, 2, $attr, 0))
-		: ($self->_sprint_seq($read2_ref, $read_size, 1, $attr, 0), $self->_sprint_seq($read1_ref, $read_size, 2, $attr, 1));
+		? ($self->_sprint_seq($read1_ref, $read_size, 1, $attr, 1, $rng), $self->_sprint_seq($read2_ref, $read_size, 2, $attr, 0, $rng))
+		: ($self->_sprint_seq($read2_ref, $read_size, 1, $attr, 0, $rng), $self->_sprint_seq($read1_ref, $read_size, 2, $attr, 1, $rng));
 }
 
 sub _sprint_seq {
-	my ($self, $read_ref, $read_size, $read_num, $attr, $is_leader) = @_;
+	my ($self, $read_ref, $read_size, $read_num, $attr, $is_leader, $rng) = @_;
 
 	if ($is_leader) {
 		my $error_a = $attr->{error1};
@@ -159,7 +159,7 @@ sub _sprint_seq {
 	}
 
 	my $seqid = $self->_gen_id($self->_info);
-	my $quality_ref = $self->gen_quality($read_size);
+	my $quality_ref = $self->gen_quality($read_size, $rng);
 
 	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref, $read_num, $read_size);
 }
