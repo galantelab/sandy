@@ -875,9 +875,11 @@ sub run_simulation {
 	my $simulation = $self->argv->[0];
 
 	# Count file to be generated
-	my $count_file = $simulation eq 'transcriptome'
-		? $self->prefix . '_abundance.tsv'
-		: $self->prefix . '_coverage.tsv';
+	my %count_file = (
+		transcripts => $self->prefix . '_abundance_transcripts.tsv',
+		genes       => $self->prefix . '_abundance_genes.tsv',
+		coverage    => $self->prefix . '_coverage.tsv'
+	);
 
 	# Main files
 	my %files = (
@@ -1121,34 +1123,60 @@ sub run_simulation {
 			or die "Cannot write file $files{$file_class}[$fh_idx]: $!\n";
 	}
 
-	# Save counts
-	log_msg ":: Saving count file";
-	my $count_fh = $self->with_open_w($count_file, 0);
+	if ($self->count_loops_by eq 'number-of-reads') {
+		# It is necessary to correct the abundance according to
+		# fragment sequencing end
+		my $count_factor = ref($self->seq) eq 'App::Sandy::Seq::PairedEnd'
+			? 2
+			: 1;
 
-	# It is necessary to correct the abundance according to
-	# fragment sequencing end
-	my $count_factor = 1;
-	if ($self->count_loops_by eq 'number-of-reads'
-		&& ref($self->seq) eq 'App::Sandy::Seq::PairedEnd') {
-		$count_factor = 2;
+		# Save transcripts
+		log_msg ":: Saving transcripts count";
+		my $fh = $self->with_open_w($count_file{transcripts}, 0);
+
+		log_msg "  => Writing counts to $count_file{transcripts} ...";
+		for my $id (sort keys %counters) {
+			printf {$fh} "%s\t%d\n" => $id,
+				int($counters{$id} / $count_factor);
+		}
+
+		# Close transcripts file
+		log_msg ":; Writing and closing $count_file{transcripts} ...";
+		close $fh
+			or die "Cannot write file $count_file{transcripts}: $!\n";
+
+		# Calculate 'gene' like expression
+		my $parent_count = $self->_calculate_parent_count(\%counters);
+
+		if (%$parent_count) {
+			# Save genes
+			log_msg ":: Saving genes count";
+			my $fh = $self->with_open_w($count_file{genes}, 0);
+
+			log_msg "  => Writing counts to $count_file{genes} ...";
+			for my $id (sort keys %$parent_count) {
+				printf {$fh} "%s\t%d\n" => $id,
+					int($parent_count->{$id} / $count_factor);
+			}
+
+			# Close genes file
+			log_msg ":; Writing and closing $count_file{genes} ...";
+			close $fh
+				or die "Cannot write file $count_file{genes}: $!\n";
+		}
+	} else {
+		# Save coverage
+		log_msg ":: Saving coverage count";
+		my $fh = $self->with_open_w($count_file{coverage}, 0);
+
+		log_msg "  => Writing counts to $count_file{coverage} ...";
+		for my $id (sort keys %counters) {
+			printf {$fh} "%s\t%d\n" => $id, $counters{$id};
+		}
+
+		# Close coverage file
+		log_msg ":; Writing and closing $count_file{coverage} ...";
+		close $fh
+			or die "Cannot write file $count_file{coverage}: $!\n";
 	}
-
-	log_msg "  => Writing counts to $count_file ...";
-	for my $id (sort keys %counters) {
-		printf {$count_fh} "%s\t%d\n" => $id,
-			int($counters{$id} / $count_factor);
-	}
-
-	# Just in case, calculate 'gene' like expression
-	my $parent_count = $self->_calculate_parent_count(\%counters);
-
-	for my $id (sort keys %$parent_count) {
-		printf {$count_fh} "%s\t%d\n" => $id,
-			int($parent_count->{$id} / $count_factor);
-	}
-
-	# Close $count_file
-	log_msg ":; Writing and closing $count_file ...";
-	close $count_fh
-		or die "Cannot write file $count_file: $!\n";
 }
