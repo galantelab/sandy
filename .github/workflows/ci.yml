@@ -1,14 +1,31 @@
-name: Dist::Zilla Action
+name: build
 on: push
 
 jobs:
   dzil:
     runs-on: ubuntu-latest
-    name: "dzil run"
+    name: "Build and test"
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
-      - name: Installing dependencies and testing all using dzil
-        uses: jonasbn/github-action-perl-dist-zilla@0.4.0
-        with:
-          dzil-arguments: 'test'
+
+      - name: Install cpanminus
+        uses: perl-actions/install-with-cpanm@v1
+
+      - name: Install Math::GSL
+        run: |
+          wget -O- https://cpan.metacpan.org/authors/id/H/HA/HAKONH/Math-GSL-0.43.tar.gz | tar xz
+          sed -i "/version = '1.16'/a \$version = '2.7' if \$version eq '2.7.1'\;" Math-GSL-0.43/inc/Ver2Func.pm
+          sudo cpanm --notest --quiet ./Math-GSL-0.43/
+
+      - name: Install Dist::Zilla
+        run: sudo cpanm --notest --quiet Dist::Zilla
+
+      - name: Install authordeps
+        run: dzil authordeps --missing | grep -v '^inc::' | sudo cpanm --notest --quiet
+
+      - name: Install deps
+        run: dzil listdeps --missing | sudo cpanm --notest --quiet
+
+      - name: Build and test App::Sandy
+        run: dzil test --all
