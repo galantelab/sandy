@@ -63,16 +63,22 @@ PERM_DB_DIR = 0777
 PERM_DB = 666
 
 pure_perl_install :: all
-	$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLPRIVLIB)/auto/share/dist/$(DISTNAME)"
-	$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLPRIVLIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
+	-$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLPRIVLIB)/auto/share/dist/$(DISTNAME)"
+	-$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLPRIVLIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
+	-$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLARCHLIB)/auto/share/dist/$(DISTNAME)"
+	-$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLARCHLIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
 
 pure_site_install :: all
-	$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLSITELIB)/auto/share/dist/$(DISTNAME)"
-	$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLSITELIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
+	-$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLSITELIB)/auto/share/dist/$(DISTNAME)"
+	-$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLSITELIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
+	-$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLSITEARCH)/auto/share/dist/$(DISTNAME)"
+	-$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLSITEARCH)/auto/share/dist/$(DISTNAME)/db.sqlite3"
 
 pure_vendor_install :: all
-	$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLVENDORLIB)/auto/share/dist/$(DISTNAME)"
-	$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLVENDORLIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
+	-$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLVENDORLIB)/auto/share/dist/$(DISTNAME)"
+	-$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLVENDORLIB)/auto/share/dist/$(DISTNAME)/db.sqlite3"
+	-$(NOECHO) $(CHMOD) $(PERM_DB_DIR) "$(DESTINSTALLVENDORARCH)/auto/share/dist/$(DISTNAME)"
+	-$(NOECHO) $(CHMOD) $(PERM_DB) "$(DESTINSTALLVENDORARCH)/auto/share/dist/$(DISTNAME)/db.sqlite3"
 
 pure_perl_install :: all
 	-$(NOECHO) $(MOD_INSTALL) \
