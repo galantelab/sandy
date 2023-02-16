@@ -40,11 +40,30 @@ const char *gsl_rng_name (const gsl_rng * r);
 size_t gsl_rng_size (const gsl_rng * r);
 void * gsl_rng_state (const gsl_rng * r);
 
-#define gsl_rng_get(r) ((r)->type->get ((r)->state))
+static inline unsigned long int
+gsl_rng_get (const gsl_rng * r)
+{
+  return (r->type->get) (r->state);
+}
 
-#define gsl_rng_uniform(r) (((r)->type->get_double) ((r)->state))
+static inline double
+gsl_rng_uniform (const gsl_rng * r)
+{
+  return (r->type->get_double) (r->state);
+}
 
-#define gsl_rng_uniform_pos(r) (((r)->type->get_double) ((r)->state))
+static inline double
+gsl_rng_uniform_pos (const gsl_rng * r)
+{
+  double x ;
+  do
+    {
+      x = (r->type->get_double) (r->state) ;
+    }
+  while (x == 0) ;
+
+  return x ;
+}
 
 double gsl_ran_gaussian (const gsl_rng * r, const double sigma);
 double gsl_ran_gaussian_ratio_method (const gsl_rng * r, const double sigma);
