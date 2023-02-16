@@ -1,4 +1,5 @@
 package App::Sandy::RNG;
+# ABSTRACT: Generates random numbers
 
 use 5.018000;
 use strict;

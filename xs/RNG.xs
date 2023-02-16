@@ -125,3 +125,20 @@ ran_ugaussian_pdf (double x)
 		RETVAL = gsl_ran_ugaussian_pdf (x);
 	OUTPUT:
 		RETVAL
+
+unsigned long
+get_n (RNGContext *ctx, unsigned long n)
+	INIT:
+		if (n <= 0)
+			croak ("n must be greater than zero");
+	CODE:
+		RETVAL = gsl_rng_get (ctx->rng) % n;
+	OUTPUT:
+		RETVAL
+
+double
+get_norm (RNGContext *ctx, double mean, double stdd)
+	CODE:
+		RETVAL = mean + (int) (gsl_ran_gaussian (ctx->rng, stdd) + 0.5);
+	OUTPUT:
+		RETVAL
