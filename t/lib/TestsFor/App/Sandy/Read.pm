@@ -3,7 +3,7 @@ package TestsFor::App::Sandy::Read;
 
 use App::Sandy::Base 'test';
 use App::Sandy::PieceTable;
-use App::Sandy::Rand;
+use App::Sandy::RNG;
 #use Data::Dumper;
 use base 'TestsFor';
 
@@ -44,7 +44,7 @@ sub setup : Tests(setup) {
 	$test->seq_len(length $seq);
 	$test->slice_len(10);
 	$test->table(App::Sandy::PieceTable->new(orig => \$table_seq));
-	$test->rng(App::Sandy::Rand->new(seed => SEED));
+	$test->rng(App::Sandy::RNG->new(SEED));
 }
 
 sub constructor : Tests(4) {

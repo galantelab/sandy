@@ -2,7 +2,7 @@ package TestsFor::App::Sandy::Seq;
 # ABSTRACT: Tests for 'App::Sandy::Seq' class
 
 use App::Sandy::Base 'test';
-use App::Sandy::Rand;
+use App::Sandy::RNG;
 use base 'TestsFor';
 use autodie;
 
@@ -44,7 +44,7 @@ sub setup : Tests(setup) {
 	my $seq = 'TGACCCGCTAACCTCAGTTCTGCAGCAGTAACAACTGCCGTATCTGGACTTTCCTAATACCTCGCATAGTCCGTCCCCTCGCGCGGCAAGAGGTGCGGCG';
 	$test->seq($seq);
 	$test->seq_len(length $seq);
-	$test->rng(App::Sandy::Rand->new(seed => SEED));
+	$test->rng(App::Sandy::RNG->new(SEED));
 }
 
 sub constructor : Tests(12) {

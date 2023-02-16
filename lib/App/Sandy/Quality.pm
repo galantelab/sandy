@@ -132,9 +132,9 @@ sub _gen_quality_by_system {
 
 	for (my $i = 0; $i < $partil; $i++) {
 		for (my $j = 0; $j < $bin; $j++) {
-			$quality .= $matrix->[$i][$rng->get($deepth)];
+			$quality .= $matrix->[$i][$rng->get_n($deepth)];
 			if ($pick_again->()) {
-				$quality .= $matrix->[$i][$rng->get($deepth)];
+				$quality .= $matrix->[$i][$rng->get_n($deepth)];
 			}
 		}
 	}
@@ -156,7 +156,7 @@ sub _poisson_dist {
 	my $part = int($size / $phred_score->{ratio}) + ($size % $phred_score->{ratio});
 
 	for (my $i = 0; $i < $part; $i++) {
-		$$quality_ref .= $phred_score->{score}[$rng->get($phred_score->{size})];
+		$$quality_ref .= $phred_score->{score}[$rng->get_n($phred_score->{size})];
 	}
 
 	return $self->_poisson_dist($quality_ref, $size - $part, $countdown - 1, $rng);

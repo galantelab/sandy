@@ -5,7 +5,7 @@ use App::Sandy::Base 'class';
 use App::Sandy::Seq::SingleEnd;
 use App::Sandy::Seq::PairedEnd;
 use App::Sandy::InterlaceProcesses;
-use App::Sandy::Rand;
+use App::Sandy::RNG;
 use App::Sandy::WeightedRaffle;
 use App::Sandy::PieceTable;
 use App::Sandy::DB::Handle::Expression;
@@ -228,8 +228,8 @@ sub _build_strand {
 	} elsif ($self->strand_bias eq 'minus') {
 		$strand_sub = sub {0};
 	} elsif ($self->strand_bias eq 'random') {
-		# Use App::Sandy::Rand
-		$strand_sub = sub { $_[0]->get(2) };
+		# Use App::Sandy::RNG
+		$strand_sub = sub { $_[0]->get_n(2) };
 	} else {
 		croak sprintf "Unknown option '%s' for strand bias\n",
 			$self->strand_bias;
@@ -394,8 +394,8 @@ sub _build_seqid_raffle {
 		}
 
 		my $keys_size = scalar @$keys;
-		# Use App::Sandy::Rand
-		$seqid_sub = sub { $keys->[$_[0]->get($keys_size)] };
+		# Use App::Sandy::RNG
+		$seqid_sub = sub { $keys->[$_[0]->get_n($keys_size)] };
 	} elsif ($self->seqid_weight eq 'count') {
 		# Catch expression-matrix entry from database
 		my $indexed_file = $self->_retrieve_expression_matrix;
@@ -988,7 +988,7 @@ sub run_simulation {
 		my $sig = App::Sandy::InterlaceProcesses->new(foreign_pid => [$parent_pid]);
 
 		# Set child RNG
-		my $rng = App::Sandy::Rand->new(seed => $self->seed + $tid);
+		my $rng = App::Sandy::RNG->new($self->seed + $tid);
 
 		# Calculate the number of reads to this job and correct this local index
 		# to the global index

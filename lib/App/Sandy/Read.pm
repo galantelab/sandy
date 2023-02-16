@@ -62,7 +62,7 @@ sub subseq_rand {
 	my ($self, $seq_ref, $seq_len, $slice_len, $rng) = @_;
 	my $usable_len = $seq_len - $slice_len;
 	# Use App::Sandy::Rand
-	my $pos = $rng->get($usable_len + 1);
+	my $pos = $rng->get_n($usable_len + 1);
 	my $read = substr $$seq_ref, $pos, $slice_len;
 	return (\$read, $pos);
 }
@@ -71,7 +71,7 @@ sub subseq_rand_ptable {
 	my ($self, $ptable, $ptable_size, $slice_len, $sub_slice_len, $rng) = @_;
 	my $usable_len = $ptable_size - $slice_len;
 	# Use App::Sandy::Rand
-	my $pos = $rng->get($usable_len + 1);
+	my $pos = $rng->get_n($usable_len + 1);
 	my $pieces = $ptable->lookup($pos, $slice_len);
 	return $self->_build_subseq($pieces, $pos, $slice_len, $sub_slice_len);
 }
@@ -167,5 +167,5 @@ sub reverse_complement {
 
 sub _randb {
 	my ($self, $base, $rng) = @_;
-	return $self->_not_base->{$base}[$rng->get(3)] || $base;
+	return $self->_not_base->{$base}[$rng->get_n(3)] || $base;
 }

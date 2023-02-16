@@ -2,7 +2,7 @@ package TestsFor::App::Sandy::Quality;
 # ABSTRACT: Tests for 'App::Sandy::Quality' class
 
 use App::Sandy::Base 'test';
-use App::Sandy::Rand;
+use App::Sandy::RNG;
 
 use autodie;
 use base 'TestsFor';
@@ -34,7 +34,7 @@ sub setup : Tests(setup) {
 
 	$test->default_attr(\%default_attr);
 	$test->default_quality($test->class_to_test->new(%default_attr));
-	$test->rng(App::Sandy::Rand->new(seed => SEED));
+	$test->rng(App::Sandy::RNG->new(SEED));
 }
 
 sub constructor : Tests(2) {
