@@ -1,4 +1,4 @@
-FROM perl:latest
+FROM perl:5.36.0
 
 LABEL maintainer="tmiller@mochsl.org.br"
 
