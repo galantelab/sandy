@@ -1,20 +1,25 @@
+FROM perldocker/perl-tester:5.36 AS builder
+
+COPY . /sandy
+
+WORKDIR /sandy
+
+RUN set -e; \
+    \
+    if [[ -f Makefile.PL ]]; then  \
+      cpanm -nq -L /app ./; \
+    else \
+      dzil authordeps --missing | grep -v '^inc::' | cpanm -nq; \
+      dzil build --no-tgz --in build; \
+      cpanm -nq -L /app ./build; \
+    fi
+
 FROM perl:5.36.0
 
 LABEL maintainer="tmiller@mochsl.org.br"
 
-ENV SANDY_ROOT="/sandy" \
-	PERL_MM_OPT="INSTALLDIRS=vendor" \
-	PERL_MB_OPT="--installdirs vendor"
-
-COPY . ${SANDY_ROOT}
-
-RUN cd ${SANDY_ROOT} \
-	&& cpanm --notest --quiet Dist::Zilla \
-	&& dzil authordeps --missing | grep -v '^inc::' | cpanm --notest --quiet \
-	&& dzil build --no-tgz --in build \
-	&& cpanm --notest --quiet ./build \
-	&& install -Dpm755 docker/run_sandy.sh /usr/local/bin/run_sandy.sh
-
-RUN rm -rf ${SANDY_ROOT}
+COPY --from=builder /app/lib/perl5/ /usr/local/lib/perl5/vendor_perl/5.36.0/
+COPY --from=builder /app/bin/sandy /usr/local/bin/
+COPY --from=builder /sandy/docker/run_sandy.sh /usr/local/bin/
 
 ENTRYPOINT ["run_sandy.sh"]
