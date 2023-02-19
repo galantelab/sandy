@@ -2,7 +2,10 @@
 
 set -e
 
-DB_PATH="/usr/local/lib/perl5/vendor_perl/5.36.0/x86_64-linux-gnu/auto/share/dist/App-Sandy"
+PERL_BASE="$(perl -V:'install(vendorarch)' \
+	| perl -F= -lanE "say \$F[1] =~ s/[';]//rg")"
+
+DB_PATH="$PERL_BASE/auto/share/dist/App-Sandy"
 MOUNTED_DB_PATH="/sandy/db"
 DB="db.sqlite3"
 

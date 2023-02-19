@@ -14,7 +14,7 @@ RUN set -e; \
       cpanm -nq -L /app ./build; \
     fi
 
-FROM perl:5.36.0
+FROM perl:5.36.0-slim
 
 LABEL maintainer="tmiller@mochsl.org.br"
 
