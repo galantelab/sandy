@@ -67,6 +67,91 @@ How to get a shell started in your container:
 
 `$ docker run -ti --entrypoint bash galantelab/sandy`
 
+### Persistent data
+
+**Sandy** *expression matrix*, *quality profile* and *structural variation* patterns are stored within docker container, that is, any database changes during runtime will last as long as the container is not removed.
+
+A named Docker volume or a mounted host directory should be used in order to keep your changes to the database. If our container detects that the path `/sandy/db` is mounted, then the database `/sandy/db/db.sqlite3` will be used intead of the default database. In the same way, if there is no database `db.sqlite3` inside the mounted path `/sandy/db/`, then the default database will be copied to `/sandy/db/` and used consecutively.
+
+#### Named volume:
+
+- `sandy_db` volume will be created at first run and will persist after container deletion.
+
+```
+$ docker run \
+	--rm \
+	-v sandy_db:/sandy/db
+	galantelab/sandy
+```
+
+You can verify the created volume with the commands:
+
+```
+$ docker volume ls
+
+# and in more detail with the command:
+$ docker volume inspect sandy_db
+```
+
+#### Mounted directory:
+
+- `/path/to/DB` will receive the default database at first run and any further changes will be stored in it.
+
+```
+$ docker run \
+	--rm \
+	-v /path/to/DB:/sandy/db \
+	galantelab/sandy
+```
+
+Now, verify the directory `/path/to/DB`. You should find the file `db.sqlite3`.
+
+As you add your custom patterns to **Sandy**, the alterations will be kept safelly outside the container.
+
+#### More examples:
+
+- Add a new quality profile:
+
+```
+$ docker run \
+	--rm \
+	-v /path/to/quality_profile.txt:/quality_profile.txt \
+	-v sandy_db:/sandy/db \
+	galantelab/sandy quality add -q new_profile /quality_profile.txt
+```
+
+- Check the new quality profile at `sandy_db`:
+
+`$ docker run --rm -v sandy_db:/sandy/db galantelab/sandy quality`
+
+- Add a new expression matrix:
+
+```
+$ docker run \
+	--rm \
+	-v /path/to/tissue_counts.txt:/tissue_counts.txt \
+	-v sandy_db:/sandy/db \
+	galantelab/sandy expression add -f new_tissue /tissue_counts.txt
+```
+
+- Check the new expression matrix at `sandy_db`:
+
+`$ docker run --rm -v sandy_db:/sandy/db galantelab/sandy expression`
+
+- Add a new structural variation:
+
+```
+$ docker run \
+	--rm \
+	-v /path/to/sv.txt:/sv.txt \
+	-v sandy_db:/sandy/db \
+	galantelab/sandy variation add -a new_sv /sv.txt
+```
+
+- Check the new structural variation at `sandy_db`:
+
+`$ docker run --rm -v sandy_db:/sandy/db galantelab/sandy variation`
+
 ### Thank You
 
 So long, and thanks for all the fish!
