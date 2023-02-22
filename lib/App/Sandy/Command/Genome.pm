@@ -283,7 +283,7 @@ entries
 =head1 DESCRIPTION
 
 This subcommand simulates genome sequencing reads taking into account the
-quality profile and the structural variation patterns, along with: raffle
+quality-profile and the genome-variation patterns, along with: raffle
 seed; coverage (depth); fragment mean and standard deviation; single-end
 (long and short fragments) and paired-end sequencing type; bam, sam,
 fastq.gz and fastq output formats and more.
@@ -309,24 +309,36 @@ coverage of 20x and a ${prefix}_coverage.tsv file with the read counts.
 
  $ sandy genome \
  --verbose \
+ --jobs=10 \
  --sequencing-type=paired-end \
  --coverage=20 hg38.fa 2> sim.log
 
 or, equivalently:
 
- $ sandy genome -v -t paired-end -c 20 hg38.fa 2> sim.log
+ $ sandy genome -v -j 10 -t paired-end -c 20 hg38.fa 2> sim.log
 
 Using a seed for reproducibility.
 
- $ sandy genome -s 1717 my_fasta.fa
+ $ sandy genome --seed=1717 my_fasta.fa
 
-To simulate reads with a specific quality profile other than the default
+To simulate reads with a specific quality-profile other than the default
 poisson:
 
  $ sandy genome --quality-profile=hiseq_101 hg19.fa
 
-Let’s simulate a paired-end sequencing and add the read length, read
-position and mate position into all sequence identifiers: 
+To see the current list of available quality-profiles:
+
+ $ sandy quality
+
+And in order to learn how to add your custom quality-profile, see:
+
+ $ sandy quality add --help
+
+Sequence identifiers (first lines of fastq entries) may be customized in output using
+a format string passed by the user. This format is a combination of literal and escaped
+characters, in a similar fashion to that used in C programming language’s printf function.
+For example, let’s simulate a paired-end sequencing and add the read length, read position
+and mate position into all sequence identifiers:
 
  $ sandy genome \
  --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
@@ -340,9 +352,32 @@ In this case, results would be:
  ==> Into R2
  @SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
 
-Finally, let's simulate a genome which includes the gene fusion
-between NPM1 and ALK:
+See B<Format> section for details.
 
- $ sandy genome -q hiseq_150 -a fusion_hg38_NPM1-ALK my_hg38.fa
+An important feature of B<Sandy> is to simulate a genome with genomic-variation.
+So to exemplify, let's simulate a genome which includes the fusion between the genes
+NPM1 and ALK:
+
+ $ sandy genome --genomic-variation=fusion_hg38_NPM1-ALK hg38.fa
+
+To see the current list of available genomic-variation
+
+ $ sandy variation
+
+And in order to learn how to add your custom genomic-variation, see:
+
+ $ sandy variation add --help
+
+Putting all together:
+
+ $ sandy genome \
+ --verbose \
+ --jobs=10 \
+ --sequencing-type=paired-end \
+ --seed=1717 \
+ --quality-profile=hiseq_101 \
+ --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
+ --genomic-variation=fusion_hg38_NPM1-ALK \
+ hg38.fa 2> sim.log
 
 =cut
