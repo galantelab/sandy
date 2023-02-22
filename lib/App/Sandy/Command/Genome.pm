@@ -282,6 +282,67 @@ entries
 
 =head1 DESCRIPTION
 
-Simulate genome sequencing.
+This subcommand simulates genome sequencing reads taking into account the
+quality profile and the structural variation patterns, along with: raffle
+seed; coverage (depth); fragment mean and standard deviation; single-end
+(long and short fragments) and paired-end sequencing type; bam, sam,
+fastq.gz and fastq output formats and more.
+
+=head2 INPUT
+
+I<sandy genome> expects as argument a fasta file with chromosome sequences.
+For example, L<the GENCODE human genome|https://www.gencodegenes.org/human/>
+GRCh38.p13 fasta file.
+
+=head2 OUTPUT
+
+The output file generated will depend on the I<output-format> (fastq, bam),
+on the I<join-paired-ends> option (mate read pairs into a single file) and
+on the I<sequencing-type> (single-end, paired-end). A file with the simulated
+coverage (${prefix}_coverage.tsv) for each chromosome (read counts) also
+accompanies the output file.
+
+=head1 EXAMPLES
+
+The following command will produce two fastq.gz files (paired-end), with a
+coverage of 20x and a ${prefix}_coverage.tsv file with the read counts.
+
+ $ sandy genome \
+ --verbose \
+ --sequencing-type=paired-end \
+ --coverage=20 hg38.fa 2> sim.log
+
+or, equivalently:
+
+ $ sandy genome -v -t paired-end -c 20 hg38.fa 2> sim.log
+
+Using a seed for reproducibility.
+
+ $ sandy genome -s 1717 my_fasta.fa
+
+To simulate reads with a specific quality profile other than the default
+poisson:
+
+ $ sandy genome --quality-profile=hiseq_101 hg19.fa
+
+Let’s simulate a paired-end sequencing and add the read length, read
+position and mate position into all sequence identifiers: 
+
+ $ sandy genome \
+ --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
+ hg38.fa
+
+In this case, results would be:
+
+ ==> Into R1
+ @SR.1 read=chr6:979-880 mate=chr6:736-835 length=100
+ ...
+ ==> Into R2
+ @SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
+
+Finally, let's simulate a genome which includes the gene fusion
+between NPM1 and ALK:
+
+ $ sandy genome -q hiseq_150 -a fusion_hg38_NPM1-ALK my_hg38.fa
 
 =cut
