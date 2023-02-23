@@ -23,7 +23,7 @@ sub execute {
 	my ($self, $opts, $args) = @_;
 
 	my $variation = $self->retrievedb($args);
-	print "#seqid\tposition\tid\treference\talteration\tgenotype\n";
+	print "#seqid\tposition\tid\treference\talternate\tgenotype\n";
 
 	for my $id (sort keys %$variation) {
 		my $data = $variation->{$id};
@@ -39,10 +39,10 @@ __END__
 
 =head1 SYNOPSIS
 
- sandy variation dump <structural variation>
+ sandy variation dump <genomic variation>
 
  Arguments:
-  a structural variation entry
+  a genomic-variation entry
 
  Options:
   -h, --help               brief help message
@@ -50,6 +50,6 @@ __END__
 
 =head1 DESCRIPTION
 
-Dump structural variation from database.
+Dump genomic-variation from database.
 
 =cut

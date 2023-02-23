@@ -75,6 +75,7 @@ __END__
 
 =head1 DESCRIPTION
 
-Manage structural variation database.
+Manage genomic-variation database. Running this command without any
+option or command will show all available variations in the database.
 
 =cut

@@ -39,10 +39,10 @@ __END__
 
 =head1 SYNOPSIS
 
- sandy variation remove <structural variation>
+ sandy variation remove <genomic variation>
 
  Arguments:
-  a structural variation entry
+  a genomic-variation entry
 
  Options:
   -h, --help               brief help message
@@ -51,6 +51,6 @@ __END__
 
 =head1 DESCRIPTION
 
-Remove structural variation from database.
+Remove genomic-variation from database.
 
 =cut
