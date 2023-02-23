@@ -76,6 +76,7 @@ __END__
 
 =head1 DESCRIPTION
 
-Manage quality profile database.
+Manage quality-profile database. Running this command without any
+option or command will show all available profiles in the database.
 
 =cut

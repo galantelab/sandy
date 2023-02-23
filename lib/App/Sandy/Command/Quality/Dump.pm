@@ -47,6 +47,6 @@ __END__
 
 =head1 DESCRIPTION
 
-Dump a quality profile from database.
+Dump a quality-profile from database.
 
 =cut

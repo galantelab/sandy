@@ -50,6 +50,6 @@ __END__
 
 =head1 DESCRIPTION
 
-Remove a quality profile from database.
+Remove a quality-profile from database.
 
 =cut
