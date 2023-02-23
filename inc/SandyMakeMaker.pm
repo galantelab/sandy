@@ -55,6 +55,7 @@ sub postamble {
 
 	my $cmd = q{
 # --- App::Sandy custom postamble section:
+LFS_URL = https://media.githubusercontent.com/media/galantelab/sandy/master/share/assets/db.sqlite3
 INST_DB = $(INST_LIB)/auto/share/dist/$(DISTNAME)
 INST_SHARE = blib/share
 INSTALLSHARE = /usr/share
@@ -98,7 +99,7 @@ pure_vendor_install :: all
 		write "$(DESTINSTALLVENDORARCH)/auto/$(FULLEXT)/.packlist" \
 		"$(INST_SHARE)" "$(DESTINSTALLSHARE)"
 
-config ::
+config :: config_lfs
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_DB)'\'')' -- \
 		'share/assets/db.sql' '$(INST_DB)/db.sql' \
 		'share/assets/db.sqlite3' '$(INST_DB)/db.sqlite3'
@@ -107,6 +108,21 @@ config ::
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_SHARE)'\'')' -- \
 		'share/completions/sandy-completion.bash' '$(INST_SHARE)/bash-completion/completions/sandy' \
 		'share/completions/sandy-completion.zsh' '$(INST_SHARE)/zsh/site-functions/_sandy'
+
+.PHONY : config_lfs
+config_lfs :
+	$(NOECHO) if ! perl -E 'exit((-s $$ARGV[0] && -B $$ARGV[0])?0:1)' 'share/assets/db.sqlite3'; \
+	then \
+		echo 'Database share/assets/db.sqlite3 is not a binary file.'; \
+		echo 'Maybe it is a git-lfs pointer, so I will try to download it for you'; \
+		perl -MLWP::Simple -e 'getprint "$(LFS_URL)"' > './db.sqlite3'; \
+		if ! perl -E 'exit((-s $$ARGV[0] && -B $$ARGV[0])?0:1)' './db.sqlite3'; \
+		then \
+			echo 'Something went wrong. Abort.'; \
+			exit 1; \
+		fi; \
+		mv './db.sqlite3' 'share/assets/db.sqlite3'; \
+	fi
 
 # --- END: App::Sandy custom postamble section
 };
