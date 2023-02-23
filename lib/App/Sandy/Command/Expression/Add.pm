@@ -86,19 +86,28 @@ __END__
   -v, --verbose              print log messages
   -s, --source               expression-matrix source detail for database
 
-=head1 OPTIONS
-
-=over 8
-
-=item B<--expression-matrix>
-
-A valid expression-matrix is a file with 2 columns. The first column is for the seqid
-and the second column is for the count. The counts will be treated as weights
-
-=back
-
 =head1 DESCRIPTION
 
-Add an expression-matrix to the database.
+Add an expression-matrix to the database. A valid expression-matrix is a
+file with two columns. The first column is for the seqid and the second
+column is for the raw count. The counts will be treated as weights.
+
+=head2 INPUT
+
+A two-columns whitespace separated file, where the first column is the
+transcript id, or the gene id, and the second column is the raw counts.
+
+ ===> my_custom_expression_matrix.txt
+ #feature	count
+ ENST00000000233.9	2463
+ ENST00000000412.7	2494
+ ENST00000000442.10	275
+ ENST00000001008.5	5112
+ ENST00000001146.6	637
+ ENST00000002125.8	660
+ ENST00000002165.10	478
+ ENST00000002501.10	57
+ ENST00000002596.5	183
+ ...
 
 =cut
