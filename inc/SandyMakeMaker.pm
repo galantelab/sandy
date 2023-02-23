@@ -111,6 +111,7 @@ config ::
 
 .PHONY : config_lfs
 config_lfs :
+ifndef GITHUB_ACTIONS_CI
 	$(NOECHO) if ! perl -E 'exit((-s $$ARGV[0] && -B $$ARGV[0])?0:1)' 'share/assets/db.sqlite3'; \
 	then \
 		echo 'Database share/assets/db.sqlite3 is not a binary file.'; \
@@ -123,6 +124,7 @@ config_lfs :
 		fi; \
 		mv './db.sqlite3' 'share/assets/db.sqlite3'; \
 	fi
+endif
 
 # --- END: App::Sandy custom postamble section
 };
