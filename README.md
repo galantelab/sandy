@@ -1,9 +1,11 @@
-[![Sandy logo](share/imgs/sandy.jpeg)](https://galantelab.github.io/sandy/)
-## A straightforward and complete next-generation sequencing read simulator
+<p align="center"><a href="https://galantelab.github.io/sandy/"><img src="share/imgs/sandy.jpeg" alt="sandy logo"></a></p>
+<h2 align="center">A straightforward and complete next-generation sequencing read simulator</h2>
 
-[![build](https://github.com/galantelab/sandy/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/galantelab/sandy/actions/workflows/ci.yml)
-[![cpan version](https://badge.fury.io/pl/App-Sandy.svg)](https://badge.fury.io/pl/App-Sandy)
-[![docker tags](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://hub.docker.com/r/galantelab/sandy/tags)
+<p align="center">
+  <a href="https://github.com/galantelab/sandy/actions/workflows/ci.yml"><img alt="" src="https://github.com/galantelab/sandy/actions/workflows/ci.yml/badge.svg?branch=dev" align="center"></a>
+  <a href="https://badge.fury.io/pl/App-Sandy"><img alt="" src="https://badge.fury.io/pl/App-Sandy.svg" align="center"></a>
+  <a href="https://hub.docker.com/r/galantelab/sandy/tags"><img alt="" src="https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white" align="center"></a>
+</p>
 
 **Sandy** is a bioinformatics tool that provides a simple engine to simulate next-generation
 sequencing (NGS) reads for genomic and transcriptomic pipelines. Simulated data works as
@@ -24,10 +26,11 @@ For full documentation, please visit <https://galantelab.github.io/sandy/>.
 
 * Simulate DNA and RNA sequencing
 
-    Simulate `single-end` (long and short fragments) and `paired-end` sequencing reads for **genome**
-    and **transcriptome** analysis. The simulation can be customized with raffle seed, sequencing
-    coverage, number of reads, fragment mean, output formats (`fastq`, `sam` and their compressed
-    versions `fastq.gz` and `bam`), sequence identifier (header of entries in `fastq`) and much more.
+    Simulate **single-end** (long and short fragments) and **paired-end** sequencing reads for
+    **genome** and **transcriptome** analysis. The simulation can be customized with raffle seed,
+    sequencing coverage, number of reads, fragment mean, output formats (`fastq`, `sam` and their
+    compressed versions `fastq.gz` and `bam`), sequence identifier (header of entries in `fastq`)
+    and much more.
 
 * Sequencer **quality-profile**
 
@@ -104,7 +107,7 @@ For more details, see [INSTALL](https://github.com/galantelab/sandy/blob/master/
 | --- | --- |
 | Coordination for the Improvement of Higher Level Personnel | [CAPES](http://www.capes.gov.br/) |
 | The São Paulo Research Foundation | [FAPESP](https://fapesp.br/en/about) |
-| Teaching and Research Institute from Sírio-Libanês Hospital | [Group of Bioinformatics](https://www.bioinfo.mochsl.org.br/) |
+| Teaching and Research Institute from Sírio-Libanês Hospital | [Galantelab](https://www.bioinfo.mochsl.org.br/) |
 
 ## License
 
