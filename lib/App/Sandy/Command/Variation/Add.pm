@@ -95,7 +95,7 @@ __END__
 
  Options:
   -h, --help                    brief help message
-  -u, --man                     full documentation
+  -H, --man                     full documentation
   -v, --verbose                 print log messages
   -s, --source                  genomic-variation source detail for database
   -n, --sample-name             the sample-name present in one of the optional

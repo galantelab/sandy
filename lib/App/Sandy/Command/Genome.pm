@@ -51,7 +51,7 @@ __END__
 
  Options:
   -h, --help                         brief help message
-  -u, --man                          full documentation
+  -H, --man                          full documentation
   -v, --verbose                      print log messages
   -p, --prefix                       prefix output [default:"out"]
   -o, --output-dir                   output directory [default:"."]

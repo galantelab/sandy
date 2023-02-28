@@ -65,7 +65,7 @@ __END__
 
  Options:
   -h, --help               brief help message
-  -u, --man                full documentation
+  -H, --man                full documentation
  
  Commands:
   add                      add a new expression-matrix to database

@@ -27,7 +27,7 @@ __END__
 
  Options:
   -h, --help               brief help message
-  -u, --man                full documentation
+  -H, --man                full documentation
 
  Help commands:
   help                     show application or command-specific help
@@ -48,14 +48,14 @@ __END__
 
 =head1 DESCRIPTION
 
-B<SANDY> is a bioinformatics tool that provides a simple engine to simulate next-generation
+B<Sandy> is a bioinformatics tool that provides a simple engine to simulate next-generation
 sequencing for genomic and transcriptomic data. Simulated data works as experimental control
-- a key step to optimize NGS analysis - in comparison to hypothetical models. SANDY is a
+- a key step to optimize NGS analysis - in comparison to hypothetical models. B<Sandy> is a
 straightforward, easy-to-use, fast and highly customizable tool that generates reads requiring
-only a FASTA file as input. SANDY can simulate single/paired-end reads from both whole exome
+only a FASTA file as input. B<Sandy> can simulate single/paired-end reads from both whole exome
 sequencing and RNA-seq as if produced from the most used second and third-generation sequencing
-platforms. SANDY’s reads can be simulated with genetic variations such as SNVs, indels and gene
-fusions. For customization purposes, SANDY have built-in (native) databases that can be easily
+platforms. B<Sandy>’s reads can be simulated with genetic variations such as SNVs, indels and gene
+fusions. For customization purposes, B<Sandy> have built-in (native) databases that can be easily
 extended with varying gene/transcript expression profiles, sequencing errors, sequencing
 coverages and genomic variations.
 

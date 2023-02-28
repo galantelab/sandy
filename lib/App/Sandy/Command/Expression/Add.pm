@@ -82,7 +82,7 @@ __END__
 
  Options:
   -h, --help                 brief help message
-  -u, --man                  full documentation
+  -H, --man                  full documentation
   -v, --verbose              print log messages
   -s, --source               expression-matrix source detail for database
 
