@@ -52,10 +52,41 @@ For full documentation, please visit <https://galantelab.github.io/sandy/>.
     obtained from the [1KGP](https://www.internationalgenome.org/) and from
     [COSMIC](https://cancer.sanger.ac.uk/cosmic).
 
-* User customization
+* Custom user models
 
     Users can include their models for **quality-profile**, **expression-matrix** and **genomic-variation**
     in order to adapt the simulation to their needs.
+
+* Custom sequence identifier
+
+    The sequence identifier, as the name implies, is a string that identifies a biological sequence (usually
+    nucleotides) within a sequencing data. For example, the `fasta` format includes the sequence identifier
+    always after the `>` character at the beginning of the line; the `fastq` format always includes it after
+    the `@` character at the beginning of the line; the `sam` format uses the first column (called the
+    *query template name*).
+
+    | Sequence identifier | File format |
+    | :-- | :-: |
+    | \>**MYID and Optional information**<br />ATCGATCG | `fasta` |
+    | @**MYID and Optional information**<br />ATCGATCG<br />+<br />ABCDEFGH | `fastq` |
+    | **MYID** 99 chr1 123456 20 8M chr1 123478 30 ATCGATCG ABCDEFGH | `sam` |
+
+    Sequence identifiers may be customized in output using a format string passed by the user. This format
+    is a combination of literal and escaped characters, in a similar fashion to that used in C programming
+    language’s `printf` function.
+
+    For example, simulating a paired-end sequencing you can add the read length, read position and mate
+    position into all sequence identifiers with the following format:
+
+        %i.%U read=%c:%t-%n mate=%c:%T-%N length=%r
+
+    In this case, results in `fastq` format would be:
+
+        ==> Into R1
+        @SR.1 read=chr6:979-880 mate=chr6:736-835 length=100
+        ...
+        ==> Into R2
+        @SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
 
 ## Installation
 
@@ -104,7 +135,7 @@ For more details, see [INSTALL](https://github.com/galantelab/sandy/blob/master/
 ## Acknowledgments
 
 | Institution | Site |
-| --- | --- |
+| :-- | :-: |
 | Coordination for the Improvement of Higher Level Personnel | [CAPES](http://www.capes.gov.br/) |
 | The São Paulo Research Foundation | [FAPESP](https://fapesp.br/en/about) |
 | Teaching and Research Institute from Sírio-Libanês Hospital | [Galantelab](https://www.bioinfo.mochsl.org.br/) |
