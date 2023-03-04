@@ -7,22 +7,13 @@ permalink: /docs/v0.21/
 ---
 
 ## Documentation for **Sandy** version **0.21**
+{:.no_toc}
 
 ## Contents
+{:.no_toc}
 
-1. [Usage and Option summary](#usage-and-option-summary)
-	1. [General](#general-syntax)
-	2. [Main Commands](#main-commands)
-		1. [Command `genome`](#command-genome)
-		2. [Command `transcriptome`](#command-transcriptome)
-	3. [Database Commands](#database-commands)
-		1. [Command `quality`](#command-quality)
-		2. [Command `expression`](#command-expression)
-		3. [Command `variation`](#command-variation)
-	4. [Miscellaneous Commands](#miscellaneous-commands)
-		1. [Command `version`](#command-version)
-		2. [Command `citation`](#command-citation)
-	5. [Help Commands](#help-commands)
+1. This will become a table of contents.
+{:toc}
 
 ## Usage and option summary
 
