@@ -1,7 +1,5 @@
-*bundle*
-*site*
-*.html
-Gem*
-vendor*
-sandy_features*
-*.swp
+_site
+.sass-cache
+.jekyll-cache
+.jekyll-metadata
+vendor

@@ -1,0 +1,15 @@
+---
+layout: release
+title: "Release v0.21"
+author: "Thiago L. A. Miller"
+version: "0.21"
+date: 2018-09-18 20:07:39 -03:00
+categories: jekyll update
+---
+
+This version implents these new features:
+
+- Set expression-matrix as optional;
+- Fix bash/zsh completion installatio;
+- Distinguish count file between genome (coverage) and transcriptome (abundance);
+- Set minimum perl version to 5.014.

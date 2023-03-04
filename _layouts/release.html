@@ -1,0 +1,29 @@
+---
+layout: post
+---
+{{ content }}
+
+{% if page.version %}
+<h2 id="get-the-code">Get the code</h2>
+
+<p>Clone the repository for this version:</p>
+
+{% highlight shell_session %}
+$ git clone --single-branch --branch "v{{ page.version }}" https://github.com/galantelab/sandy.git
+{% endhighlight %}
+
+<h2 id="install-from-cpan">Install from <a href="https://metacpan.org/">CPAN</a></h2>
+
+<p>Install this version with <code class="language-plaintext highlighter-rouge">cpanm</code>:</p>
+
+{% highlight shell_session %}
+# cpanm App::Sandy~"== {{ page.version }}"
+{% endhighlight %}
+
+<p>For more details on installation, go to <a href="/install/">installation</a> page.</p>
+
+<h2 id="documentation">Documentation</h2>
+
+<p>See the complete documentation for this version:
+	<a href="/docs/v{{ page.version }}"><img src="https://img.shields.io/badge/sandy-v{{ page.version }}-success" alt="docs" /></a></p>
+{% endif %}

@@ -1,8 +1,16 @@
-### Contents at a Glance ###
+---
+layout: page
+title: ""
+version: "0.23"
+status: latest
+permalink: /docs/v0.23/
+---
 
-1. [New Features](#new-features)
-2. [Installation](#installation)
-3. [Usage and Option summary](#usage-and-option-summary)
+## Documentation for **Sandy** version **0.23**
+
+## Contents
+
+1. [Usage and Option summary](#usage-and-option-summary)
 	1. [General](#general-syntax)
 	2. [Main Commands](#main-commands)
 		1. [Command `genome`](#command-genome)
@@ -15,109 +23,12 @@
 		1. [Command `version`](#command-version)
 		2. [Command `citation`](#command-citation)
 	5. [Help Commands](#help-commands)
-4. [Docker Usage](#docker-usage)
-5. [Case study examples](case.md#case-study-examples)
+3. [Docker Usage](#docker-usage)
+4. [Old Versions](old_documentation.markdown)
 
+## Usage and option summary ###
 
-
-### New Features ###
-
-This is the version 0.23, which implements these new interesting features:
-
-This version implents these new interesting features:
-* Several ways to customize the reads' identifiers in the FASTq files for on
-demand outputs.
-* Ready to use built-in datasets for quality profile of sequencing, based on
-experimental data from several platforms (e.g. hiseq, miseq and nextseq from
-Illumina).
-* Ready to use datasets for 54 tissue especific matrix expression, from GTEx
-[(Xena Project)](https://xena.ucsc.edu/).
-* Simulation of 3rd generation sequencing reads (PacBio and Nanopore) with
-specific quality profiles
-* Addition of many types of genomic variations (SNPs, INDELs, fusions an others)
-in an easy-to-use way.
-* Improved way to record user’s experimental data to the datasets' entries.
-* Run many instances of *SANDY* in a scalable way by pulling its Docker
-[image](https://hub.docker.com/r/galantelab/sandy).
-
-
-
-### Installation ###
-
-#### Prerequisites ####
-
-Along with **Perl**, the user must have **zlib**, **gcc** and **make** and
-**perl-doc** packages installed. To install them according to your distro, use:
-
-* Debian/Ubuntu
-```bash
-$ apt-get install perl zlib1g-dev gcc make perl-doc
-```
-
-* CentOS/Fedora
-```bash
-$ yum install perl zlib gcc make perl-doc
-```
-
-* Archlinux
-```bash
-$ pacman -S perl zlib gcc make perl-doc
-```
-
-*SANDY* uses the *Comprehensive Perl Archive Network*, CPAN, as its package
-manager, which allows a good control over all dependencies needed. If the user
-already has Perl installed, then he may have the cpan command utility too. At
-the first run, cpan will interactively configure your environment and mirror.
-
-If the user is not sure, confirm the aforementioned prerequisites and, after
-this, install *cpanminus* package manager:
-```bash
-$ cpan -i App::cpanminus
-```
-
-`App::cpanminus` will provide the `cpanm` utility, which has the capability of
-install not only *SANDY*, but also all its dependencies, recursively.
-
-
-#### Installing *SANDY* properly ####
-
-Finally install *SANDY* with:
-```bash
-$ cpanm App::Sandy
-```
-
-**Important:** MacOS users must add an extra option to the command above, like
-this:
-```bash
-	$ cpanm --force App::Sandy
-```
-
-For more details, see the [INSTALL](https://github.com/galantelab/sandy/blob/master/INSTALL)
-file on *SANDY's* GitHub [repository](https://github.com/galantelab/sandy).
-
-
-#### Or get *SANDY* in a Docker image ####
-
-If the user prefer to avoid any intallation process and has Docker, you can just
-pull *SANDY's* [image](https://hub.docker.com/r/galantelab/sandy) from Docker Hub with:
-```bash
-	$ docker pull galantelab/sandy
-```
-
-And he will take the latest version of *SANDY*, ready to rock!
-So, to view some instructions about how to use *SANDY* from a docker image, see
-the manual or consult this web [tutorial about SANDY usage from docker](#docker-usage).
-
-**Important:** Docker has some strict default configurations for memory and CPU
-usage on MacOS. Users of this system can change these configurations on their
-behalf by accessing the [Preferences menu](https://docs.docker.com/docker-for-mac/#preferences-menu)
-on the Docker icon at top right corner of their desktops.
-
-
-
-### Usage and option summary ###
-
-#### General Syntax ####
+### General Syntax ####
 
 **Usage:**
 ```bash
@@ -134,17 +45,17 @@ Options							| Description
 -------------------------------	| ----------------------------------------------
 -h, --help						| brief help message
 -u, --man						| full documentation
-**Help commands:**				| 
+**Help commands:**				|
 help							| show application or command-specific help
 man								| show application or command-specific documentation
-**Misc commands:**				| 
+**Misc commands:**				|
 version							| print the current version
 citation						| export citation in BibTeX format
-**Database commands:**			| 
+**Database commands:**			|
 quality							| manage quality profile database
 expression						| manage expression-matrix database
 variation						| manage structural variation database
-**Main commands:**				| 
+**Main commands:**				|
 genome							| simulate genome sequencing
 transcriptome					| simulate transcriptome sequencing
 
@@ -168,9 +79,9 @@ or
 	```
 
 
-#### Main Commands ####
+### Main Commands
 
-##### Command `genome` #####
+#### Command `genome`
 
 Use it to generate simulated FASTq-files from a given FASTA-file.
 The `genome` command sets these default options for a genome sequencing
@@ -287,10 +198,7 @@ command, but many more can be found in the *SANDY's* documentation, with:
 	```bash
 	$ sandy genome --man
 	```
-
-
-
-##### Command `transcriptome` #####
+#### Command `transcriptome`
 
 Use it to generate simulated FASTq files from a given FASTA file,
 according to an expression profile matrix file.
@@ -382,15 +290,11 @@ can run in parallel, splitting the task among jobs. For example, type:
 and *SANDY* will allocate 15 jobs. This feature works for both `genome` and
 `transcriptome` simulations commands.
 
-
-
 --------------------------------------------------------------------------------
 
+### Database Commands
 
-
-#### Database Commands ####
-
-##### Command `quality` #####
+#### Command `quality`
 
 Use the `quality` command to manage quality profiles database. With this command,
 it is possible to add or remove customized expression profiles in the built-in
@@ -402,7 +306,7 @@ vendor’s profile by the user.
 **Usage:**
 ```bash
 $ sandy quality
-$ sandy quality [options] 
+$ sandy quality [options]
 $ sandy quality <sub-command>
 ```
 whose options' exaustive list can be consulted by `sandy quality -h` or
@@ -412,7 +316,7 @@ Options							| Description
 ------------------------------- | ----------------------------------------------
 -h, --help						| brief help message
 -u, --man						| full documentation
-**Sub-Commands**				| 
+**Sub-Commands**				|
 add								| add a new quality profile to database
 dump							| dump a quality-profle from database
 remove							| remove an user quality profle from database
@@ -480,7 +384,7 @@ probabilistic curve, as described by the literature
 ([illumina, 2018](https://www.illumina.com/content/dam/illumina-marketing/documents/products/technotes/technote_understanding_quality_scores.pdf)).
 
 
-#### Command `expression` ####
+### Command `expression`
 
 The `expression` command is used to verify and update the expression matrix
 database. In a transcriptome sequencing simulation, the user
@@ -492,7 +396,7 @@ to restore the vendor's original entries state.
 **Usage:**
 ```bash
 $ sandy expression
-$ sandy expression [options] 
+$ sandy expression [options]
 $ sandy expression <sub-command>
 ```
 whose options' and sub-commands' exaustive list can be consulted by
@@ -502,7 +406,7 @@ Options							| Description
 ------------------------------- | ----------------------------------------------
 -h, --help						| brief help message
 -u, --man						| full documentation
-**Sub-Commands**				| 
+**Sub-Commands**				|
 add								| add a new expression-matrix to database
 dump							| dump an expression-matrix from database
 remove							| remove an user expression-matrix from database
@@ -605,13 +509,12 @@ its original state. It's a very simple command:
 Note that this is a dangerous command and *SANDY* will warn you about it
 before make the restoration in fact.
 
-
-#### Command `variation` ####
+### Command `variation`
 
 **Usage:**
 ```bash
 $ sandy variation
-$ sandy variation [options] 
+$ sandy variation [options]
 $ sandy variation <sub-command>
 ```
 whose options' and sub-commands' exaustive list can be consulted by
@@ -621,7 +524,7 @@ Options							| Description
 ------------------------------- | ----------------------------------------------
 -h, --help						| brief help message
 -u, --man						| full documentation
-**Sub-Commands:**				| 
+**Sub-Commands:**				|
 add								| add a new structural variation to database
 dump							| dump structural variation from database
 remove							| remove an user structural variation from database
@@ -720,11 +623,9 @@ in it with a few words!
 
 --------------------------------------------------------------------------------
 
+### Miscellaneous Commands
 
-
-#### Miscellaneous Commands ####
-
-##### Command `version` #####
+#### Command `version`
 
 *SANDY* project is made in a rolling release way, so the user can easily find
 the version number he's using:
@@ -732,7 +633,7 @@ the version number he's using:
 $ sandy version
 ```
 
-##### Command `citation` #####
+#### Command `citation`
 
 If *SANDY* was somehow useful, please cite its authors. With the `citation`
 command, you can obtain a correct BibTeX entry and/or DOI number for the
@@ -740,12 +641,9 @@ version of *SANDY* you're using:
 ```bash
 $ sandy citation
 ```
-
 --------------------------------------------------------------------------------
 
-
-
-#### Help Commands ####
+### Help Commands
 
 **Usage:**
 To get a simple general help, user can type any of these commands:
@@ -785,9 +683,7 @@ with `man sandy` or `info sandy` commands in their terminals.
 
 --------------------------------------------------------------------------------
 
-
-
-### Docker Usage ###
+## Docker Usage
 
 The user can run many instances of *SANDY* in a scalable way by pulling its
 Docker [image](https://hub.docker.com/r/galantelab/sandy) from Docker Hub in
@@ -854,10 +750,3 @@ many times as the number of directories the data needs.
 
 See [Docker documentation](https://docs.docker.com/) for more information about
 options and commands for Docker.
-
-
-
---------------------------------------------------------------------------------
-*So long and thanks for all the fish!*
-
-[Back to Top](#contents-at-a-glance) | [Back to main page](../README.md)

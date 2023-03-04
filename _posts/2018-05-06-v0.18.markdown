@@ -1,0 +1,16 @@
+---
+layout: release
+title: "Release v0.18"
+author: "Thiago L. A. Miller"
+version: "0.18"
+date: 2018-05-06 02:36:33 -03:00
+categories: jekyll update
+---
+
+This version implents these new features:
+
+- Several ways to customize the reads' identifiers in the `fastq` files on output;
+- Ready to use built-in datasets for **quality-profile** of sequencing, based on
+experimental data from several platforms (e.g. *Ilumina HISeq*);
+- Ready to use datasets for 54 tissue especific **expression-matrices** from GTEx
+[(Xena Project)](https://xena.ucsc.edu/).

@@ -1,1 +1,15 @@
-theme: jekyll-theme-cayman
+title: Sandy
+email: tmiller@mochsl.org.br
+description: >-
+  Sandy is a bioinformatics tool that provides a simple and
+  extensible engine to simulate single-end and paired-end
+  reads for whole-genome and RNA sequencing.
+baseurl: "/sandy"
+url: "https://galantelab.github.io"
+twitter_username: galante_lab
+github_username:  galantelab
+
+# Build settings
+theme: minima
+plugins:
+  - jekyll-feed

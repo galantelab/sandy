@@ -1,0 +1,17 @@
+---
+layout: release
+title: "Release v0.19"
+author: "Thiago L. A. Miller"
+version: "0.19"
+date: 2018-08-10 21:10:27 -03:00
+categories: jekyll update
+---
+
+This version implents these new features:
+
+- Implementation of structural variations;
+- New variation database;
+- Simulate reads adding fusions from [COSMIC](https://cancer.sanger.ac.uk/cosmic) and
+SNVs/Indels from NA12878 ([1KGP](https://www.internationalgenome.org/));
+- Improved way to record your own experimental data to the datasets entries;
+- Add bash/zsh completions.
