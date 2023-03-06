@@ -4,77 +4,100 @@ title: Installation
 permalink: /install/
 ---
 
+There are three ways to obtain **Sandy**: pulling the official [Docker](https://www.docker.com/)
+image, installing through [CPAN](https://metacpan.org/) and installing manually.
+
 ## Contents
+{:.no_toc}
 
-1. [Prerequisites](#prerequisites)
-2. [Installing Sandy properly](#installing-sandy-properly)
-3. [Or get Sandy in a Docker image](#or-get-sandy-in-a-docker-image)
+1. This will become a table of contents.
+{:toc}
 
-## Prerequisites
+## Docker
 
-Along with **Perl**, the user must have **zlib**, **gcc**, **make** and
-**perldoc** packages installed. To install them according to your distro, use:
+Assuming that `docker` is already installed on your server, simply run the command:
 
-* Debian/Ubuntu
-```bash
-	$ apt-get install perl zlib1g-dev gcc make perl-doc
-```
+{% highlight shell_session %}
+$ docker pull galantelab/sandy
+{% endhighlight %}
 
-* CentOS/Fedora
-```bash
-	$ yum install perl zlib gcc make perl-doc
-```
+This way the latest stable version of **Sandy** will be installed. You can see the complete list of
+available versions at [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://hub.docker.com/r/galantelab/sandy/tags).
 
-* Archlinux
-```bash
-	$ pacman -S perl zlib gcc make perl-doc
-```
+For more details about `docker` usage and examples, see
+[docker/README.md](https://github.com/galantelab/sandy/blob/master/docker/README.md) file.
 
-**Sandy** uses the *Comprehensive Perl Archive Network*, CPAN, as its package
-manager, which allows a good control over all dependencies needed. If you have
-Perl installed, then you may have the cpan command utility. At the first run,
-cpan will interactively configure your environment and mirror.
+## CPAN
 
-If you are not sure, confirm the prerequisites presented and, after this,
-install *cpanminus* package manager:
-```bash
-	$ cpan -i App::cpanminus
-```
+### Prerequisites
 
-`App::cpanminus` will provide the `cpanm` utility, which has the capability of
-install not only Sandy, but also all its dependencies, recursively.
+Along with `perl`, you must have `zlib`, `gcc`, `make` and `cpanm` packages installed:
 
-## Installing **Sandy** properly
+- Debian/Ubuntu
 
-Finally install **Sandy** with:
-```bash
-	$ cpanm App::Sandy
-```
+{% highlight shell_session %}
+# apt-get install perl zlib1g-dev gcc make cpanminus
+{% endhighlight %}
 
-**Important:** MacOS users must add an extra option to the command above, like
-this:
-```bash
-	$ cpanm --force App::Sandy
-```
+- CentOS/Fedora
 
-## Or get Sandy in a Docker image
+{% highlight shell_session %}
+# yum install perl zlib gcc make perl-App-cpanminus
+{% endhighlight %}
 
-If the user prefer to avoid any intallation process and have Docker, you can just
-pull *Sandy*'s* [image](https://hub.docker.com/r/galantelab/sandy) from Docker
-Hub with:
-```bash
-	$ docker pull galantelab/sandy
-```
+- Archlinux
 
-And will take the latest version of **Sandy**, ready to rock!
+{% highlight shell_session %}
+# pacman -S perl zlib gcc make cpanminus
+{% endhighlight %}
 
-So, to view some instructions about how to use **Sandy** from a docker image, see
-the manual or consult the web [tutorial about Sandy usage from docker](https://galantelab.github.io/sandy/v0.22/main.html#docker-usage).
+### Installing with `cpanm`
 
-**Important:** Docker has some strict default configurations for memory and CPU
-usage on MacOS. Users of this system can change these configurations on their
-behalf by accessing the [Preferences menu](https://docs.docker.com/docker-for-mac/#preferences-menu)
-on the Docker icon at top right corner of their desktops.
+Install **Sandy** with the following command:
 
-For many more details, see the [INSTALL](https://github.com/galantelab/sandy/blob/master/INSTALL)
-file on *Sandy*'s* GitHub [repository](https://github.com/galantelab/sandy).
+{% highlight shell_session %}
+# cpanm App::Sandy
+{% endhighlight %}
+
+If you concern about speed, you can avoid testing with the flag `--notest`:
+
+{% highlight shell_session %}
+# cpanm --notest App::Sandy
+{% endhighlight %}
+
+## Manual installation
+
+This is not the recommended way to install **Sandy**, but for conscience sake,
+here is the manual way to obtain and install it.
+
+First of all, install the [prerequisites](#prerequisites).
+
+Then, clone the source-code:
+
+{% highlight shell_session %}
+$ git clone https://github.com/galantelab/sandy.git
+{% endhighlight %}
+
+if you already have all the perl packages Sandy depends on (you probably don't),
+then skip this step. Inside **Sandy** directory, install all perl dependencies
+with `cpanm`:
+
+{% highlight shell_session %}
+# cpanm --installdeps .
+{% endhighlight %}
+
+Now compile the code with:
+
+{% highlight shell_session %}
+$ perl Makefile.PL
+$ make
+{% endhighlight %}
+
+And install:
+
+{% highlight shell_session %}
+# make install
+{% endhighlight %}
+
+For more details, see
+[INSTALL](https://github.com/galantelab/sandy/blob/master/INSTALL) file.
