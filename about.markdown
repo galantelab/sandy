@@ -4,7 +4,8 @@ title: About
 permalink: /about/
 ---
 
-**Sandy** was developed by the following members of the galantelab bioinformatics group:
+**Sandy** was developed by the following members of the [Galantelab](https://www.bioinfo.mochsl.org.br/)
+bioinformatics group:
 
 Thiago L. A. Miller | <tmiller@mochsl.org.br>
 Gabriela Guardia | <gguardia@mochsl.org.br>
@@ -16,7 +17,7 @@ Rafael Mercuri | <rmercuri@mochsl.org.br>
 
 With the mentorship of the principal investigator:
 
-Pedro A. F. Galante | <pgalante@mochsl.org.br>
+Dr. Pedro A. F. Galante | <pgalante@mochsl.org.br>
 
 ## Citation
 
