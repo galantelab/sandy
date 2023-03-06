@@ -12,6 +12,7 @@ J. Leonel Buzzo | <lbuzzo@mochsl.org.br>
 Fernanda Orpinelli | <forpinelli@mochsl.org.br>
 Felipe R. C. Santos | <fsantos@mochsl.org.br>
 Helena B. Conceição | <hconceicao@mochsl.org.br>
+Rafael Mercuri | <rmercuri@mochsl.org.br>
 
 With the mentorship of the principal investigator:
 
@@ -40,10 +41,8 @@ If **Sandy** was somehow useful in your research, please cite it:
 
 ## Acknowledgments
 
-| Institution | Site |
-| :-- | :-: |
-| Coordination for the Improvement of Higher Level Personnel | [CAPES](http://www.capes.gov.br/) |
-| The São Paulo Research Foundation | [FAPESP](https://fapesp.br/en/about) |
+Coordination for the Improvement of Higher Level Personnel | [CAPES](http://www.capes.gov.br/)
+The São Paulo Research Foundation | [FAPESP](https://fapesp.br/en/about)
 
 ## License
 
