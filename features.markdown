@@ -15,22 +15,155 @@ permalink: /features/
 Simulate **single-end** (long and short fragments) and **paired-end** sequencing reads for
 **genome** and **transcriptome** analysis. The simulation can be customized with raffle seed,
 sequencing coverage, number of reads, fragment mean, output formats (`fastq`, `sam` and their
-compressed versions `fastq.gz` and `bam`), sequence identifier (header of entries in `fastq`)
-and much more.
+compressed versions `fastq.gz`, `bam`) and much more.
 
-## Sequencer **quality-profile**
+### DNA sequencing examples
+
+For example, if you want to simulate a whole-genome sequencing, then you just need the reference
+genome file in `fasta` format for the desired species:
+
+- long options
+
+{% highlight shell_session %}
+$ sandy genome --verbose --jobs=10 --coverage=20 my_genome.fa
+{% endhighlight %}
+
+- short options
+
+{% highlight shell_session %}
+$ sandy genome -v -j 10 -c 20 my_genome.fa
+{% endhighlight %}
+
+Which will produce **paired-end** sequencing. For **single-end**, add the option
+`--sequencing-type`:
+
+- long options
+
+{% highlight shell_session %}
+$ sandy genome --verbose --jobs=10 --coverage=20 --sequencing-type=single-end my_genome.fa
+{% endhighlight %}
+
+- short options
+
+{% highlight shell_session %}
+$ sandy genome -v -j 10 -c 20 -t single-end my_genome.fa
+{% endhighlight %}
+
+### RNA sequencing examples
+
+In the same way, you can simulate an RNA-seq for your recorded transcripts also in a file
+in `fasta` format:
+
+- long options
+
+{% highlight shell_session %}
+$ sandy transcriptome --verbose --jobs=10 --number-of-reads=50000000 my_transcripts.fa
+{% endhighlight %}
+
+- short options
+
+{% highlight shell_session %}
+$ sandy transcriptome -v -j 10 -n 50000000 my_transcripts.fa
+{% endhighlight %}
+
+And for **single-end** sequencing:
+
+- long options
+
+{% highlight shell_session %}
+$ sandy transcriptome --verbose --jobs=10 --number-of-reads=50000000 --sequencing-type=single-end my_transcripts.fa
+{% endhighlight %}
+
+- short options
+
+{% highlight shell_session %}
+$ sandy transcriptome -v -j 10 -n 50000000 -t single-end my_transcripts.fa
+{% endhighlight %}
+
+### Output files
+
+The output file generated for whole-genome and RNA sequencing will depend on the `--output-format`
+(`fastq`, `bam`), on the `--join-paired-ends` (mate read pairs into a single file) and on the
+`--sequencing-type` (single-end, paired-end) options. Along with the simulation output, files with read
+counts per chromosome, gene and transcript are also produced. That is, for DNA sequencing, a file
+with the read counts per chromosome is created and for RNA sequencing, a file with the abundance
+per transcript and, if there is the relationship between genes and their transcripts at the `fasta`
+header, a file with the abundance per gene are produced as well.
+
+In the previous examples, the output files are:
+
+- for genome
+
+{% highlight shell_session %}
+$ sandy genome -v -j 10 -c 20 my_genome.fa
+$ ls -1
+{% endhighlight %}
+
+{% highlight text %}
+my_genome.fa
+out_coverage.tsv
+out_R1_001.fastq.gz
+out_R2_001.fastq.gz
+{% endhighlight %}
+
+- for transcriptome
+
+{% highlight shell_session %}
+$ sandy transcriptome -v -j 10 -n 50000000 my_transcripts.fa
+$ ls -1
+{% endhighlight %}
+
+{% highlight text %}
+my_transcripts.fa
+out_abundance_genes.tsv
+out_abundance_transcripts.tsv
+out_R1_001.fastq.gz
+out_R2_001.fastq.gz
+{% endhighlight %}
+
+## Sequencer quality-profile
 
 **Sandy** generates `fastq` quality entries that mimic the [Illumina](https://www.illumina.com/),
 [PacBio](https://www.pacb.com/) and [Nanopore](https://nanoporetech.com/) sequencers, as well as
 generating the *phred-score* using a statistical model based on the *poisson* distribution.
 
-## RNA-Seq **expression-matrix**
+By default, **Sandy** writes out *phred-scores* according to the *poisson* statistical
+distribution. You can change it by passing `--quality-profile` option:
+
+{% highlight shell_session %}
+$ sandy genome --verbose --quality-profile=miseq_150 my_transcripts.fa
+{% endhighlight %}
+
+Which will output the *phred-scores* according to the *MySeq* sequencer with a read length of 150
+bases.
+
+To see the complete list of profiles, run:
+
+{% highlight shell_session %}
+$ sandy quality
+{% endhighlight %}
+
+## RNA-Seq expression-matrix
 
 It is possible to simulate a RNA-Seq which reflects the abundance of gene expression for transcripts
 and genes of a given tissue. For this purpose, **expression-matrices** were created from the gene
 expression data of 54 tissues of the [GTExV8](https://www.gtexportal.org/home/) project.
 
-## Whole-genome sequencing with **genomic-variiation**
+By default, **Sandy** simulates an RNA-Seq, raffling the transcripts according to the features length.
+You can select another raffling pattern with the `--expression-matrix` option. For example, let's
+simulate an RNA-Seq for liver tissue:
+
+{% highlight shell_session %}
+$ sandy transcriptome --expression-matrix=liver my_transcripts.fa
+{% endhighlight %}
+
+To see the complete list of matrices, run:
+
+{% highlight shell_session %}
+$ sandy expression
+{% endhighlight %}
+
+## Whole-genome sequencing with genomic-variiation
 
 The user can tune the reference genome (eg [GRCh38.p13.genome.fa.gz](https://www.gencodegenes.org/human/)),
 adding homozygous or heterozygous **genomic-variations** such as SNVs, Indels, gene fusions and other
@@ -38,10 +171,120 @@ types of structural variations (eg CNVs, retroCNVs). **Sandy** has in its databa
 obtained from the [1KGP](https://www.internationalgenome.org/) and from
 [COSMIC](https://cancer.sanger.ac.uk/cosmic).
 
+So, let's simulate a genome which includes the fusion between the genes *NPM1* and *ALK*:
+
+{% highlight shell_session %}
+$ sandy genome --genomic-variation=fusion_hg38_NPM1-ALK my_genome.fa
+{% endhighlight %}
+
+To see the complete list of variations, run:
+
+{% highlight shell_session %}
+$ sandy variation
+{% endhighlight %}
+
 ## Custom user models
 
 Users can include their models for **quality-profile**, **expression-matrix** and **genomic-variation**
 in order to adapt the simulation to their needs.
+
+### quality-profile
+
+The user must pass a file in `fastq` format or a file containing only the ASCII-encoded phred-scores, as
+in this example:
+
+{% highlight shell_session %}
+$ cat my_qualities.txt
+{% endhighlight %}
+
+{% highlight text %}
+BECGF@F@DEBIDBE@DCC?HFH?BBB?H@FEEIFDCCECCCIGDIDI?@?CCC?AE?EC?F?@FB;<9<>9:599=>7:57614,30,440&"!***)#
+@DCGIDBDECIHIG@FII?G?GCAD@BFECDCEF?H?GIHE?@GEECBCIHCABAFHDFAHBEBEB:5575678=75>657673-14,.113#"()#&)$
+F?B@@DFAHIDD?EBFADICBFABCBBAHFCGF@@@?DEIAIEAFCEADC?B@IB?BIEABIBG@C<:;96<968:>::;778,+0203-3,#&'$$#&!
+...
+{% endhighlight %}
+
+And with the command:
+
+{% highlight shell_session %}
+$ sandy quality add --verbose --quality-profile=new_quality my_qualities.txt
+{% endhighlight %}
+
+### expression-matrix
+
+Add an **expression-matrix** to the database. A valid expression-matrix is a file with two columns.
+The first column is for the seqid and the second column is for the raw count. The counts will be
+treated as weights.
+
+{% highlight shell_session %}
+$ cat my_custom_expression_matrix.txt
+{% endhighlight %}
+
+{% highlight text %}
+#feature	count
+ENST00000000233.9	2463
+ENST00000000412.7	2494
+ENST00000000442.10	275
+ENST00000001008.5	5112
+ENST00000001146.6	637
+ENST00000002125.8	660
+ENST00000002165.10	478
+ENST00000002501.10	57
+ENST00000002596.5	183
+...
+{% endhighlight %}
+
+And with the command:
+
+{% highlight shell_session %}
+$ sandy expression add --verbose --expression-matrix=new_tissue my_custom_expression_matrix.tsv
+{% endhighlight %}
+
+### genomic-variiation
+
+A **genomic-variation** may be represented  by a genomic position (seqid, position), a reference sequence
+at that postion, an alternate sequence and a genotype (homozygous or heterozygous). The input file may
+be a vcf or a custom genomic-variation file.  For vcf files, the user can point out the sample-name
+present in vcf header and then its column will be used to extract the genotype. if the user does not
+pass the option `--sample-name`, then it will be used the first sample.
+
+{% highlight shell_session %}
+$ cat my_variations.vcf
+{% endhighlight %}
+
+{% highlight text %}
+##fileformat=VCFv4.3
+...
+#CHROM POS     ID    REF ALT   QUAL FILTER INFO        FORMAT NA001 NA002
+chr20  14370   rs81  G   A     29   PASS   NS=3;DP=14  GT     0/1   0/0
+chr20  17330   rs82  T   AAA   3    PASS   NS=3;DP=20  GT     1/1   0/0
+chr20  110696  rs83  A   GTCT  10   PASS   NS=2;DP=11  GT     0/0   1/1
+...
+{% endhighlight %}
+
+In the `my_variations.vcf` file, if the user does not point out the sample `NA002` by passing the
+options `--sample-name=NA002`, the sample `NA001` will be used by default.
+
+A genomic-variation file is a representation of a reduced VCF, that is, without the columns: *QUAL*,
+*FILTER*, *INFO* and *FORMAT*. There is only one *SAMPLE* column with the genotype for the entry in
+the format *HO* for homozygous and *HE* for heterozygous. See the example bellow:
+
+{% highlight shell_session %}
+$ cat my_variations.txt
+{% endhighlight %}
+
+{% highlight text %}
+#seqid  position id        reference alternate	genotype
+chr20   14370    rs81      G         A          0/1
+chr20   17330    rs82      T         AAA        1/1
+chr20   110696   rs83      A         GTCT       0/0
+{% endhighlight %}
+
+And add the variiations with the command:
+
+{% highlight shell_session %}
+$ sandy variiation add --verbose --genomic-variiation=my_variations my_variations.txt
+{% endhighlight %}
 
 ## Custom sequence identifier
 
