@@ -14,6 +14,7 @@ Fernanda Orpinelli | <forpinelli@mochsl.org.br>
 Felipe R. C. Santos | <fsantos@mochsl.org.br>
 Helena B. Conceição | <hconceicao@mochsl.org.br>
 Rafael Mercuri | <rmercuri@mochsl.org.br>
+Rodrigo Barreiro | <rbarreiro@mochsl.org.br>
 
 With the mentorship of the principal investigator:
 
