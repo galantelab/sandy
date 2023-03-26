@@ -8,6 +8,7 @@ use IO::Uncompress::Gunzip 'gunzip';
 use Storable qw/nfreeze thaw/;
 
 use constant {
+	SEED            => 1717,
 	PARTIL          => 10,
 	DEFAULT_PROFILE => {
 		poisson => {
@@ -77,7 +78,7 @@ sub insertdb {
 }
 
 sub _index_quality {
-	my ($self, $quality_ref) = @_;
+	my ($self, $quality_ref, $rng) = @_;
 	my (@partil, @sizes);
 
 	for my $entry (@$quality_ref) {
@@ -90,7 +91,7 @@ sub _index_quality {
 		my $left = $size % PARTIL;
 
 		my $pos = 0;
-		my $skip = $self->with_make_counter($size - $left, $left);
+		my $skip = $self->with_make_counter($size - $left, $left, $rng);
 
 		for (my $i = 0; $i < PARTIL; $i++) {
 			for (my $j = 0; $j < $bin; $j++) {
@@ -176,8 +177,9 @@ sub _index_quality_type {
 	my $picks = $num_left < 1000 ? $num_left : 1000;
 	my $picks_left = $picks;
 
+	my $rng = App::Sandy::RNG->new(SEED);
+	my $do_pick = $self->with_make_counter($num_left, $picks, $rng);
 	my @quality;
-	my $do_pick = $self->with_make_counter($num_left, $picks);
 
 	log_msg ":: Picking $picks entries in '$file' ...";
 	while (my $entry = $getter->()) {
@@ -199,7 +201,7 @@ sub _index_quality_type {
 	$fh->close
 		or die "Cannot close file '$file'\n";
 
-	return $self->_index_quality(\@quality);
+	return $self->_index_quality(\@quality, $rng);
 }
 
 sub _wcl {

@@ -10,13 +10,13 @@ sub with_make_counter {
 	# How do I select a random line from a file?
 	# "The Art of Computer Programming"
 
-	my ($self, $num, $picks) = @_;
+	my ($self, $num, $picks, $rng) = @_;
 	return sub {
 		state $count_down = $num;
 		state $picks_left = $picks;
 
 		my $rc = 0;
-		my $rand = int(rand($count_down));
+		my $rand = $rng->get_n($count_down);
 
 		if ($rand < $picks_left) {
 			$rc = 1;
