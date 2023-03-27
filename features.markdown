@@ -320,3 +320,95 @@ In this case, results in `fastq` format would be:
 ==> Into R2
 @SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
 {% endhighlight %}
+
+## Reproducible simulations
+
+**Sandy** comes with the option `--seed` which receives an interger and is used to initiate the random number
+generator. The ability to set a *seed* is useful for those who want reproducible simulations. Pay attention
+to the number of jobs (`--jobs`) set, because each job receives a different seed calculated from the *main seed*.
+So, for reproducibility, the same seed set before needs the same number of jobs set before as well.
+
+Obviously the user also needs to use the same options for the simulation type, sequencing type, quality profile,
+expression matrix, genomic variation, number of reads, coverage and the file with the reference sequences.
+
+So, let's test the reproducibility with the following examples:
+
+### Reproducibility in genome
+
+Let's make the same simulation twice and compare them:
+
+{% highlight shell_session %}
+$ sandy genome -v -t single-end -q nextseq_85 -j 5 -s 1717 -c 1 -a NA12878_hg38_chr17 -O fastq -o my_sim1/ chr17.fa
+{% endhighlight %}
+
+{% highlight shell_session %}
+$ sandy genome -v -t single-end -q nextseq_85 -j 5 -s 1717 -c 1 -a NA12878_hg38_chr17 -O fastq -o my_sim2/ chr17.fa
+{% endhighlight %}
+
+Comparing both the results:
+
+{% highlight shell_session %}
+$ diff -s my_sim1/out_R1_001.fastq my_sim2/out_R1_001.fastq
+{% endhighlight %}
+
+And you should receive the message:
+
+{% highlight shell_session %}
+Files my_sim1/out_R1_001.fastq and my_sim2/out_R1_001.fastq are identical
+{% endhighlight %}
+
+### Reproducibility in transcriptome
+
+in the same way as the examples above for genome, you can test the reproductivity with:
+
+{% highlight shell_session %}
+$ sandy transcriptome \
+    -v \
+    -t paired-end \
+    -q hiseq_101 \
+    -j 5 \
+    -s 1717 \
+    -n 1000000 \
+    -f liver \
+    -O fastq \
+    -o my_sim1/ \
+    gencode.v40.transcripts.fa.gz
+{% endhighlight %}
+
+{% highlight shell_session %}
+$ sandy transcriptome \
+    -v \
+    -t paired-end \
+    -q hiseq_101 \
+    -j 5 \
+    -s 1717 \
+    -n 1000000 \
+    -f liver \
+    -O fastq \
+    -o my_sim2/ \
+    gencode.v40.transcripts.fa.gz
+{% endhighlight %}
+
+Comparing the simulations for R1:
+
+{% highlight shell_session %}
+$ diff -s my_sim1/out_R1_001.fastq my_sim2/out_R1_001.fastq
+{% endhighlight %}
+
+And you should receive the message:
+
+{% highlight shell_session %}
+Files my_sim1/out_R1_001.fastq and my_sim2/out_R1_001.fastq are identical
+{% endhighlight %}
+
+Comparing the simulations for R2
+
+{% highlight shell_session %}
+$ diff -s my_sim1/out_R2_001.fastq my_sim2/out_R2_001.fastq
+{% endhighlight %}
+
+And you should receive the message:
+
+{% highlight shell_session %}
+Files my_sim1/out_R2_001.fastq and my_sim2/out_R2_001.fastq are identical
+{% endhighlight %}
