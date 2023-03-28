@@ -412,3 +412,103 @@ And you should receive the message:
 {% highlight shell_session %}
 Files my_sim1/out_R2_001.fastq and my_sim2/out_R2_001.fastq are identical
 {% endhighlight %}
+
+## Persistent database with Docker
+
+**Sandy** *expression matrix*, *quality profile* and *structural variation* patterns are stored within
+docker container, that is, any database changes during runtime will last as long as the container is
+not removed.
+
+A named Docker volume or a mounted host directory should be used in order to keep your changes to the
+database. If our container detects that the path `/sandy/db` is mounted, then the database
+`/sandy/db/db.sqlite3` will be used intead of the default database. In the same way, if there is no
+database `db.sqlite3` inside the mounted path `/sandy/db/`, then the default database will be copied to
+`/sandy/db/` and used consecutively.
+
+### Named volume
+
+`sandy_db` volume will be created at first run and will persist after container deletion.
+
+{% highlight shell_session %}
+$ docker run \
+    --rm \
+    -v sandy_db:/sandy/db \
+    galantelab/sandy
+{% endhighlight %}
+
+You can verify the created volume with the commands:
+
+{% highlight shell_session %}
+$ docker volume ls
+{% endhighlight %}
+
+And in more detail with the command:
+
+{% highlight shell_session %}
+$ docker volume inspect sandy_db
+{% endhighlight %}
+
+### Mounted directory
+
+`/path/to/DB` will receive the default database at first run and any further changes will be stored in it.
+
+{% highlight shell_session %}
+$ docker run \
+    --rm \
+    -v /path/to/DB:/sandy/db \
+    galantelab/sandy
+{% endhighlight %}
+
+Now, verify the directory `/path/to/DB`. You should find the file `db.sqlite3`.
+
+As you add your custom patterns to **Sandy**, the alterations will be kept safelly outside the container.
+
+### More examples
+
+#### Add a new quality profile
+
+{% highlight shell_session %}
+$ docker run \
+    --rm \
+    -v /path/to/quality_profile.txt:/quality_profile.txt \
+    -v sandy_db:/sandy/db \
+    galantelab/sandy quality add -q new_profile /quality_profile.txt
+{% endhighlight %}
+
+Check the new quality profile at `sandy_db`:
+
+{% highlight shell_session %}
+$ docker run --rm -v sandy_db:/sandy/db galantelab/sandy quality
+{% endhighlight %}
+
+#### Add a new expression matrix
+
+{% highlight shell_session %}
+$ docker run \
+    --rm \
+    -v /path/to/tissue_counts.txt:/tissue_counts.txt \
+    -v sandy_db:/sandy/db \
+    galantelab/sandy expression add -f new_tissue /tissue_counts.txt
+{% endhighlight %}
+
+Check the new expression matrix at `sandy_db`:
+
+{% highlight shell_session %}
+$ docker run --rm -v sandy_db:/sandy/db galantelab/sandy expression
+{% endhighlight %}
+
+#### Add a new structural variation
+
+{% highlight shell_session %}
+$ docker run \
+    --rm \
+    -v /path/to/sv.txt:/sv.txt \
+    -v sandy_db:/sandy/db \
+    galantelab/sandy variation add -a new_sv /sv.txt
+{% endhighlight %}
+
+Check the new structural variation at `sandy_db`:
+
+{% highlight shell_session %}
+$ docker run --rm -v sandy_db:/sandy/db galantelab/sandy variation
+{% endhighlight %}
