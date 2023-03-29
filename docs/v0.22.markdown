@@ -370,7 +370,7 @@ before make the restoration in fact.
 probabilistic curve, as described by the literature
 ([illumina, 2018](https://www.illumina.com/content/dam/illumina-marketing/documents/products/technotes/technote_understanding_quality_scores.pdf)).
 
-### Command `expression`
+#### Command `expression`
 
 The `expression` command is used to verify and update the expression matrix
 database. In a transcriptome sequencing simulation, the user
@@ -495,7 +495,7 @@ its original state. It's a very simple command:
 Note that this is a dangerous command and Sandy will warn you about it
 before make the restoration in fact.
 
-### Command `variation`
+#### Command `variation`
 
 **Usage:**
 ```bash

@@ -58,11 +58,11 @@ or
 	```bash
 	$ sandy expression -h
 	```
-2. To view the verion of *SANDY* in use, just type:
+2. To view the verion of *Sandy* in use, just type:
 	```bash
 	$ sandy version
 	```
-3. And, to take a BibTex entry to cite *SANDY* in his work, type:
+3. And, to take a BibTex entry to cite *Sandy* in his work, type:
 	```bash
 	$ sandy citation
 	```
@@ -143,7 +143,7 @@ new profile on the database.
 be directed to the standard error so, in the example above, it was redirected
 to a file. Whithout the `-v` option, only errors messages will be printed.
 4. Sequence identifiers (first lines of FASTq entries) may be customized in
-SANDY output using a format string passed by the user. This format is a
+Sandy output using a format string passed by the user. This format is a
 combination of literal and escaped characters, in a similar fashion to that
 used in C programming language’s printf function. For example, let’s simulate a
 paired-end sequencing and add the read length, read position and mate position
@@ -183,7 +183,7 @@ a paired-end sequencing with the `-D` option and an integer number
 	$ sandy genome -D 30 my_fasta_file.fa
 	```
 9. The options above are the most frequently used ones for the `genome`
-command, but many more can be found in the *SANDY's* documentation, with:
+command, but many more can be found in the *Sandy's* documentation, with:
 	```bash
 	$ sandy genome --man
 	```
@@ -242,7 +242,7 @@ file and a plain text file with the raw counts of the reads per gene,
 according to the expression matrix provided by the *brain_cortex* entry
 already registered in the database.
 2. To demonstrate some other features, think about the sequencing error rate
-that can be set between 0 and 1. By default, *SANDY* set this value to
+that can be set between 0 and 1. By default, *Sandy* set this value to
 0.005, which means 1 error every 200 bases.	To set it to another value,
 try:
 	```bash
@@ -253,7 +253,7 @@ the reliability of all the raffles in a later simulation.
 	```bash
 	$ sandy transcriptome -q hiseq_101 --seed=123 hg19.fa
 	```
-4. To have an idea of *SANDY's* plurality, look to how overwhelming the number
+4. To have an idea of *Sandy's* plurality, look to how overwhelming the number
 of choices could be:
 	```bash
 	$ sandy transcriptome \
@@ -276,7 +276,7 @@ can run in parallel, splitting the task among jobs. For example, type:
 	```bash
 	$ sandy custom -f testis -q hiseq_101 -v -i "length=%r" --jobs 15 gencode_lnc.fa.gz
 	```
-and *SANDY* will allocate 15 jobs. This feature works for both `genome` and
+and *Sandy* will allocate 15 jobs. This feature works for both `genome` and
 `transcriptome` simulations commands.
 
 --------------------------------------------------------------------------------
@@ -288,7 +288,7 @@ and *SANDY* will allocate 15 jobs. This feature works for both `genome` and
 Use the `quality` command to manage quality profiles database. With this command,
 it is possible to add or remove customized expression profiles in the built-in
 database and make simulations more suitable for your experimental data. By
-default, *SANDY* uses a Poisson distribution when compiling the quality entries,
+default, *Sandy* uses a Poisson distribution when compiling the quality entries,
 but like many other features, this behavior can be altered and restored to
 vendor’s profile by the user.
 
@@ -346,7 +346,7 @@ a tab separated fashion (quality profile defaut density function is
 *Poisson*).<br />
 **Note:** Before the new entry can appear in the database's list, the new
 profile needs to be validated, and if it can't, an error message will
-be show. *SANDY* prevent's you before overwrite an existing entry.
+be show. *Sandy* prevent's you before overwrite an existing entry.
 3. To use a recently inserted quality profile over a given FASTA file
 to simulate a transcriptomic data, use the `-q` option with the id you
 registered:
@@ -359,25 +359,25 @@ remove some actual entry and register a newer one, like this:
 	```bash
 	$ sandy quality remove 'my_quality_id'
 	```
-*SANDY* will refuse to remove any vendor's original entry from the database.
+*Sandy* will refuse to remove any vendor's original entry from the database.
 5. And, there could be times when users would wants to reset all the database to
 its original state. It's a very simple command:
 	```bash
 	$ sandy quality restore
 	```
-Note that this is a dangerous command and *SANDY* will warn you about it
+Note that this is a dangerous command and *Sandy* will warn you about it
 before make the restoration in fact.
 
-**Note:** *SANDY* already comes with one quality profile based on the Poisson
+**Note:** *Sandy* already comes with one quality profile based on the Poisson
 probabilistic curve, as described by the literature
 ([illumina, 2018](https://www.illumina.com/content/dam/illumina-marketing/documents/products/technotes/technote_understanding_quality_scores.pdf)).
 
 
-### Command `expression`
+#### Command `expression`
 
 The `expression` command is used to verify and update the expression matrix
 database. In a transcriptome sequencing simulation, the user
-must provide an expression matrix indexed into this database. *SANDY*
+must provide an expression matrix indexed into this database. *Sandy*
 already comes with 52 different tissues from the GTEx project, but the
 user has the freedom to include his own data as well, or even clean it up
 to restore the vendor's original entries state.
@@ -477,7 +477,7 @@ problem:
 	```
 Note that, before the new entry can appear in the database's list, the new
 matrix file needs to be validated, and if it can't, an error message will
-be show. *SANDY* prevents you to overwrite an existing entry.
+be show. *Sandy* prevents you to overwrite an existing entry.
 3. So, to use the recently added expression matrix in a transcriptome
 simulation, use the `-f` option on the `transcriptome` command:
 	```bash
@@ -489,16 +489,16 @@ remove the actual entry and register a newer one, like this:
 	```bash
 	$ sandy expression remove 'my_expression_id'
 	```
-*SANDY* will refuse to remove any vendor's original entry from the database.
+*Sandy* will refuse to remove any vendor's original entry from the database.
 5. Finally, there could be times when you would want to reset all the database to
 its original state. It's a very simple command:
 	```bash
 	$ sandy expression restore
 	```
-Note that this is a dangerous command and *SANDY* will warn you about it
+Note that this is a dangerous command and *Sandy* will warn you about it
 before make the restoration in fact.
 
-### Command `variation`
+#### Command `variation`
 
 **Usage:**
 ```bash
@@ -571,7 +571,7 @@ like this:
 	```
 Note that, before the new entry can appear in the database's list, the new
 variation's file needs to be validated, and if it can't, an error message will
-be show. *SANDY* will prevent you to overwrite any existing entry, and *SANDY*
+be show. *Sandy* will prevent you to overwrite any existing entry, and *Sandy*
 require these variations files to be in a GTF like format, specifying
 coordinates on a reference genome with one variation per line (INDELs, SNVs and
 gene fusions).
@@ -597,7 +597,7 @@ control for some other algorithm he's using), he can try this:
 	$ sandy genome -c 50 -a NA12878_hg38_chrX hg38.fa
 	```
 In this example, he has simulated reads for the whole genome, but the variations
-are only in the X chromosome of the NA12878 individue in *SANDY's* database. An
+are only in the X chromosome of the NA12878 individue in *Sandy's* database. An
 even better way to insert variations to simulations is to use a
 *regular expression* to search the entire database, like this:
 	```bash
@@ -606,7 +606,7 @@ even better way to insert variations to simulations is to use a
 This way, all entries that match NA12878 variations will be taken and,
 additionally, a well studied gene fusion fusion_hg38_BCR-ABL1 introduced.
 
-See? Notwithstanding the succint way that *SANDY's* commands are constructed, it
+See? Notwithstanding the succint way that *Sandy's* commands are constructed, it
 is possible to construct near real and complex genomes with on demand variations
 in it with a few words!
 
@@ -616,7 +616,7 @@ in it with a few words!
 
 #### Command `version`
 
-*SANDY* project is made in a rolling release way, so the user can easily find
+*Sandy* project is made in a rolling release way, so the user can easily find
 the version number he's using:
 ```bash
 $ sandy version
@@ -624,9 +624,9 @@ $ sandy version
 
 #### Command `citation`
 
-If *SANDY* was somehow useful, please cite its authors. With the `citation`
+If *Sandy* was somehow useful, please cite its authors. With the `citation`
 command, you can obtain a correct BibTeX entry and/or DOI number for the
-version of *SANDY* you're using:
+version of *Sandy* you're using:
 ```bash
 $ sandy citation
 ```
@@ -648,14 +648,14 @@ or simply call it without any arguments.
 $ sandy
 ```
 
-But, if a more comprehensive explanation is needed, invoke *SANDY's*
+But, if a more comprehensive explanation is needed, invoke *Sandy's*
 manual:
 ```bash
 $ sandy --man
 ```
 or for short
 ```bash
-$ sandy -M
+$ sandy -u
 ```
 
 For help about specific commands, its options and inputs, type:
@@ -667,14 +667,14 @@ or
 $ sandy <command> -h
 ```
 
-We always exhort users to get help by consulting *SANDY's* builtin documentations
+We always exhort users to get help by consulting *Sandy's* builtin documentations
 with `man sandy` or `info sandy` commands in their terminals.
 
 --------------------------------------------------------------------------------
 
 ## Docker Usage
 
-The user can run many instances of *SANDY* in a scalable way by pulling its
+The user can run many instances of *Sandy* in a scalable way by pulling its
 Docker [image](https://hub.docker.com/r/galantelab/sandy) from Docker Hub in
 a way aforementioned in the [Installation](#or-get-sandy-in-a-docker-image) section.
 
