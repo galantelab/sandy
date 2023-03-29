@@ -123,7 +123,7 @@ then it will be used the first sample.
  #CHROM POS     ID    REF ALT   QUAL FILTER INFO        FORMAT NA001 NA002
  chr20  14370   rs81  G   A     29   PASS   NS=3;DP=14  GT     0/1   0/0
  chr20  17330   rs82  T   AAA   3    PASS   NS=3;DP=20  GT     1/1   0/0
- chr20  110696  rs83  A   GTCT  10   PASS   NS=2;DP=11  GT     0/0   1/1
+ chr20  110696  rs83  A   GTCT  10   PASS   NS=2;DP=11  GT     0/1   1/1
  ...
 
 In the I<my_variations.vcf> file, if the user does not point out the
@@ -136,10 +136,10 @@ one SAMPLE column with the genotype for the entry in the format I<HO>
 for homozygous and I<HE> for heterozygous. See the example bellow:
 
  ===> my_variations.txt
- #seqid	position	id	  reference	alternate	genotype
- chr20  14370     rs81  G         A         0/1
- chr20  17330     rs82  T         AAA       1/1
- chr20  110696    rs83  A         GTCT      0/0
+ #seqid	position  id	  reference	alternate	genotype
+ chr20  14370     rs81  G         A         HE
+ chr20  17330     rs82  T         AAA       HO
+ chr20  110696    rs83  A         GTCT      HE
  ...
 
 =cut
