@@ -1,0 +1,847 @@
+---
+layout: page
+title: ""
+version: "0.24"
+status: comming
+permalink: /docs/v0.24/
+---
+
+## Documentation for **Sandy** version **0.24**
+{:.no_toc}
+
+## Contents
+{:.no_toc}
+
+1. This will become a table of contents.
+{:toc}
+
+## General Syntax
+
+**Usage:**
+
+```bash
+$ sandy [options]
+$ sandy help <command>
+$ sandy <command> [options] <FILEs>
+```
+
+where there are basically two commands for general help, two main commands
+with their own inner options, tree database management commands, some
+miscellaneous commands and a specific `help` command for each of the main
+commands. See:
+
+### Help commands
+
+| Commands | Description |
+| :-- | :-- |
+| help | show application or command-specific help |
+| man | show application or command-specific documentation |
+
+### Misc commands
+
+| Commands | Description |
+| :-- | :-- |
+| version | print the current version |
+| citation | export citation in BibTeX format |
+
+### Database commands
+
+| Commands | Description |
+| :-- | :-- |
+| quality | manage quality profile database |
+| expression | manage expression-matrix database |
+| variation | manage structural variation database |
+
+### Main commands
+
+| Commands | Description |
+| :-- | :-- |
+| genome | simulate genome sequencing |
+| transcriptome	| simulate transcriptome sequencing |
+
+### Some examples
+
+1. If the user wants to see a brief help for the `expression` command, he can
+type both of the commands bellow:
+    ```bash
+    $ sandy help expression
+    ```
+or
+    ```bash
+    $ sandy expression -h
+    ```
+
+2. To view the verion of *Sandy* in use, just type:
+    ```bash
+    $ sandy version
+    ```
+
+3. And, to take a BibTex entry to cite *Sandy* in his work, type:
+    ```bash
+    $ sandy citation
+    ```
+
+## Main Commands
+
+### Command `genome`
+
+Use it to generate simulated `fastq` (or `sam`) files from a given `fasta`
+file. The `genome` command sets these default options for a genome sequencing
+simulation:
+
+* The strand is **randomly** chosen;
+* The total number of reads is calculated by the coverage;
+* The number of reads per chromosome is proportional to the length of the chromosome sequences.
+
+**Usage:**
+
+```bash
+$ sandy genome [options] <fasta-file>
+```
+
+whose options' exaustive list can be consulted by `sandy genome -h` or
+even `sandy help genome` commands.
+
+At least one `fasta` file must be given as the `<fasta-file>` term. The results
+will be one or two `fastaq` files (or one `sam`, `bam` file), depending on the
+`--sequencing-type` option, `-t`, for *single-ended* or *paired-ended* reads and
+on the `--output-format`, `-O`, for `fastq`, `fastq.gz`, `sam`, `bam` file formats.
+
+#### Input/Output options
+
+| Options | Description |
+| :-- | :-- |
+| -h, --help | brief help message |
+| -H, --man | full documentation |
+| -v, --verbose | print log messages |
+| -p, --prefix | prefix output [default:"out"] |
+| -o, --output-dir | output directory [default:"."] |
+| -O, --output-format | bam, sam, fastq.gz, fastq [default:"fastq.gz"] |
+| -1, --join-paired-ends | merge R1 and R2 outputs in one file |
+| -x, --compression-level | speed compression: "1" - compress faster, <br />"9" - compress better [default:"6"; Integer] |
+
+#### Runtime options
+
+| Options | Description |
+| :-- | :-- |
+| -j, --jobs | number of jobs [default:"1"; Integer] |
+| -s, --seed | set the seed of the base generator<br />[default:"time()"; Integer] |
+
+#### Sequence identifier options
+
+| Options | Description |
+| :-- | :-- |
+| -i, --append-id | append to the defined template id [Format] |
+| -I, --id | overlap the default template id [Format] |
+
+#### Sequencing options
+
+| Options | Description |
+| :-- | :-- |
+| -q, --quality-profile | sequencing system profiles from quality<br />database [default:"poisson"] |
+| -e, --sequencing-error | sequencing error rate for poisson<br />[default:"0.001"; Number] |
+| -m, --read-mean | read mean size for poisson<br />[default:"100"; Integer] |
+| -d, --read-stdd | read standard deviation size for poisson<br />[default:"0"; Integer] |
+| -t, --sequencing-type | single-end or paired-end reads<br />[default:"paired-end"] |
+| -M, --fragment-mean | the fragment mean size for paired-end reads<br />[default:"300"; Integer] |
+| -D, --fragment-stdd | the fragment standard deviation size for<br />paired-end reads [default:"50"; Integer] |
+
+#### Genome-specific options
+
+| Options | Description |
+| :-- | :-- |
+| -c, --coverage | genome coverage [default:"8", Number] |
+| -a, --genomic-variation | a list of genomic variation entries from<br />variation database. This option may be passed<br />multiple times [default:"none"] |
+| -A, --genomic-variation-regex | a list of perl-like regex to match genomic<br />variation entries in variation database.<br />This option may be passed multiple times<br />[default:"none"] |
+
+#### Some examples
+
+1. The following command will produce two `fastq` files (default `--sequencing-type`
+is *paired-end*), both with a coverage of 20x (default `--coverage `is 8), and a plain text
+reads-count file in a tab-separated fashion.
+    ```bash
+    $ sandy genome --verbose --sequencing-type=paired-end --coverage=20 hg38.fa 2> sim.log
+    ```
+or, equivalently
+    ```bash
+    $ sandy genome -v -t paired-end -c 20 hg38.fa 2> sim.log
+    ```
+
+2. For reproducibility, the user can set an integer seed for the random raffles
+with the `-s` option (seed default is environment `time()` value),
+for example:
+    ```bash
+    $ sandy genome -s 1220 my_fasta.fa
+    ```
+
+3. To simulate reads from a ready registered database with a specific quality
+profile other than default's one, type, for example:
+    ```bash
+    $ sandy genome --quality-profile=hiseq_101 hg19.fa
+    ```
+See the [quality profile](#command-quality) section to know how can a user register a
+new profile on the database.  **Note:** If the user uses the option `-v`, by default,
+the log messages will be directed to the standard error so, in the example above, it
+was redirected to a file. Whithout the `-v` option, only errors messages will be printed.
+
+4. Sequence identifiers (first lines of `fastq` entries) may be customized in
+Sandy output using a format string passed by the user. This format is a
+combination of literal and escaped characters, in a similar fashion to that
+used in C programming language’s printf function. For example, let’s simulate a
+paired-end sequencing and add the read length, read position and mate position
+into all sequence identifiers:
+    ```bash
+    $ sandy genome -s 123 --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" hg38.fa
+    ```
+In this case, results would	be:
+    ```bash
+    $ sandy genome -s 123 --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" hg38.fa
+    ==> Into R1
+    @SR.1 read=chr6:979-880 mate=chr6:736-835 length=100
+    ...
+    ==> Into R2
+    @SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
+    ...
+    ```
+
+5. To change the sequencing quality profile, use the `-q` option and a
+string value (quality-profile default is "hiseq"):
+    ```bash
+    $ sandy genome -q myseq_150 my_fasta_file.fa
+    ```
+
+6. It is possible to set the size of the reads with the `-r` option and an integer
+number (reads-size default is 101):
+    ```bash
+    $ sandy genome -r 151 my_fasta_file.fa
+    ```
+
+7. User also can set the mean size of a fragment in a paired-end sequencing with
+the `-m` option and an integer number (default is 300):
+    ```bash
+    $ sandy genome -m 300 my_fasta_file.fa
+    ```
+
+8. And, he can also set the standard deviation of the size of a fragment in
+a paired-end sequencing with the `-D` option and an integer number
+(default is 50):
+    ```bash
+    $ sandy genome -D 30 my_fasta_file.fa
+    ```
+
+9. The options above are the most frequently used ones for the `genome`
+command, but many more can be found in the *Sandy's* documentation, with:
+    ```bash
+    $ sandy genome --man
+    ```
+
+### Command `transcriptome`
+
+Use it to generate simulated FASTq files from a given FASTA file,
+according to an expression profile matrix file.
+The `transcriptome` command sets these default options for a transcriptome
+sequencing simulation as well:
+
+* Choose the **Minus** strand (cDNA);
+* The number of reads is directly passed;
+* The genes/transcripts are raffled following the expression matrix.
+
+**Usage:**
+
+```bash
+$ sandy transcriptome [options] <fasta-file>
+```
+
+whose options' exaustive list can be consulted by `sandy transcriptome -h` or
+even `sandy help transcriptome` commands.
+
+#### Input/Output options
+
+| Options | Description |
+| :-- | :-- |
+| -h, --help | brief help message |
+| -H, --man | full documentation |
+| -v, --verbose | print log messages |
+| -p, --prefix | prefix output [default:"out"] |
+| -o, --output-dir | output directory [default:"."] |
+| -O, --output-format | bam, sam, fastq.gz, fastq [default:"fastq.gz"] |
+| -1, --join-paired-ends | merge R1 and R2 outputs in one file |
+| -x, --compression-level | speed compression: "1" - compress faster,<br />"9" - compress better [default:"6"; Integer] |
+
+#### Runtime options
+
+| Options | Description |
+| :-- | :-- |
+| -j, --jobs | number of jobs [default:"1"; Integer] |
+| -s, --seed | set the seed of the base generator<br />[default:"time()"; Integer] |
+
+#### Sequence identifier options
+
+| Options | Description |
+| :-- | :-- |
+| -i, --append-id | append to the defined template id [Format] |
+| -I, --id | overlap the default template id [Format] |
+
+#### Sequencing option
+
+| Options | Description |
+| :-- | :-- |
+| -q, --quality-profile | sequencing system profiles from quality<br />database [default:"poisson"] |
+| -e, --sequencing-error | sequencing error rate for poisson<br />[default:"0.001"; Number] |
+| -m, --read-mean | read mean size for poisson<br />[default:"100"; Integer] |
+| -d, --read-stdd | read standard deviation size for poisson<br />[default:"0"; Integer] |
+| -t, --sequencing-type | single-end or paired-end reads<br />[default:"paired-end"] |
+| -M, --fragment-mean | the fragment mean size for paired-end reads<br />[default:"300"; Integer] |
+| -D, --fragment-stdd | the fragment standard deviation size for<br />paired-end reads [default:"50"; Integer] |
+
+#### Transcriptome-specific options
+
+| Options | Description |
+| :-- | :-- |
+| -n, --number-of-reads | set the number of reads<br />[default:"1000000", Integer] |
+| -f, --expression-matrix | an expression-matrix entry from database |
+
+#### Some examples
+
+1. The command:
+    ```bash
+    $ sandy transcriptome --verbose --number-of-reads=1000000 --expression-matrix=brain_cortex gencode_pc_v26.fa.gz
+    ```
+or, equivalently
+    ```bash
+    $ sandy transcriptome -v -n 1000000 -f brain_cortex gencode_pc_v26.fa.gz
+    ```
+will both generate a `fastq` file with 1000000 reads from the *gencode_pc_v26.fa.gz*
+file and a plain text file with the raw counts of the reads per gene,
+according to the expression matrix provided by the *brain_cortex* entry
+already registered in the database.
+
+2. To demonstrate some other features, think about the sequencing error rate
+that can be set between 0 and 1. By default, *Sandy* set this value to
+0.005, which means 1 error every 200 bases.	To set it to another value,
+try:
+    ```bash
+    $ sandy transcriptome -f liver --sequencing-error=0.001 genome_pc_v26.fa.gz
+    ```
+
+3. For reproducibility, the user can set the `seed` option and guarantee
+the reliability of all the raffles in a later simulation.
+    ```bash
+    $ sandy transcriptome -q hiseq_101 --seed=123 hg19.fa
+    ```
+
+4. To have an idea of *Sandy's* plurality, look to how overwhelming the number
+of choices could be:
+    ```bash
+    $ sandy transcriptome \
+        --expression-matrix=pancreas \
+        --quality-profile=hiseq_101 \
+        --sequencing-type=paired-end \
+        --fragment-mean=350 \
+        --fragment-stdd=100 \
+        --prefix=pancreas_sim \
+        --output-dir=sim_dir \
+        --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
+        --verbose \
+        --seed=123 \
+        --jobs=30 \
+        gencode_pc_v26.fa.gz
+    ```
+
+**A note on paralelism:** To increase the processing speed, the simulation
+can run in parallel, splitting the task among jobs. For example, type:
+    ```bash
+    $ sandy custom -f testis -q hiseq_101 -v -i "length=%r" --jobs 15 gencode_lnc.fa.gz
+    ```
+
+and *Sandy* will allocate 15 jobs. This feature works for both `genome` and
+`transcriptome` simulations commands.
+
+## Database Commands
+
+### Command `quality`
+
+Use the `quality` command to manage quality profiles database. With this command,
+it is possible to add or remove customized expression profiles in the built-in
+database and make simulations more suitable for your experimental data. By
+default, *Sandy* uses a Poisson distribution when compiling the quality entries,
+but like many other features, this behavior can be altered and restored to
+vendor’s profile by the user.
+
+**Usage:**
+
+```bash
+$ sandy quality
+$ sandy quality [options]
+$ sandy quality <sub-command>
+```
+
+whose options' exaustive list can be consulted by `sandy quality -h` or
+even `sandy help quality` commands.
+
+| Commands | Description |
+| :-- | :-- |
+| add | add a new quality profile to database |
+| dump | dump a quality-profle from database |
+| remove | remove an user quality profle from database |
+| restore | restore the database |
+
+**Some examples:**
+
+1. To list the quality profiles already registered in the builtin database, you
+can simply type:
+    ```bash
+    $ sandy quality
+    ```
+and all entries will be shown:
+
+    | quality profile | mean | stdd | error |
+    | :-- | :-- | :-- | :-- |
+    | hiseq_101 | 101 | 0 | 0.001 |
+    | hiseq_150 | 150 | 0 | 0.001 |
+    | hiseq_51 | 51 | 0 | 0.001 |
+    | hiseq_76 | 76 | 0 | 0.001 |
+    | miseq_150 | 150 | 0 | 0.001 |
+    | miseq_301 | 301 | 0 | 0.001 |
+    | nextseq_51 | 51 | 0 | 0.001 |
+    | nextseq_85 | 85 |0 | 0.001 |
+    | ont | 15482 | 6195 | 0.25 |
+    | pacbio | 8817 | 3277 | 0.15 |
+    | poisson | -m | -d | -e |
+
+2. To register a new probabilistic quality profile called, for example,
+*my_profile.txt* to be used in the simulation of your `fasta` file.
+User can use the `add` sub-command, typing:
+    ```bash
+    $ sandy quality add -q 'my_quality_id' my_profile.txt
+    ```
+This quality profile can be either a `fastq` file or a plain text file in
+a tab separated fashion (quality profile defaut density function is
+*Poisson*).<br />
+**Note:** Before the new entry can appear in the database's list, the new
+profile needs to be validated, and if it can't, an error message will
+be show. *Sandy* prevent's you before overwrite an existing entry.
+See more details on [how to add a custom quality profile model]({{ site.baseurl }}/features#quality-profile).
+
+3. To use a recently inserted quality profile over a given FASTA file
+to simulate a transcriptomic data, use the `-q` option with the id you
+registered:
+    ```bash
+    $ sandy genome -q 'my_quality_id' my_fasta.fa
+    ```
+
+4. Sometimes the user will need to update or delete some quality profile entry
+(`my_profile.txt` for example) in the database. In this situation, he can
+remove some actual entry and register a newer one, like this:
+    ```bash
+    $ sandy quality remove 'my_quality_id'
+    ```
+*Sandy* will refuse to remove any vendor's original entry from the database.
+
+5. And, there could be times when users would wants to reset all the database to
+its original state. It's a very simple command:
+    ```bash
+    $ sandy quality restore
+    ```
+Note that this is a dangerous command and *Sandy* will warn you about it
+before make the restoration in fact.
+
+**Note:** *Sandy* already comes with one quality profile based on the Poisson
+probabilistic curve, as described by the literature
+([illumina, 2018](https://www.illumina.com/content/dam/illumina-marketing/documents/products/technotes/technote_understanding_quality_scores.pdf)).
+
+### Command `expression`
+
+The `expression` command is used to verify and update the expression matrix
+database. In a transcriptome sequencing simulation, the user
+must provide an expression matrix indexed into this database. *Sandy*
+already comes with 54 different tissues from the GTEx project, but the
+user has the freedom to include his own data as well, or even clean it up
+to restore the vendor's original entries state.
+
+**Usage:**
+
+```bash
+$ sandy expression
+$ sandy expression [options]
+$ sandy expression <sub-command>
+```
+
+whose options' and sub-commands' exaustive list can be consulted by
+`sandy expression -h` or even `sandy help expression` commands.
+
+| Commands | Description |
+| :-- | :-- |
+| add | add a new expression-matrix to database |
+| dump | dump an expression-matrix from database |
+| remove | remove an user expression-matrix from database |
+| restore | restore the database |
+
+**Some examples:**
+
+1. To list the expression matrixes already registered in the builtin database,
+the user can simply type:
+    ```bash
+    $ sandy expression
+    ```
+and all registered entries will be shown:
+
+    | expression-matrix |
+    | :-- |
+    | adipose_subcutaneous |
+    | adipose_visceral |
+    | adrenal_gland |
+    | artery_aorta |
+    | artery_coronary |
+    | artery_tibial |
+    | bladder |
+    | brain_amygdala |
+    | brain_anterior_cingulate_cortex |
+    | brain_caudate |
+    | brain_cerebellar_hemisphere |
+    | brain_cerebellum |
+    | brain_cortex |
+    | brain_frontal_cortex |
+    | brain_hippocampus |
+    | brain_hypothalamus |
+    | brain_nucleus_accumbens |
+    | brain_putamen |
+    | brain_spinal_cord |
+    | brain_substantia_nigra |
+    | breast_mammary_tissue |
+    | cells_cultured_fibroblasts |
+    | cells_ebv_transformed_lymphocytes |
+    | cervix_ectocervix |
+    | cervix_endocervix |
+    | colon_sigmoid |
+    | colon_transverse |
+    | esophagus_gastroesophageal_junction |
+    | esophagus_mucosa |
+    | esophagus_muscularis |
+    | fallopian_tube |
+    | heart_atrial_appendage |
+    | heart_left_ventricle |
+    | kidney_cortex |
+    | kidney_medulla |
+    | liver |
+    | lung |
+    | minor_salivary_gland |
+    | muscle_skeletal |
+    | nerve_tibial |
+    | ovary |
+    | pancreas |
+    | pituitary |
+    | prostate |
+    | skin_not_sun_exposed |
+    | skin_sun_exposed |
+    | small_intestine_terminal_ileum |
+    | spleen |
+    | stomach |
+    | testis |
+    | thyroid |
+    | uterus |
+    | vagina |
+    | whole_blood |
+
+2. A valid expression matrix is a file with two columns, the first column is
+for the *seqid* and the second column is for the *raw* count. Now, supose an
+user wants to register a new expression matrix file called *my_expression.txt*
+to simulate the `fasta` file according to its experimentally annnotated data.
+In this case, the sub-command `add` would solve your problem:
+    ```bash
+    $ sandy expression add -f 'my_expression_id' my_expression.txt
+    ```
+Note that, before the new entry can appear in the database's list, the new
+matrix file needs to be validated, and if it can't, an error message will
+be show. *Sandy* prevents you to overwrite an existing entry.
+See more details on [how to add a custom expression matrix model]({{ site.baseurl }}/features#expression-matrix).
+
+3. So, to use the recently added expression matrix in a transcriptome
+simulation, use the `-f` option on the `transcriptome` command:
+    ```bash
+    $ sandy expression -f 'my_expression_id' my_fasta.fa
+    ```
+
+4. Sometimes an user will need to update or delete some expression-matrix entry,
+*my_expression.txt* for examples, in the database. In this situation, he can
+remove the actual entry and register a newer one, like this:
+    ```bash
+    $ sandy expression remove 'my_expression_id'
+    ```
+*Sandy* will refuse to remove any vendor's original entry from the database.
+
+5. Finally, there could be times when you would want to reset all the database to
+its original state. It's a very simple command:
+    ```bash
+    $ sandy expression restore
+    ```
+Note that this is a dangerous command and *Sandy* will warn you about it
+before make the restoration in fact.
+
+### Command `variation`
+
+**Usage:**
+
+```bash
+$ sandy variation
+$ sandy variation [options]
+$ sandy variation <sub-command>
+```
+
+whose options' and sub-commands' exaustive list can be consulted by
+`sandy variation -h` or even `sandy help variation` commands.
+
+| Commands | Description |
+| :-- | :-- |
+| add | add a new structural variation to database |
+| dump | dump structural variation from database |
+| remove | remove an user structural variation from database |
+| restore | restore the database |
+
+**Some Examples:**
+
+1. To show all variations entries in the database, type:
+    ```bash
+    $ sandy variations
+    ```
+and all entries for variations will be shown:
+
+    | structural variation |
+    | :-- |
+    | NA12878_hg38_chr1 |
+    | NA12878_hg38_chr10 |
+    | NA12878_hg38_chr11 |
+    | NA12878_hg38_chr12 |
+    | NA12878_hg38_chr13 |
+    | NA12878_hg38_chr14 |
+    | NA12878_hg38_chr15 |
+    | NA12878_hg38_chr16 |
+    | NA12878_hg38_chr17 |
+    | NA12878_hg38_chr18 |
+    | NA12878_hg38_chr19 |
+    | NA12878_hg38_chr2 |
+    | NA12878_hg38_chr20 |
+    | NA12878_hg38_chr21 |
+    | NA12878_hg38_chr22 |
+    | NA12878_hg38_chr3 |
+    | NA12878_hg38_chr4 |
+    | NA12878_hg38_chr5 |
+    | NA12878_hg38_chr6 |
+    | NA12878_hg38_chr7 |
+    | NA12878_hg38_chr8 |
+    | NA12878_hg38_chr9 |
+    | NA12878_hg38_chrX |
+    | fusion_hg38_BCR-ABL1 |
+    | fusion_hg38_CCDC6-RET |
+    | fusion_hg38_EML4-ALK |
+    | fusion_hg38_EWSR1-ERG |
+    | fusion_hg38_EWSR1-FLI1 |
+    | fusion_hg38_KIAA1549-BRAF |
+    | fusion_hg38_KMT2A-AFF1 |
+    | fusion_hg38_NCOA4-RET |
+    | fusion_hg38_NPM1-ALK |
+    | fusion_hg38_TMPRSS2-ERG |
+
+2. To increase the database with user's own data, use the `add` sub-command,
+like this:
+    ```bash
+    $ sandy variation add -a 'my_variations_id' my_vatiations.txt
+    ```
+Note that, before the new entry can appear in the database's list, the new
+variation's file needs to be validated, and if it can't, an error message will
+be show. *Sandy* will prevent you to overwrite any existing entry, and *Sandy*
+require these variations files to be in a `vcf` like format, specifying
+coordinates on a reference genome with one variation per line. A variation file
+is a representation of a reduced `vcf`, that is, without the columns: QUAL, FILTER,
+INFO and FORMAT. There is only one SAMPLE column with the genotype for the entry in
+the format *HO* for homozygous and *HE* for heterozygous. See the example bellow:
+    ```bash
+    $ cat my_variations.txt
+    ```
+
+    ```
+     #seqid position        id        reference     alternate       genotype
+     chr20  14370           rs81      G             A               HE
+     chr20  17330           rs82      T             AAA             HO
+     chr20  110696          rs83      A             GTCT            HE
+    ```
+    See more details on [how to add a custom variation model]({{ site.baseurl }}/features#genomic-variiation).
+
+3. Now, to use the recently added variations specifications in a genomic
+project, the user can use the `-a` option with the id registered for that file:
+    ```bash
+    $ sandy genome -a 'my_variations_id' hg38.fa
+    ```
+
+4. User can remove no-vendors entries from database as well:
+    ```bash
+    $ sandy variation remove 'my_vatiations_id'
+    ```
+Note that the user can't remove any vendor's entry.
+
+5. Also, to reset all your variation entries to the original state (only with
+the vendor's data), use the `restore` sub-command.
+    ```bash
+    $ sandy variation restore
+    ```
+6. Finally, when an user wants to simulate a reference genome with a high
+coverage (ex. 50x) and insert some variations in it (maybe to abtain a positive
+control for some other algorithm he's using), he can try this:
+    ```bash
+    $ sandy genome -c 50 -a NA12878_hg38_chrX hg38.fa
+    ```
+In this example, he has simulated reads for the whole genome, but the variations
+are only in the X chromosome of the NA12878 individue in *Sandy's* database. An
+even better way to insert variations to simulations is to use a
+*regular expression* to search the entire database, like this:
+    ```bash
+    $ sandy genome -c 50 -A NA12878* -a fusion_hg38_BCR-ABL1 hg38.fa
+    ```
+This way, all entries that match NA12878 variations will be taken and,
+additionally, a well studied gene fusion fusion_hg38_BCR-ABL1 introduced.
+
+See? Notwithstanding the succint way that *Sandy's* commands are constructed, it
+is possible to construct near real and complex genomes with on demand variations
+in it with a few words!
+
+## Miscellaneous Commands
+
+### Command `version`
+
+*Sandy* project is made in a rolling release way, so the user can easily find
+the version number he's using:
+```bash
+$ sandy version
+```
+
+### Command `citation`
+
+If *Sandy* was somehow useful, please cite its authors. With the `citation`
+command, you can obtain a correct BibTeX entry and/or DOI number for the
+version of *Sandy* you're using:
+```bash
+$ sandy citation
+```
+
+## Help Commands
+
+**Usage:**
+
+To get a simple general help, user can type any of these commands:
+
+```bash
+$ sandy --help
+```
+
+or for short
+
+```bash
+$ sandy -h
+```
+
+or simply call it without any arguments.
+
+```bash
+$ sandy
+```
+
+But, if a more comprehensive explanation is needed, invoke *Sandy's*
+manual:
+```bash
+$ sandy --man
+```
+
+or for short
+
+```bash
+$ sandy -H
+```
+
+For help about specific commands, its options and inputs, type:
+
+```bash
+$ sandy help <command>
+```
+
+or
+
+```bash
+$ sandy <command> -h
+```
+
+We always exhort users to get help by consulting *Sandy's* builtin documentations
+with `man sandy` or `info sandy` commands in their terminals.
+
+## Docker Usage
+
+The user can run many instances of *Sandy* in a scalable way by pulling its
+Docker [image](https://hub.docker.com/r/galantelab/sandy) from Docker Hub in
+a way aforementioned in the [Installation]({{ site.baseurl }}/install)
+
+Here, we describe how to port all the commands shown above to be used in a Docker
+cointainer in a very straightforward way. For example, given the command:
+
+```bash
+$ sandy help genome
+```
+
+All user has to do is substitute the word `sandy` by
+`docker run --rm -ti [options] galantelab/sandy`, like:
+
+```bash
+$ docker run --rm -ti [options] galantelab/sandy help genome
+```
+
+And the *options* are about the folders which the user wants to map inside the
+container.
+
+Let's see another example, supose the user is in a directory like
+`host_path/folder1/` containing the file `gencode_pc_v26.fai.gz` on which he is
+trying to use the command bellow:
+
+```bash
+$ sandy transcriptome \
+    --expression-matrix=pancreas \
+    --quality-profile=hiseq_101 \
+    --sequencing-type=paired-end \
+    --fragment-mean=350 \
+    --fragment-stdd=100 \
+    --prefix=pancreas_sim \
+    --output-dir=sim_dir \
+    --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
+    --verbose \
+    --seed=123 \
+    --jobs=30 \
+    gencode_pc_v26.fa.gz
+```
+
+So, to adapt such a command to a Docker usage looking up to the correct path of
+the directories containing the data, only substitute the first line with:
+
+```bash
+$ docker run --rm -ti -v /ABSOLUTE/host_path/folder1:/ABSOLUTE/container_path/folder2 \
+    galantelab/sandy transcriptome \
+    --expression-matrix=pancreas \
+    --quality-profile=hiseq_101 \
+    --sequencing-type=paired-end \
+    --fragment-mean=350 \
+    --fragment-stdd=100 \
+    --prefix=pancreas_sim \
+    --output-dir=sim_dir \
+    --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
+    --verbose \
+    --seed=123 \
+    --jobs=30 \
+    gencode_pc_v26.fa.gz
+```
+
+The `-v /ABSOLUTE/host_path:/ABSOLUTE/container_path/folder1` option maps the
+directory `folder1` (adding its absolute path) in the host to the `folder2`, in
+the container, at `/ABSOLUTE/container_path/` directory. Obviously those paths
+could be something like `/home/user/dataset/`, we are just highlighting the
+importance of using the absolute paths here, otherwise it won't work correctly.
+Additionally, the `-v` option can be used repeatedly in the same command, as
+many times as the number of directories the data needs.
+
+See [Persistent database with Docker]({{ site.baseurl }}/features#persistent-database-with-docker)
+for more features available with Docker.
