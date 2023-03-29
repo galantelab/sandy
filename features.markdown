@@ -244,7 +244,7 @@ $ sandy expression add --verbose --expression-matrix=new_tissue my_custom_expres
 
 A **genomic-variation** may be represented  by a genomic position (seqid, position), a reference sequence
 at that postion, an alternate sequence and a genotype (homozygous or heterozygous). The input file may
-be a vcf or a custom genomic-variation file.  For vcf files, the user can point out the sample-name
+be a vcf or a custom genomic-variation file.  For `vcf` files, the user can point out the sample-name
 present in vcf header and then its column will be used to extract the genotype. if the user does not
 pass the option `--sample-name`, then it will be used the first sample.
 
@@ -258,7 +258,7 @@ $ cat my_variations.vcf
 #CHROM POS     ID    REF ALT   QUAL FILTER INFO        FORMAT NA001 NA002
 chr20  14370   rs81  G   A     29   PASS   NS=3;DP=14  GT     0/1   0/0
 chr20  17330   rs82  T   AAA   3    PASS   NS=3;DP=20  GT     1/1   0/0
-chr20  110696  rs83  A   GTCT  10   PASS   NS=2;DP=11  GT     0/0   1/1
+chr20  110696  rs83  A   GTCT  10   PASS   NS=2;DP=11  GT     0/1   1/1
 ...
 {% endhighlight %}
 
@@ -275,9 +275,9 @@ $ cat my_variations.txt
 
 {% highlight text %}
 #seqid  position id        reference alternate	genotype
-chr20   14370    rs81      G         A          0/1
-chr20   17330    rs82      T         AAA        1/1
-chr20   110696   rs83      A         GTCT       0/0
+chr20   14370    rs81      G         A          HE
+chr20   17330    rs82      T         AAA        HO
+chr20   110696   rs83      A         GTCT       HE
 {% endhighlight %}
 
 And add the variiations with the command:
