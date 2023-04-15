@@ -110,4 +110,18 @@ subtype 'My:Level'
 	=> where   { /^[1-9]$/ }
 	=> message { "Invalid compression level: '$_': 1-9"};
 
+
+subtype 'My:TupleElem'
+	=> as      'ArrayRef[Int]'
+	=> where   { @$_ == 2 }
+	=> message { "Invalid tuple element" };
+
+subtype 'My:Tuple'
+	=> as      'ArrayRef[My:TupleElem]'
+	=> message { "Invalid tuple" };
+
+subtype 'My:FastaBlackList'
+	=> as      'HashRef[My:Tuple]'
+	=> message { "Fasta blacklist is chr => Tuple" };
+
 1; ## --- end class App::Sandy::Types

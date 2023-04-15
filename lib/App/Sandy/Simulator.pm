@@ -164,6 +164,13 @@ has '_fasta_rtree' => (
 	}
 );
 
+has '_fasta_blacklist' => (
+	is         => 'ro',
+	isa        => 'My:Tuple',
+	builder    => '_build_fasta_blacklist',
+	lazy_build => 1
+);
+
 has '_seqname' => (
 	traits     => ['Hash'],
 	is         => 'ro',
@@ -216,6 +223,7 @@ sub BUILD {
 	$self->_piece_table;
 	$self->_seqid_raffle;
 	$self->_fasta;
+	$self->_fasta_blacklist;
 	$self->_strand;
 }
 
@@ -363,6 +371,72 @@ sub _populate_fasta_tree {
 
 		$self->_set_fasta_tree(%fasta_tree);
 	}
+}
+
+sub _build_fasta_blacklist {
+	my $self = shift;
+
+	my $indexed_fasta = $self->_index_fasta;
+	my $class = ref $self->seq;
+
+	my %fasta_blacklist;
+	my @blacklist_id;
+
+	for my $id (keys %$indexed_fasta) {
+		my $seq = $indexed_fasta->{$id}{seq};
+		my $seq_len = $indexed_fasta->{$id}{size};
+
+		my $offset = 0;
+		my ($st, $en) = (0, 0);
+		my $pos = 0;
+		my $init = 0;
+		my $len = 0;
+		my @stack;
+
+		while (($pos = index $seq, "N", $offset) != -1) {
+			unless ($init) {
+				$st = $pos;
+				$en = $pos;
+				$init = 1;
+			}
+
+			if ($en < ($pos - 1)) {
+				push @stack => [$st, $en];
+				$len += $en - $st + 1;
+				$st = $pos;
+			}
+
+			$en = $pos;
+			$offset++;
+		}
+
+		push @stack => [$st, $en];
+		$len += $en - $st + 1;
+
+		my $read_len = 'App::Sandy::Seq::SingleEnd'
+			? $self->seq->read_mean
+			: $self->seq->fragment_mean;
+
+		if ($len > ($seq_len - $read_len)) {
+			log_msg ":: Seqid '$id' has too much NNN and will not be used";
+			delete $indexed_fasta->{$id};
+			push @blacklist_id => $id;
+		} else {
+			$fasta_blacklist{$id} = \@stack;
+		}
+	}
+
+	unless (%$indexed_fasta) {
+		die sprintf "Fasta file '%s' has too much NNN regions\n" => $self->fasta_file;
+	}
+
+	# If fasta_rtree has entries
+	unless ($self->_has_no_fasta_rtree) {
+		# Remove no valid entries from id -> pid relation
+		$self->_delete_fasta_rtree(@blacklist_id) if @blacklist_id;
+	}
+
+	return \%fasta_blacklist;
 }
 
 sub _retrieve_expression_matrix {
