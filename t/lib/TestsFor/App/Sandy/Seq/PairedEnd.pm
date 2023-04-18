@@ -54,11 +54,12 @@ sub sprint_fastq : Tests(6) {
 	my $seq_len = $test->seq_len;
 	my $table = $test->table_read;
 	my $rng = $test->rng;
+	my $blacklist = [];
 
 	my $id = "SR0001";
 	my $seq_name = "Chr1";
 	my ($read1_ref, $read2_ref) = $fastq->sprint_seq($id, 1, $seq_name, 'ref', $table,
-		$table->logical_len, 1, $rng);
+		$table->logical_len, 1, $rng, $blacklist);
 	my $read_size = $fastq->read_mean;
 
 	my $header = qr/simulation_read length=$read_size position=${seq_name}:\d+-\d+/;
@@ -91,7 +92,7 @@ sub sprint_fastq : Tests(6) {
 
 	# Testing retarded strand paired-end fastq
 	my ($read2_1_ref, $read2_2_ref) = $fastq->sprint_seq($id, 1, $seq_name, 'ref', $table,
-		$table->logical_len, 0, $rng);
+		$table->logical_len, 0, $rng, $blacklist);
 
 	my @lines3 = split /\n/ => $$read2_1_ref;
 	$fastq->_read->reverse_complement(\$lines3[1]);

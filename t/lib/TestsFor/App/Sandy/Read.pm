@@ -166,6 +166,7 @@ sub subseq_rand_ptable : Test(20) {
 	my $seq = $test->table_seq;
 	my $alt_seq = "A span of English text";
 	my $rng = $test->rng;
+	my $blacklist = [];
 
 	# Try to remove large
 	$table->delete(2, 6, "large/-");
@@ -182,7 +183,7 @@ sub subseq_rand_ptable : Test(20) {
 
 	for my $i (1..10) {
 		my ($seq_ref, $attr) = $read->subseq_rand_ptable($table,
-			$table->logical_len, $len, $len, $rng);
+			$table->logical_len, $len, $len, $rng, $blacklist);
 		my $true_seq = substr $alt_seq, $attr->{start} - 1, $len;
 		ok $$seq_ref eq $true_seq,
 			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";
@@ -201,7 +202,7 @@ sub subseq_rand_ptable : Test(20) {
 
 	for my $i (1..10) {
 		my ($seq_ref, $attr) = $read->subseq_rand_ptable($table,
-			$table->logical_len, $len, $len, $rng);
+			$table->logical_len, $len, $len, $rng, $blacklist);
 		my $true_seq = substr $alt_seq2, $attr->{start} - 1, $len;
 		ok $$seq_ref eq $true_seq,
 			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";
