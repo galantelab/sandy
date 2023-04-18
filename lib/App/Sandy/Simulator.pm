@@ -286,7 +286,7 @@ sub _index_fasta {
 		} else {
 			die "Error reading fasta file '$fasta': Not defined id"
 				unless defined $id;
-			$indexed_fasta{$id}{seq} .= $_;
+			$indexed_fasta{$id}{seq} .= uc($_);
 		}
 	}
 
