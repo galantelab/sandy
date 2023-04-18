@@ -166,7 +166,7 @@ has '_fasta_rtree' => (
 
 has '_fasta_blacklist' => (
 	is         => 'ro',
-	isa        => 'My:Tuple',
+	isa        => 'My:FastaBlackList',
 	builder    => '_build_fasta_blacklist',
 	lazy_build => 1
 );
@@ -376,6 +376,8 @@ sub _populate_fasta_tree {
 sub _build_fasta_blacklist {
 	my $self = shift;
 
+	log_msg ":: Index unidentified (NNN..) regions";
+
 	my $indexed_fasta = $self->_index_fasta;
 	my $class = ref $self->seq;
 
@@ -407,7 +409,7 @@ sub _build_fasta_blacklist {
 			}
 
 			$en = $pos;
-			$offset++;
+			$offset = $pos + 1;
 		}
 
 		push @stack => [$st, $en];
@@ -1061,6 +1063,9 @@ sub run_simulation {
 		# Intelace child/parent processes
 		my $sig = App::Sandy::InterlaceProcesses->new(foreign_pid => [$parent_pid]);
 
+		# Get the FASTA blacklist regions ID => @{ TUPLE }
+		my $fasta_blacklist = $self->_fasta_blacklist;
+
 		# Set child RNG
 		my $rng = App::Sandy::RNG->new($self->seed + $tid);
 
@@ -1115,11 +1120,12 @@ sub run_simulation {
 		# Run simulation in child
 		for (my $i = $idx; $i <= $last_read_idx and not $sig->signal_catched; $i++) {
 			my $id = $seqid->($rng);
+			my $blacklist = $fasta_blacklist->{$id->{seq_id}};
 			my $ptable = $piece_table->{$id->{seq_id}}{$id->{type}};
 			my @seq_entry;
 			try {
 				@seq_entry = $self->sprint_seq($tid, $i, $id->{seq_id}, $id->{type},
-					$ptable->{table}, $ptable->{size}, $strand->($rng), $rng);
+					$ptable->{table}, $ptable->{size}, $strand->($rng), $rng, $blacklist);
 			} catch {
 				die "Not defined entry for seqid '>$id->{seq_id}' at job $tid: $_";
 			} finally {

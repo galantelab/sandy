@@ -22,7 +22,7 @@ has 'fragment_stdd' => (
 );
 
 sub gen_read {
-	my ($self, $ptable, $ptable_size, $read_size, $is_leader, $rng) = @_;
+	my ($self, $ptable, $ptable_size, $read_size, $is_leader, $rng, $blacklist) = @_;
 
 	unless ($read_size <= $self->fragment_mean && $self->fragment_mean <= $ptable_size) {
 		croak sprintf
@@ -50,7 +50,7 @@ sub gen_read {
 
 	# Build the fragment string
 	my ($fragment_ref, $attr) = $self->subseq_rand_ptable($ptable,
-		$ptable_size, $fragment_size, $read_size, $rng);
+		$ptable_size, $fragment_size, $read_size, $rng, $blacklist);
 
 	# Catch R1 substring
 	my $read1_ref = $self->subseq($fragment_ref, $fragment_size, $read_size, 0);

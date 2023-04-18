@@ -81,7 +81,7 @@ override '_build_info' => sub {
 };
 
 sub sprint_seq {
-	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader, $rng) = @_;
+	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader, $rng, $blacklist) = @_;
 
 	my $read_size = $self->_get_read_size($rng);
 
@@ -93,7 +93,7 @@ sub sprint_seq {
 	}
 
 	my ($read1_ref, $read2_ref, $attr) = $self->gen_read($ptable, $ptable_size,
-		$read_size, $is_leader, $rng);
+		$read_size, $is_leader, $rng, $blacklist);
 
 	my $annot_a = $attr->{annot};
 
