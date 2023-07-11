@@ -378,7 +378,7 @@ sub _build_fasta_blacklist {
 
 	log_msg ":: Index unidentified (NNN..) regions";
 
-	my $indexed_fasta = $self->_index_fasta;
+	my $indexed_fasta = $self->_fasta;
 	my $class = ref $self->seq;
 
 	my %fasta_blacklist;
