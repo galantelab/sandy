@@ -412,10 +412,12 @@ sub _build_fasta_blacklist {
 			$offset = $pos + 1;
 		}
 
-		push @stack => [$st, $en];
-		$len += $en - $st + 1;
+		if ($init) {
+			push @stack => [$st, $en];
+			$len += $en - $st + 1;
+		}
 
-		my $read_len = 'App::Sandy::Seq::SingleEnd'
+		my $read_len = $class eq 'App::Sandy::Seq::SingleEnd'
 			? $self->seq->read_mean
 			: $self->seq->fragment_mean;
 
