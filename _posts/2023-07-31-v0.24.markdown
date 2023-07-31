@@ -1,0 +1,17 @@
+---
+layout: release
+title: "Release v0.24"
+author: "Thiago L. A. Miller"
+version: "0.24"
+date: 2023-07-31 14:11:00 -03:00
+categories: jekyll update
+---
+
+This version implements these new features:
+
+- When running 'sandy transcriptome' save transcript counts and gene counts into separated files;
+- Use GNU/GSL RNG and Randist for randlux algorithm;
+- Update the database with [GTEx version 8](https://www.gtexportal.org/home/) expression patterns;
+- Enable persistent storage of sandy db in docker;
+- Uppercase all FASTA bases;
+- Apply NNN blacklist filter.
