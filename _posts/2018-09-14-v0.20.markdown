@@ -7,7 +7,7 @@ date: 2018-09-14 01:49:09 -03:00
 categories: jekyll update
 ---
 
-This version implents these new features:
+This version implements these new features:
 
 * Add CI with travis;
 * Fix count file names;

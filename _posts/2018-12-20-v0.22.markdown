@@ -7,7 +7,7 @@ date: 2018-12-20 16:18:05 -02:00
 categories: jekyll update
 ---
 
-This version implents these new features:
+This version implements these new features:
 
 - Change docker repository to the namespace galantelab;
 - Change genome command option `--structural-variation` to `--genomic-variation`;

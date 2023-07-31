@@ -7,7 +7,7 @@ date: 2019-03-10 17:20:19 -03:00
 categories: jekyll update
 ---
 
-This version implents these new features:
+This version implements these new features:
 
 - Fix database permissions;
 - Improve `README.md` and `docker/README.md`.

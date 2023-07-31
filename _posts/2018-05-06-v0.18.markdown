@@ -7,7 +7,7 @@ date: 2018-05-06 02:36:33 -03:00
 categories: jekyll update
 ---
 
-This version implents these new features:
+This version implements these new features:
 
 - Several ways to customize the reads' identifiers in the `fastq` files on output;
 - Ready to use built-in datasets for **quality-profile** of sequencing, based on

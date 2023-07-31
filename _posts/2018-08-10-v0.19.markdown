@@ -7,7 +7,7 @@ date: 2018-08-10 21:10:27 -03:00
 categories: jekyll update
 ---
 
-This version implents these new features:
+This version implements these new features:
 
 - Implementation of structural variations;
 - New variation database;
