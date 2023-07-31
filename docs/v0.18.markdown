@@ -237,7 +237,7 @@ try:
 For reproducibility, the user can set the `seed` option and guarantee
 the reliability of all the raffles in a later simulation.
 ```bash
-    $ sandy transcriptome -q hiseq_101 --seed=123 hg19.fa
+    $ sandy transcriptome -q hiseq_101 --seed=123 transcripts.fa
 ```
 
 ### The `custom` command

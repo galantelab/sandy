@@ -251,7 +251,7 @@ try:
 3. For reproducibility, the user can set the `seed` option and guarantee
 the reliability of all the raffles in a later simulation.
 	```bash
-	$ sandy transcriptome -q hiseq_101 --seed=123 hg19.fa
+	$ sandy transcriptome -q hiseq_101 --seed=123 transcripts.fa
 	```
 4. To have an idea of *Sandy's* plurality, look to how overwhelming the number
 of choices could be:
