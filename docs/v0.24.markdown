@@ -2,7 +2,7 @@
 layout: page
 title: ""
 version: "0.24"
-status: comming
+status: latest
 permalink: /docs/v0.24/
 ---
 
