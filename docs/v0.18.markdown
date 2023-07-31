@@ -55,17 +55,17 @@ Use it to generate simulated FASTq-files from a given FASTA-file.
 The `genome` command sets these default options for a genome sequencing simulation:
 * The strand is **randomly** chosen;
 * The number of reads is calculated by the coverage;
-* The chromossomes are raffled following a weighted raffle with the
+* The chromosomes are raffled following a weighted raffle with the
 sequence length as the bias;
 
 **Usage:**
 ```bash
     $ sandy genome [options] <FILEs>
 ```
-whose options' exaustive list can be consulted by `sandy genome -h` or
+whose options' exhaustive list can be consulted by `sandy genome -h` or
 even `sandy help genome` commands.
 At least one fasta-file must be given as the `<FILEs>` term. The results
-will be one or two fastaq-files, depending on the sequencing-type option,
+will be one or two fastq-files, depending on the sequencing-type option,
 `-t`, for single-ended or paired-ended reads, and an additional reads-count
 file.
 
@@ -95,7 +95,7 @@ The command:
 ```bash
     $ sandy genome --verbose --sequencing-type=paired-end --coverage=20 hg38.fa 2> sim.log
 ```
-ou, with an equal effect:
+or, with an equal effect:
 ```bash
     $ sandy genome -v -t paired-end -c 20 hg38.fa 2> sim.log
 ```
@@ -105,7 +105,7 @@ text reads-count file in a tab separated fashion.
 
 **Note:** If you use the option `-v`, by default, the log messages will be
 directed to the standard error so, in the example above, it was redirected
-to a file. Whithout the `-v` option, only errors messages will be printed.
+to a file. Without the `-v` option, only errors messages will be printed.
 
 For reproducibility, you can set an integer seed for the random raffles
 with the `-s` option (seed default is environment `time()` value),
@@ -123,7 +123,7 @@ See the [quality profile](#howto) section to know how you can register a
 new profile.
 
 The sequence identifier is the first and third line of a FASTq entry
-beggining with a **@** token, for a read identifier, and a **+**,
+beginning with a **@** token, for a read identifier, and a **+**,
 for a quality identifier.
 *Sandy* has the capacity to customize it, with a format string passed by
 the user. This format is a combination of literal and escaped characters,
@@ -188,7 +188,7 @@ sequencing simulation as well:
 ```bash
     $ sandy transcriptome [options] <FILEs>
 ```
-whose options' exaustive list can be consulted by `sandy transcriptome -h` or
+whose options' exhaustive list can be consulted by `sandy transcriptome -h` or
 even `sandy help transcriptome` commands.
 
 Options							| Description
@@ -242,14 +242,14 @@ the reliability of all the raffles in a later simulation.
 
 ### The `custom` command
 
-This is the most versatile command to procuce FASTq-files,
-but the user must deal whit a greater number os options.
+This is the most versatile command to produce FASTq-files,
+but the user must deal whit a greater number of options.
 
 **Usage:**
 ```bash
     $ sandy custom [options] <FILEs>
 ```
-whose options' exaustive list can be consulted by `sandy custom -h` or
+whose options' exhaustive list can be consulted by `sandy custom -h` or
 even `sandy help custom` commands.
 
 Options							| Description
@@ -299,7 +299,7 @@ plurality, look to how overwhelming the number of choices could be:
         gencode_pc_v26.fa.gz
 ```
 
-**A note on paralelism:** To increase the processing speed, the simulation
+**A note on parallelism:** To increase the processing speed, the simulation
 can run in parallel, splitting the task among jobs. For example, type:
 ```bash
     $ sandy custom -f testis -q hiseq_101 -v -i "length=%r" --jobs 15 gencode_lnc.fa.gz
@@ -315,13 +315,13 @@ and turn your simulations more realistic based on real experimental data.
 Or you can even clean it up to restore the vendor's original entries state.
 By default, *Sandy* uses a Poisson distribution when compiling the
 quality entries, but like many other features, this behavior can be
-overrided by the user.
+overridden by the user.
 
 **Usage:**
 ```bash
     $ sandy quality [options] <sub-command> <FILEs>
 ```
-whose options' exaustive list can be consulted by `sandy quality -h` or
+whose options' exhaustive list can be consulted by `sandy quality -h` or
 even `sandy help quality` commands.
 
 Options							| Description
@@ -330,7 +330,7 @@ Options							| Description
   -M, --man						| full documentation
 **Sub-commands**				|.
   add							| add a new quality profile to database
-  remove						| remove an user quality profle from database
+  remove						| remove an user quality profile from database
   restore						| restore the database
 
 **Some examples:**
@@ -349,12 +349,12 @@ You can type:
     $ sandy quality add my_profile.txt
 ```
 This quality profile can be either a FASTq file or a plain text file in
-a tab separated fashion (quality profile defaut density function is
+a tab separated fashion (quality profile default density function is
 "Poisson").
 
 **Note:** Before the new entry can appear in the database's list, the new
 profile needs to be validated, and if it can't, an error message will
-be show. Sandy prevent's you before overwrite an existing entry.
+be show. Sandy prevents you before overwrite an existing entry.
 
 Sometimes you will need to update or delete some quality profile entry
 ('my_profile.txt' for example) in the database. In this situation, you can
@@ -389,7 +389,7 @@ to restore the vendor's original entries state.
 ```bash
     $ sandy expression <sub-command> [options] <FILEs>
 ```
-whose options' and sub-commands' exaustive list can be consulted by
+whose options' and sub-commands' exhaustive list can be consulted by
 `sandy expression -h` or even `sandy help expression` commands.
 
 Options							| Description
@@ -403,23 +403,23 @@ Options							| Description
 
 **Some examples:**
 
-To list the expression matrixes already registered in the builtin database,
+To list the expression matrices already registered in the builtin database,
 you can simply type:
 ```bash
     $ sandy expression
 ```
 and all registered entries will be shown.
 
-But, supose you want to register a new expression matrix file called
+But, suppose you want to register a new expression matrix file called
 'my_mtx.txt', to simulate your FASTA-file according to its experimentally
-annnotated data.
+annotated data.
 In this case, the command bellow would solve your problem:
 ```bash
     $ sandy expression add my_mtx.txt
 ```
 Note that before the new entry can appear in the database's list, the new
 matrix file needs to be validated, and if it can't, an error message will
-be show. Sandy prevent's you before overwrite an existing entry.
+be show. Sandy prevents you before overwrite an existing entry.
 
 Sometimes you will need to update or delete some expression-matrix entry
 ('my_mtx.txt' for example) in the database. In this situation, you can
@@ -473,5 +473,5 @@ or
     $ sandy <command> -h
 ```
 
-And you can aways get help by consulting *Sandy's* manuals in your system's
+And you can always get help by consulting *Sandy's* manuals in your system's
 builtin documentations with `man sandy` or `info sandy` commands.

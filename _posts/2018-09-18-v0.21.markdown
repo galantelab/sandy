@@ -10,6 +10,6 @@ categories: jekyll update
 This version implements these new features:
 
 - Set expression-matrix as optional;
-- Fix bash/zsh completion installatio;
+- Fix bash/zsh completion installation;
 - Distinguish count file between genome (coverage) and transcriptome (abundance);
 - Set minimum perl version to 5.014.

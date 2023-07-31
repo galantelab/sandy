@@ -125,9 +125,9 @@ out_R2_001.fastq.gz
 
 **Sandy** generates `fastq` quality entries that mimic the [Illumina](https://www.illumina.com/),
 [PacBio](https://www.pacb.com/) and [Nanopore](https://nanoporetech.com/) sequencers, as well as
-generating the *phred-score* using a statistical model based on the *poisson* distribution.
+generating the *phred-score* using a statistical model based on the *Poisson* distribution.
 
-By default, **Sandy** writes out *phred-scores* according to the *poisson* statistical
+By default, **Sandy** writes out *phred-scores* according to the *Poisson* statistical
 distribution. You can change it by passing `--quality-profile` option:
 
 {% highlight shell_session %}
@@ -163,11 +163,11 @@ To see the complete list of matrices, run:
 $ sandy expression
 {% endhighlight %}
 
-## Whole-genome sequencing with genomic-variiation
+## Whole-genome sequencing with genomic-variation
 
-The user can tune the reference genome (eg [GRCh38.p13.genome.fa.gz](https://www.gencodegenes.org/human/)),
+The user can tune the reference genome (e.g. [GRCh38.p13.genome.fa.gz](https://www.gencodegenes.org/human/)),
 adding homozygous or heterozygous **genomic-variations** such as SNVs, Indels, gene fusions and other
-types of structural variations (eg CNVs, retroCNVs). **Sandy** has in its database **genomic-variations**
+types of structural variations (e.g. CNVs, retroCNVs). **Sandy** has in its database **genomic-variations**
 obtained from the [1KGP](https://www.internationalgenome.org/) and from
 [COSMIC](https://cancer.sanger.ac.uk/cosmic).
 
@@ -240,10 +240,10 @@ And with the command:
 $ sandy expression add --verbose --expression-matrix=new_tissue my_custom_expression_matrix.tsv
 {% endhighlight %}
 
-### genomic-variiation
+### genomic-variation
 
 A **genomic-variation** may be represented  by a genomic position (seqid, position), a reference sequence
-at that postion, an alternate sequence and a genotype (homozygous or heterozygous). The input file may
+at that position, an alternate sequence and a genotype (homozygous or heterozygous). The input file may
 be a vcf or a custom genomic-variation file.  For `vcf` files, the user can point out the sample-name
 present in vcf header and then its column will be used to extract the genotype. if the user does not
 pass the option `--sample-name`, then it will be used the first sample.
@@ -280,10 +280,10 @@ chr20   17330    rs82      T         AAA        HO
 chr20   110696   rs83      A         GTCT       HE
 {% endhighlight %}
 
-And add the variiations with the command:
+And add the variations with the command:
 
 {% highlight shell_session %}
-$ sandy variiation add --verbose --genomic-variiation=my_variations my_variations.txt
+$ sandy variation add --verbose --genomic-variation=my_variations my_variations.txt
 {% endhighlight %}
 
 ## Custom sequence identifier
@@ -323,7 +323,7 @@ In this case, results in `fastq` format would be:
 
 ## Reproducible simulations
 
-**Sandy** comes with the option `--seed` which receives an interger and is used to initiate the random number
+**Sandy** comes with the option `--seed` which receives an integer and is used to initiate the random number
 generator. The ability to set a *seed* is useful for those who want reproducible simulations. Pay attention
 to the number of jobs (`--jobs`) set, because each job receives a different seed calculated from the *main seed*.
 So, for reproducibility, the same seed set before needs the same number of jobs set before as well.
@@ -359,7 +359,7 @@ Files my_sim1/out_R1_001.fastq and my_sim2/out_R1_001.fastq are identical
 
 ### Reproducibility in transcriptome
 
-in the same way as the examples above for genome, you can test the reproductivity with:
+in the same way as the examples above for genome, you can test the reproducibility with:
 
 {% highlight shell_session %}
 $ sandy transcriptome \
@@ -421,7 +421,7 @@ not removed.
 
 A named Docker volume or a mounted host directory should be used in order to keep your changes to the
 database. If our container detects that the path `/sandy/db` is mounted, then the database
-`/sandy/db/db.sqlite3` will be used intead of the default database. In the same way, if there is no
+`/sandy/db/db.sqlite3` will be used instead of the default database. In the same way, if there is no
 database `db.sqlite3` inside the mounted path `/sandy/db/`, then the default database will be copied to
 `/sandy/db/` and used consecutively.
 
@@ -461,7 +461,7 @@ $ docker run \
 
 Now, verify the directory `/path/to/DB`. You should find the file `db.sqlite3`.
 
-As you add your custom patterns to **Sandy**, the alterations will be kept safelly outside the container.
+As you add your custom patterns to **Sandy**, the alterations will be kept safely outside the container.
 
 ### More examples
 
