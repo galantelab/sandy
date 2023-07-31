@@ -342,10 +342,11 @@ of choices could be:
     ```
 
 **A note on paralelism:** To increase the processing speed, the simulation
-can run in parallel, splitting the task among jobs. For example, type:
-    ```bash
-    $ sandy custom -f testis -q hiseq_101 -v -i "length=%r" --jobs 15 gencode_lnc.fa.gz
-    ```
+can run in parallel, splitting the task among jobs. For example:
+
+```bash
+$ sandy transcriptome --jobs 15 gencode_lnc.fa.gz
+```
 
 and *Sandy* will allocate 15 jobs. This feature works for both `genome` and
 `transcriptome` simulations commands.
