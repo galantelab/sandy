@@ -128,7 +128,7 @@ profile other than default's one, type, for example:
     ```bash
     $ sandy genome --quality-profile=hiseq_101 hg19.fa
     ```
-See the [quality profile](#command-quality) section to find how to register a new sequencing
+See the [quality profile]({{ site.baseurl }}/tutorial/#sequencing-quality) section to find how to register a new sequencing
 profile (e.g., based on your sequencing machine/platform) in Sandy's database. **Note:** If
 the user uses the option `-v`, by default, the log messages will be directed to the standard
 error so, in the example above, it was redirected to a file. Without the `-v` option, only
