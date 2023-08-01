@@ -356,7 +356,7 @@ a tab separated fashion (quality profile default density function is *Poisson*).
 **Note:** Before the new entry can appear in the database's list, the new
 profile needs to be validated, and if it can't, an error message will
 be shown. *Sandy* prevents you from overwriting an existing entry.
-See more details on [how to add a custom quality profile model]({{ site.baseurl }}/features#quality-profile).
+See more details on [how to add a custom quality profile model]({{ site.baseurl }}/tutorial/#sequencing-quality).
 
 3. To use a recently inserted sequencing quality profile over a given `fasta` file
 to simulate a transcriptomic data, use the `-q` option with the id you
@@ -489,7 +489,7 @@ In this case, the sub-command `add` should be used.
 Note that, before the new entry can appear in the database's list, the new
 matrix file needs to be validated, and if it can't, an error message will
 be shown. *Sandy* prevents you to overwrite an existing entry.
-See more details on [how to add a custom expression matrix model]({{ site.baseurl }}/features#expression-matrix).
+See more details on [how to add a custom expression matrix model]({{ site.baseurl }}/tutorial/#expression-profiles).
 
 3. So, to use the added expression matrix in a transcriptome
 simulation, use the `-f` option on the `transcriptome` command:
@@ -600,7 +600,7 @@ the format *HO* for homozygous and *HE* for heterozygous. See the example bellow
      chr20  17330           rs82      T             AAA             HO
      chr20  110696          rs83      A             GTCT            HE
     ```
-    See more details on [how to add a custom variation model]({{ site.baseurl }}/features#genomic-variiation).
+    See more details on [how to add a custom variation model]({{ site.baseurl }}/tutorial/#genomic-variations).
 
 3. Now, to use the recently added variations specifications in a genomic
 project, the user can use the `-a` option with the id registered for that file:
@@ -775,5 +775,5 @@ importance of using the absolute paths here, otherwise it won't work correctly.
 Additionally, the `-v` option can be used repeatedly in the same command, as
 many times as the number of directories the data needs.
 
-See [Persistent database with Docker]({{ site.baseurl }}/features#persistent-database-with-docker)
+See [Persistent database with Docker]({{ site.baseurl }}/tutorial/#persistently-customize-simulation-models-with-docker)
 for more features available with Docker.
