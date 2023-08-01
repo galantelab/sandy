@@ -21,28 +21,18 @@ permalink: /docs/v0.24/
 
 ```bash
 $ sandy [options]
-$ sandy help <command>
 $ sandy <command> [options] <FILEs>
 ```
 
-where there are basically two commands for general help, two main commands
-with their own inner options, tree database management commands, some
-miscellaneous commands and a specific `help` command for each of the main
-commands. See:
+where there are basically two main commands with their own inner options
+and tree database management commands. See:
 
-### Help commands
+### Main commands
 
 | Commands | Description |
 | :-- | :-- |
-| help | show application or command-specific help |
-| man | show application or command-specific documentation |
-
-### Misc commands
-
-| Commands | Description |
-| :-- | :-- |
-| version | print the current version |
-| citation | export citation in BibTeX format |
+| genome | simulate genome sequencing |
+| transcriptome	| simulate transcriptome sequencing |
 
 ### Database commands
 
@@ -52,17 +42,17 @@ commands. See:
 | expression | manage expression-matrix database |
 | variation | manage structural variation database |
 
-### Main commands
+### Getting help
 
-| Commands | Description |
-| :-- | :-- |
-| genome | simulate genome sequencing |
-| transcriptome	| simulate transcriptome sequencing |
-
-### Some examples
-
-1. If the user wants to see a brief help for the `expression` command, he can
-type both of the commands bellow:
+1. To see a brief help for **Sandy**, you can type:
+    ```bash
+    $ sandy help
+    ```
+or
+    ```bash
+    $ sandy -h
+    ```
+2. To see a brief help for the `expression` command, you can type:
     ```bash
     $ sandy help expression
     ```
@@ -70,13 +60,16 @@ or
     ```bash
     $ sandy expression -h
     ```
+### Getting Sandy version
 
 2. To view the version of *Sandy* in use, just type:
     ```bash
     $ sandy version
     ```
 
-3. And, to take a BibTeX entry to cite *Sandy* in his work, type:
+### Citing Sandy
+
+To take a BibTeX entry to cite *Sandy*, type:
     ```bash
     $ sandy citation
     ```
