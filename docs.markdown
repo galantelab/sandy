@@ -1,10 +1,10 @@
 ---
 layout: page
-title: "Documentation"
+title: "Manual"
 permalink: /docs/
 ---
 
-## Documentation list according to **Sandy** versions:
+## Manual list according to **Sandy** versions:
 
 {% assign doc_paths = site.pages
   | where_exp:"item", "item.path contains 'docs/'"

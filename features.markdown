@@ -1,7 +1,7 @@
 ---
 layout: page
 title: "Tutorial"
-permalink: /features/
+permalink: /tutorial/
 ---
 
 ## Contents

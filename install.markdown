@@ -15,7 +15,7 @@ image, installing through [CPAN](https://metacpan.org/) and installing manually.
 
 ## Docker
 
-Assuming that `docker` is already installed on your server, simply run the command:
+Once [Docker](https://www.docker.com/) is installed, simply run the command:
 
 {% highlight shell_session %}
 $ docker pull galantelab/sandy
