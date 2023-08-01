@@ -40,7 +40,7 @@ and tree database management commands. See:
 
 ## Main Commands
 
-### `genome`
+### genome
 
 Use it to generate simulated `fastq` (or `sam`) files from a given `fasta`
 file. The `genome` command sets these default options for a genome sequencing
@@ -64,7 +64,7 @@ will be one or two `fastaq` files (or one `sam`, `bam` file), depending on the
 `--sequencing-type` option, `-t`, for *single-ended* or *paired-ended* reads and
 on the `--output-format`, `-O`, for `fastq`, `fastq.gz`, `sam`, `bam` file formats.
 
-#### Options
+**Options:**
 
 | Input/Output Options | Description |
 | :-- | :-- |
@@ -73,7 +73,7 @@ on the `--output-format`, `-O`, for `fastq`, `fastq.gz`, `sam`, `bam` file forma
 | -v, --verbose | print log messages |
 | -p, --prefix | prefix output [default:"out"] |
 | -o, --output-dir | output directory [default:"."] |
-| -O, --output-format | bam, sam, fastq.gz, fastq [default:"fastq.gz"] |
+| -O, --output-format | output format. Options: bam, sam, fastq.gz, fastq [default:"fastq.gz"] |
 | -1, --join-paired-ends | merge R1 and R2 outputs in one file |
 | -x, --compression-level | speed compression: "1" - compress faster, <br />"9" - compress better [default:"6"; Integer] |
 
@@ -103,7 +103,7 @@ on the `--output-format`, `-O`, for `fastq`, `fastq.gz`, `sam`, `bam` file forma
 | -a, --genomic-variation | a list of genomic variation entries from<br />variation database. This option may be passed<br />multiple times [default:"none"] |
 | -A, --genomic-variation-regex | a list of perl-like regex to match genomic<br />variation entries in variation database.<br />This option may be passed multiple times<br />[default:"none"] |
 
-#### Some examples
+**Some examples:**
 
 1. The following command will produce two `fastq` files (default `--sequencing-type`
 is *paired-end*), both with an average coverage of 20x (default `--coverage `is 8x), and a plain text
@@ -180,7 +180,7 @@ additional details:
     $ sandy genome --man
     ```
 
-### `transcriptome`
+### transcriptome
 
 Use it to generate simulated `fastq` files from a given `fasta` file (set of transcripts or genes),
 according to an expression profile matrix file.  The `transcriptome` command sets these default
@@ -195,7 +195,7 @@ $ sandy transcriptome [options] <fasta-file>
 whose options' exhaustive list can be consulted by `sandy transcriptome -h` or
 even `sandy help transcriptome` commands.
 
-#### Options
+**Options:**
 
 | Input/Output Options | Description |
 | :-- | :-- |
@@ -204,7 +204,7 @@ even `sandy help transcriptome` commands.
 | -v, --verbose | print log messages |
 | -p, --prefix | prefix output [default:"out"] |
 | -o, --output-dir | output directory [default:"."] |
-| -O, --output-format | bam, sam, fastq.gz, fastq [default:"fastq.gz"] |
+| -O, --output-format | output format. Options: bam, sam, fastq.gz, fastq [default:"fastq.gz"] |
 | -1, --join-paired-ends | merge R1 and R2 outputs in one file |
 | -x, --compression-level | speed compression: "1" - compress faster,<br />"9" - compress better [default:"6"; Integer] |
 
@@ -233,7 +233,7 @@ even `sandy help transcriptome` commands.
 | -n, --number-of-reads | set the number of reads<br />[default:"1000000", Integer] |
 | -f, --expression-matrix | an expression-matrix entry from database |
 
-#### Some examples
+**Some examples:**
 
 1. The command:
     ```bash
@@ -294,7 +294,7 @@ and *Sandy* will allocate 15 jobs. This feature works for both `genome` and
 
 ## Database Commands
 
-### `quality`
+### quality
 
 Use the `quality` command to manage quality profiles database. With this command,
 it is possible to add or remove customized expression profiles in the built-in
@@ -385,7 +385,7 @@ before make the restoration in fact.
 probabilistic curve, as described by the literature
 ([illumina, 2018](https://www.illumina.com/content/dam/illumina-marketing/documents/products/technotes/technote_understanding_quality_scores.pdf)).
 
-### `expression`
+### expression
 
 The `expression` command is used to verify and update the expression matrix
 database. In a transcriptome sequencing simulation, the user
@@ -513,7 +513,7 @@ It's a very simple command:
 Note that this is a dangerous command and *Sandy* will warn you about it
 before make the restoration in fact.
 
-### `variation`
+### variation
 
 **Usage:**
 
