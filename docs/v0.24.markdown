@@ -40,7 +40,7 @@ and tree database management commands. See:
 
 ## Main Commands
 
-### Command `genome`
+### `genome`
 
 Use it to generate simulated `fastq` (or `sam`) files from a given `fasta`
 file. The `genome` command sets these default options for a genome sequencing
@@ -64,9 +64,9 @@ will be one or two `fastaq` files (or one `sam`, `bam` file), depending on the
 `--sequencing-type` option, `-t`, for *single-ended* or *paired-ended* reads and
 on the `--output-format`, `-O`, for `fastq`, `fastq.gz`, `sam`, `bam` file formats.
 
-#### Input/Output options
+#### Options
 
-| Options | Description |
+| Input/Output Options | Description |
 | :-- | :-- |
 | -h, --help | brief help message |
 | -H, --man | full documentation |
@@ -77,23 +77,17 @@ on the `--output-format`, `-O`, for `fastq`, `fastq.gz`, `sam`, `bam` file forma
 | -1, --join-paired-ends | merge R1 and R2 outputs in one file |
 | -x, --compression-level | speed compression: "1" - compress faster, <br />"9" - compress better [default:"6"; Integer] |
 
-#### Runtime options
-
-| Options | Description |
+| Runtime Options | Description |
 | :-- | :-- |
 | -j, --jobs | number of jobs [default:"1"; Integer] |
 | -s, --seed | set the seed of the base generator<br />[default:"time()"; Integer] |
 
-#### Sequence identifier options
-
-| Options | Description |
+| Sequence identifier Options | Description |
 | :-- | :-- |
 | -i, --append-id | append to the defined template id [Format] |
 | -I, --id | overlap the default template id [Format] |
 
-#### Sequencing options
-
-| Options | Description |
+| Sequencing Options | Description |
 | :-- | :-- |
 | -q, --quality-profile | sequencing system profiles from quality<br />database [default:"poisson"] |
 | -e, --sequencing-error | sequencing error rate for poisson<br />[default:"0.001"; Number] |
@@ -103,9 +97,7 @@ on the `--output-format`, `-O`, for `fastq`, `fastq.gz`, `sam`, `bam` file forma
 | -M, --fragment-mean | the fragment mean size for paired-end reads<br />[default:"300"; Integer] |
 | -D, --fragment-stdd | the fragment standard deviation size for<br />paired-end reads [default:"50"; Integer] |
 
-#### Genome-specific options
-
-| Options | Description |
+| Genome-specific Options | Description |
 | :-- | :-- |
 | -c, --coverage | genome coverage [default:"8", Number] |
 | -a, --genomic-variation | a list of genomic variation entries from<br />variation database. This option may be passed<br />multiple times [default:"none"] |
@@ -188,7 +180,7 @@ additional details:
     $ sandy genome --man
     ```
 
-### Command `transcriptome`
+### `transcriptome`
 
 Use it to generate simulated `fastq` files from a given `fasta` file (set of transcripts or genes),
 according to an expression profile matrix file.  The `transcriptome` command sets these default
@@ -203,9 +195,9 @@ $ sandy transcriptome [options] <fasta-file>
 whose options' exhaustive list can be consulted by `sandy transcriptome -h` or
 even `sandy help transcriptome` commands.
 
-#### Input/Output options
+#### Options
 
-| Options | Description |
+| Input/Output Options | Description |
 | :-- | :-- |
 | -h, --help | brief help message |
 | -H, --man | full documentation |
@@ -216,23 +208,17 @@ even `sandy help transcriptome` commands.
 | -1, --join-paired-ends | merge R1 and R2 outputs in one file |
 | -x, --compression-level | speed compression: "1" - compress faster,<br />"9" - compress better [default:"6"; Integer] |
 
-#### Runtime options
-
-| Options | Description |
+| Runtime Options | Description |
 | :-- | :-- |
 | -j, --jobs | number of jobs [default:"1"; Integer] |
 | -s, --seed | set the seed of the base generator<br />[default:"time()"; Integer] |
 
-#### Sequence identifier options
-
-| Options | Description |
+| Sequence identifier Options | Description |
 | :-- | :-- |
 | -i, --append-id | append to the defined template id [Format] |
 | -I, --id | overlap the default template id [Format] |
 
-#### Sequencing option
-
-| Options | Description |
+| Sequencing Options | Description |
 | :-- | :-- |
 | -q, --quality-profile | sequencing system profiles from quality<br />database [default:"poisson"] |
 | -e, --sequencing-error | sequencing error rate for poisson<br />[default:"0.001"; Number] |
@@ -242,9 +228,7 @@ even `sandy help transcriptome` commands.
 | -M, --fragment-mean | the fragment mean size for paired-end reads<br />[default:"300"; Integer] |
 | -D, --fragment-stdd | the fragment standard deviation size for<br />paired-end reads [default:"50"; Integer] |
 
-#### Transcriptome-specific options
-
-| Options | Description |
+| Transcriptome-specific Options | Description |
 | :-- | :-- |
 | -n, --number-of-reads | set the number of reads<br />[default:"1000000", Integer] |
 | -f, --expression-matrix | an expression-matrix entry from database |
@@ -310,7 +294,7 @@ and *Sandy* will allocate 15 jobs. This feature works for both `genome` and
 
 ## Database Commands
 
-### Command `quality`
+### `quality`
 
 Use the `quality` command to manage quality profiles database. With this command,
 it is possible to add or remove customized expression profiles in the built-in
@@ -401,7 +385,7 @@ before make the restoration in fact.
 probabilistic curve, as described by the literature
 ([illumina, 2018](https://www.illumina.com/content/dam/illumina-marketing/documents/products/technotes/technote_understanding_quality_scores.pdf)).
 
-### Command `expression`
+### `expression`
 
 The `expression` command is used to verify and update the expression matrix
 database. In a transcriptome sequencing simulation, the user
@@ -529,7 +513,7 @@ It's a very simple command:
 Note that this is a dangerous command and *Sandy* will warn you about it
 before make the restoration in fact.
 
-### Command `variation`
+### `variation`
 
 **Usage:**
 
