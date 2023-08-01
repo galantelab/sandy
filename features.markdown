@@ -379,7 +379,7 @@ And you should receive the message:
 Files my_sim1/out_R2_001.fastq and my_sim2/out_R2_001.fastq are identical
 {% endhighlight %}
 
-## Persistent database with Docker
+## Persistently customize simulation models with Docker
 
 **Sandy** *expression matrix*, *quality profile* and *structural variation* patterns are stored within
 docker container, that is, any database changes during runtime will last as long as the container is
@@ -391,7 +391,7 @@ database. If our container detects that the path `/sandy/db` is mounted, then th
 database `db.sqlite3` inside the mounted path `/sandy/db/`, then the default database will be copied to
 `/sandy/db/` and used consecutively.
 
-### Named volume
+**Named volume**
 
 `sandy_db` volume will be created at first run and will persist after container deletion.
 
@@ -414,7 +414,7 @@ And in more detail with the command:
 $ docker volume inspect sandy_db
 {% endhighlight %}
 
-### Mounted directory
+**Mounted directory**
 
 `/path/to/DB` will receive the default database at first run and any further changes will be stored in it.
 
@@ -429,9 +429,7 @@ Now, verify the directory `/path/to/DB`. You should find the file `db.sqlite3`.
 
 As you add your custom patterns to **Sandy**, the alterations will be kept safely outside the container.
 
-### More examples
-
-#### Add a new quality profile
+### Add custom sequencing quality profiles
 
 {% highlight shell_session %}
 $ docker run \
@@ -447,7 +445,7 @@ Check the new quality profile at `sandy_db`:
 $ docker run --rm -v sandy_db:/sandy/db galantelab/sandy quality
 {% endhighlight %}
 
-#### Add a new expression matrix
+### Add custom expression profiles
 
 {% highlight shell_session %}
 $ docker run \
@@ -463,7 +461,7 @@ Check the new expression matrix at `sandy_db`:
 $ docker run --rm -v sandy_db:/sandy/db galantelab/sandy expression
 {% endhighlight %}
 
-#### Add a new structural variation
+### Add custom genomic variations
 
 {% highlight shell_session %}
 $ docker run \
