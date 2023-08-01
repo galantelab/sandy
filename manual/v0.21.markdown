@@ -3,7 +3,7 @@ layout: page
 title: ""
 version: "0.21"
 status: legacy
-permalink: /docs/v0.21/
+permalink: /manual/v0.21/
 ---
 
 ## Documentation for **Sandy** version **0.21**

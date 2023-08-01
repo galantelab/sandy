@@ -1,12 +1,12 @@
 ---
 layout: page
 title: ""
-version: "0.20"
+version: "0.19"
 status: legacy
-permalink: /docs/v0.20/
+permalink: /manual/v0.19/
 ---
 
-## Documentation for **Sandy** version **0.20**
+## Documentation for **Sandy** version **0.19**
 {:.no_toc}
 
 ## Contents
@@ -99,7 +99,6 @@ Options							| Description
 -o, --output-dir				| output directory [default:"."]
 -O, --output-format             | bam, sam, fastq.gz, fastq [default:"fastq.gz"]
 -1, --join-paired-ends          | merge R1 and R2 outputs in one file
--x, --compression-level         | speed compression: "1" - compress faster, <br />"9" - compress better [default:"6"; Integer]
 -i, --append-id					| append to the defined template id [Format]
 -I, --id						| overlap the default template id [Format]
 -j, --jobs						| number of jobs [default:"1"; Integer]
@@ -216,18 +215,18 @@ Options							| Description
 -o, --output-dir				| output directory [default:"."]
 -O, --output-format             | bam, sam, fastq.gz, fastq [default:"fastq.gz"]
 -1, --join-paired-ends          | merge R1 and R2 outputs in one file
--x, --compression-level         | speed compression: "1" - compress faster, <br />"9" - compress better [default:"6"; Integer]
+-f, --expression-matrix			| set the expression matrix [default: none]
+-o, --output-dir				| output directory [default:"."]
 -i, --append-id					| append to the defined template id [Format]
 -I, --id						| overlap the default template id [Format]
 -j, --jobs						| number of jobs [default:"1"; Integer]
--z, --gzip						| compress output file
 -s, --seed						| set the seed of the base generator [default:"time()"; Integer]
 -n, --number-of-reads			| set the number of reads [default:"1000000", Integer]
 -t, --sequencing-type			| single-end or paired-end reads [default:"paired-end"]
 -q, --quality-profile			| illumina sequencing system profiles [default:"hiseq"]
 -e, --sequencing-error			| sequencing error rate [default:"0.005"; Number]
 -r, --read-size					| the read size [default:"101"; Integer]
--M, --fragment-mean				| the fragment mean size for paired-end reads [default:"300"; Integer]
+-M --fragment-mean				| the fragment mean size for paired-end reads [default:"300"; Integer]
 -D, --fragment-stdd				| the fragment standard deviation size for paired-end reads [default:"50"; Integer]
 
 **Some examples:**

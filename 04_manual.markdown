@@ -1,13 +1,13 @@
 ---
 layout: page
 title: "Manual"
-permalink: /docs/
+permalink: /manual/
 ---
 
 ## Manual list according to **Sandy** versions:
 
 {% assign doc_paths = site.pages
-  | where_exp:"item", "item.path contains 'docs/'"
+  | where_exp:"item", "item.path contains 'manual/'"
   | where_exp:"item", "item.version"
   | where_exp:"item", "item.status"
   | map: "path"
