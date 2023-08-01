@@ -19,8 +19,8 @@ compressed versions `fastq.gz`, `bam`) and much more.
 
 ### DNA sequencing examples
 
-For example, if you want to simulate a whole-genome sequencing, then you just need the reference
-genome file in `fasta` format for the desired species:
+TEst For example, if you want to simulate a whole-genome sequencing, then you just need the reference
+genome file in `FASTA` format for the desired species:
 
 - long options
 
