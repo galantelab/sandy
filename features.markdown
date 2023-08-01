@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Features"
+title: "Tutorial"
 permalink: /features/
 ---
 
@@ -10,115 +10,86 @@ permalink: /features/
 1. This will become a table of contents.
 {:toc}
 
-## Simulate DNA and RNA sequencing
+## Simulate DNA sequencing
 
-Simulate **single-end** (long and short fragments) and **paired-end** sequencing reads for
-**genome** and **transcriptome** analysis. The simulation can be customized with raffle seed,
-sequencing coverage, number of reads, fragment mean, output formats (`fastq`, `sam` and their
-compressed versions `fastq.gz`, `bam`) and much more.
-
-### DNA sequencing examples
-
-TEst For example, if you want to simulate a whole-genome sequencing, then you just need the reference
+To simulate a whole-genome sequencing with **paired-end** reads, you just need a reference
 genome file in `FASTA` format for the desired species:
 
-- long options
-
 {% highlight shell_session %}
-$ sandy genome --verbose --jobs=10 --coverage=20 my_genome.fa
+$ sandy genome --sequencing-type paired-end my_genome.fa
 {% endhighlight %}
 
-- short options
+Alternatively, you may customize several parameters for simulation:
 
 {% highlight shell_session %}
-$ sandy genome -v -j 10 -c 20 my_genome.fa
-{% endhighlight %}
-
-Which will produce **paired-end** sequencing. For **single-end**, add the option
-`--sequencing-type`:
-
-- long options
-
-{% highlight shell_session %}
-$ sandy genome --verbose --jobs=10 --coverage=20 --sequencing-type=single-end my_genome.fa
-{% endhighlight %}
-
-- short options
-
-{% highlight shell_session %}
-$ sandy genome -v -j 10 -c 20 -t single-end my_genome.fa
-{% endhighlight %}
-
-### RNA sequencing examples
-
-In the same way, you can simulate an RNA-seq for your recorded transcripts also in a file
-in `fasta` format:
-
-- long options
-
-{% highlight shell_session %}
-$ sandy transcriptome --verbose --jobs=10 --number-of-reads=50000000 my_transcripts.fa
-{% endhighlight %}
-
-- short options
-
-{% highlight shell_session %}
-$ sandy transcriptome -v -j 10 -n 50000000 my_transcripts.fa
-{% endhighlight %}
-
-And for **single-end** sequencing:
-
-- long options
-
-{% highlight shell_session %}
-$ sandy transcriptome --verbose --jobs=10 --number-of-reads=50000000 --sequencing-type=single-end my_transcripts.fa
-{% endhighlight %}
-
-- short options
-
-{% highlight shell_session %}
-$ sandy transcriptome -v -j 10 -n 50000000 -t single-end my_transcripts.fa
+$ sandy genome \
+    --verbose \    #enable log messages
+    --jobs 10 \    #set number of jobs
+    --coverage 8 \    #set genome coverage
+    --prefix out \    #set prefix output
+    --output-format fastq.gz \    #set output format
+    --sequencing-type paired-end \    #set sequencing type
+    --quality-profile hiseq_101 \    #set sequencing quality profile
+    --fragment-mean 300 \    #set fragment mean size
+    --fragment-stdd 50 \    #set standard deviation of fragment size
+    my_genome.fa
 {% endhighlight %}
 
 ### Output files
 
-The output file generated for whole-genome and RNA sequencing will depend on the `--output-format`
-(`fastq`, `bam`), on the `--join-paired-ends` (mate read pairs into a single file) and on the
-`--sequencing-type` (single-end, paired-end) options. Along with the simulation output, files with read
-counts per chromosome, gene and transcript are also produced. That is, for DNA sequencing, a file
-with the read counts per chromosome is created and for RNA sequencing, a file with the abundance
-per transcript and, if there is the relationship between genes and their transcripts at the `fasta`
-header, a file with the abundance per gene are produced as well.
+The output file generated for whole-genome sequencing will depend on the `--output-format` (`fastq`, `bam`),
+`--join-paired-ends` (mate read pairs into a single file) and `--sequencing-type` (single-end, paired-end) 
+options. Along with the simulation output, a file with read counts per chromosome will be produced.
 
-In the previous examples, the output files are:
-
-- for genome
-
-{% highlight shell_session %}
-$ sandy genome -v -j 10 -c 20 my_genome.fa
-$ ls -1
-{% endhighlight %}
+In the previous example, the following output files will be produced:
 
 {% highlight text %}
-my_genome.fa
+out_R1_001.fastq.gz
+out_R2_001.fastq.gz
 out_coverage.tsv
-out_R1_001.fastq.gz
-out_R2_001.fastq.gz
 {% endhighlight %}
 
-- for transcriptome
+## Simulate RNA sequencing
+
+To simulate a RNA sequencing with **paired-end** reads, you just need a reference transcriptome file in `FASTA` format for the desired species:
 
 {% highlight shell_session %}
-$ sandy transcriptome -v -j 10 -n 50000000 my_transcripts.fa
-$ ls -1
+$ sandy transcriptome --sequencing-type paired-end my_transcripts.fa
 {% endhighlight %}
 
+Alternatively, you may customize several parameters for simulation:
+
+{% highlight shell_session %}
+$ sandy transcriptome \
+    --verbose \    #enable log messages
+    --jobs 10 \    #set number of jobs
+    --prefix out \    #set prefix output
+    --output-format fastq.gz \    #set output format
+    --sequencing-type paired-end \    #set paired-end sequencing
+    --quality-profile hiseq_101 \    #set sequencing quality profile
+    --fragment-mean 300 \    #set fragment mean size
+    --fragment-stdd 50 \    #set standard deviation of fragment size
+    --number-of-reads 1000000 \    #set the number of reads
+    --expression-matrix liver \    #set an expression matrix
+    my_genome.fa
+{% endhighlight %}
+
+
+### Output files
+
+The output file generated for RNA sequencing will depend on the `--output-format` (`fastq`, `bam`), 
+`--join-paired-ends` (mate read pairs into a single file) and `--sequencing-type` (single-end, paired-end) 
+options. Along with the simulation output, a file with the abundances per transcript will be produced, 
+and if there is the relationship between genes and their transcripts at the `fasta` header, a file with the
+abundances per gene are produced as well.
+
+In the previous example, the following output files will be produced:
+
 {% highlight text %}
-my_transcripts.fa
-out_abundance_genes.tsv
-out_abundance_transcripts.tsv
 out_R1_001.fastq.gz
 out_R2_001.fastq.gz
+out_abundance_transcripts.tsv
+out_abundance_genes.tsv
 {% endhighlight %}
 
 ## Sequencer quality-profile
