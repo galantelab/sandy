@@ -1,6 +1,6 @@
 ---
 layout: page
-title: ""
+title: "Manual"
 version: "0.24"
 release_date: "2023-07-31"
 redirect_from: /manual/

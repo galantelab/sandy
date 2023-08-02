@@ -1,6 +1,6 @@
 ---
 layout: page
-title: ""
+title: "Manual"
 version: "0.21"
 release_date: "2018-09-18"
 permalink: /releases/v0.21/
