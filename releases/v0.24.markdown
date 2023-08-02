@@ -2,8 +2,8 @@
 layout: page
 title: ""
 version: "0.24"
-status: latest
-permalink: /manual/v0.24/
+release_date: "2023-07-31"
+permalink: /releases/v0.24/
 ---
 
 ## Documentation for **Sandy** version **0.24**

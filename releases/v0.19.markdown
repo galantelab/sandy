@@ -1,12 +1,12 @@
 ---
 layout: page
 title: ""
-version: "0.22"
-status: legacy
-permalink: /manual/v0.22/
+version: "0.19"
+release_date: "2018-08-10"
+permalink: /releases/v0.19/
 ---
 
-## Documentation for **Sandy** version **0.22**
+## Documentation for **Sandy** version **0.19**
 {:.no_toc}
 
 ## Contents
@@ -66,6 +66,8 @@ or
 	```bash
 	$ sandy citation
 	```
+
+
 ### Main Commands
 
 #### Command `genome`
@@ -97,7 +99,6 @@ Options							| Description
 -o, --output-dir				| output directory [default:"."]
 -O, --output-format             | bam, sam, fastq.gz, fastq [default:"fastq.gz"]
 -1, --join-paired-ends          | merge R1 and R2 outputs in one file
--x, --compression-level         | speed compression: "1" - compress faster, <br />"9" - compress better [default:"6"; Integer]
 -i, --append-id					| append to the defined template id [Format]
 -I, --id						| overlap the default template id [Format]
 -j, --jobs						| number of jobs [default:"1"; Integer]
@@ -109,8 +110,8 @@ Options							| Description
 -r, --read-size					| the read size [default:"100"; Integer] <br />the quality_profile from database overrides this value
 -M, --fragment-mean				| the fragment mean size for paired-end reads <br />[default:"300"; Integer]
 -D, --fragment-stdd				| the fragment standard deviation size for paired-end reads <br />[default:"50"; Integer]
--a, --genomic-variation			| a list of structural variation entries from variation database. This option may be passed <br />multiple times [default:"none"]
--A, --genomic-variation-regex	| a list of perl-like regex to match structural <br />variation entries in variation database. <br />This option may be passed multiple times <br />[default:"none"]
+-a, --structural-variation		| a list of structural variation entries from variation database. This option may be passed <br />multiple times [default:"none"]
+-A, --structural-variation-regex| a list of perl-like regex to match structural <br />variation entries in variation database. <br />This option may be passed multiple times <br />[default:"none"]
 
 **Some examples:**
 1. These two commands, with equal effects, will produce two FASTq-files
@@ -214,7 +215,8 @@ Options							| Description
 -o, --output-dir				| output directory [default:"."]
 -O, --output-format             | bam, sam, fastq.gz, fastq [default:"fastq.gz"]
 -1, --join-paired-ends          | merge R1 and R2 outputs in one file
--x, --compression-level         | speed compression: "1" - compress faster, <br />"9" - compress better [default:"6"; Integer]
+-f, --expression-matrix			| set the expression matrix [default: none]
+-o, --output-dir				| output directory [default:"."]
 -i, --append-id					| append to the defined template id [Format]
 -I, --id						| overlap the default template id [Format]
 -j, --jobs						| number of jobs [default:"1"; Integer]
@@ -224,7 +226,7 @@ Options							| Description
 -q, --quality-profile			| illumina sequencing system profiles [default:"hiseq"]
 -e, --sequencing-error			| sequencing error rate [default:"0.005"; Number]
 -r, --read-size					| the read size [default:"101"; Integer]
--M, --fragment-mean				| the fragment mean size for paired-end reads [default:"300"; Integer]
+-M --fragment-mean				| the fragment mean size for paired-end reads [default:"300"; Integer]
 -D, --fragment-stdd				| the fragment standard deviation size for paired-end reads [default:"50"; Integer]
 
 **Some examples:**
@@ -627,7 +629,6 @@ version of *Sandy* you're using:
 ```bash
 sandy citation
 ```
-
 --------------------------------------------------------------------------------
 
 ### Help Commands
@@ -667,74 +668,3 @@ $ sandy <command> -h
 
 And you can always get help by consulting *Sandy's* manuals in your system's
 builtin documentations with `man sandy` or `info sandy` commands.
-
---------------------------------------------------------------------------------
-
-## Docker Usage
-
-The user can run many instances of *Sandy* in a scalable way by pulling its
-Docker [image](https://hub.docker.com/r/galantelab/sandy) from Docker Hub in
-a way aforementioned in the [Installation](#or-get-sandy-in-a-docker-image) section.
-
-Here, we describe how to port all the commands shown above to be used in a Docker
-container in a very straightforward way. For example, given the command:
-```bash
-$ sandy help genome
-```
-
-All you have to do is substitute the word `sandy` by `docker run --rm -ti [options] galantelab/sandy`,
-like:
-```bash
-$ docker run --rm -ti [options] galantelab/sandy help genome
-```
-And the *options* are about the folders which you want to map inside the container.
-
-Let's see another example, suppose you are in a directory like
-`host_path/folder1/` containing the file `gencode_pc_v26.fai.gz` on which you
-are trying to use the command bellow:
-```bash
-$ sandy transcriptome \
-		--expression-matrix=pancreas \
-		--quality-profile=hiseq_101 \
-		--sequencing-type=paired-end \
-		--fragment-mean=350 \
-		--fragment-stdd=100 \
-		--prefix=pancreas_sim \
-		--output-dir=sim_dir \
-		--id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
-		--verbose \
-		--seed=123 \
-		--jobs=30 \
-		--no-gzip \
-		gencode_pc_v26.fa.gz
-```
-
-So, to adapt such a command to a Docker usage looking up to the correct path of
-the directories containing your data, only substitute the first line with:
-```bash
-$ docker run --rm -ti -v /ABSOLUTE/host_path/folder1:/ABSOLUTE/container_path/folder2 galantelab/sandy transcriptome \
-		--expression-matrix=pancreas \
-		--quality-profile=hiseq_101 \
-		--sequencing-type=paired-end \
-		--fragment-mean=350 \
-		--fragment-stdd=100 \
-		--prefix=pancreas_sim \
-		--output-dir=sim_dir \
-		--id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
-		--verbose \
-		--seed=123 \
-		--jobs=30 \
-		--no-gzip \
-		gencode_pc_v26.fa.gz
-```
-
-The `-v /ABSOLUTE/host_path:/ABSOLUTE/container_path/folder1` option maps the
-directory `folder1` (adding its absolute path) in the host to the `folder2`, in
-the container, at `/ABSOLUTE/container_path/` directory. Obviously those paths
-could be something like `/home/user/dataset/`, we are just highlighting the
-importance of using the absolute paths here, otherwise it won't work correctly.
-Additionally, you can map, using the `-v` option, as many directories as your
-data needs.
-
-See [Docker documentation](https://docs.docker.com/) for more information about
-options and commands for Docker.

@@ -2,8 +2,8 @@
 layout: page
 title: ""
 version: "0.18"
-status: legacy
-permalink: /manual/v0.18/
+release_date: "2018-05-06"
+permalink: /releases/v0.18/
 ---
 
 ## Documentation for **Sandy** version **0.18**
