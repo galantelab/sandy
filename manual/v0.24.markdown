@@ -248,7 +248,7 @@ file (transcriptome reference) and a plain text file with the raw counts of the 
 per gene (i. e., the number of reads generated per gene/transcript), according to the
 expression matrix provided by the *brain_cortex* entry already registered in the database.
 Of note: Sandy contains expression matrices (mimicking) for 54 human tissues, which are
-based on the GTEx gene expression. See more [bellow](#command-expression).
+based on the GTEx gene expression. See more [bellow](#expression).
 
 2. To demonstrate some other features, think about the sequencing error rate
 that can be set between 0 and 1. By default, *Sandy* set this value to

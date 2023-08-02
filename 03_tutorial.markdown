@@ -105,13 +105,13 @@ To simulate a RNA sequencing, you just need a reference transcriptome file in `F
 format for the desired species. If you don’t have one, you can follow this step:
 
 {% highlight shell_session %}
-$ wget http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.transcripts.fa.gz;
+$ wget http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.transcripts.fa.gz
 {% endhighlight %}
 
 or
 
 {% highlight shell_session %}
-$ curl http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.transcripts.fa.gz;
+$ curl http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.transcripts.fa.gz
 {% endhighlight %}
 
 Then, to simulate a RNA sequencing with **paired-end** reads, simply run:
@@ -133,7 +133,6 @@ $ sandy transcriptome \
     --fragment-mean 300 \    #set fragment mean size
     --fragment-stdd 50 \    #set standard deviation of fragment size
     --number-of-reads 1000000 \    #set the number of reads
-    --expression-matrix liver \    #set an expression matrix
     gencode.v40.transcripts.fa.gz
 {% endhighlight %}
 
