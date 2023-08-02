@@ -12,11 +12,23 @@ permalink: /tutorial/
 
 ## Simulate DNA sequencing
 
-To simulate a whole-genome sequencing with **paired-end** reads, you just need a reference
-genome file in `FASTA` format for the desired species:
+To simulate a whole-genome sequencing, you just need a reference genome file in `FASTA` 
+format for the desired species. If you don’t have one, you can follow this step:
 
 {% highlight shell_session %}
-$ sandy genome --sequencing-type paired-end my_genome.fa
+$ wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
+{% endhighlight %}
+
+or
+
+{% highlight shell_session %}
+$ curl https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
+{% endhighlight %}
+
+Then, to simulate a whole-genome sequencing with **paired-end** reads, simply run:
+
+{% highlight shell_session %}
+$ sandy genome --sequencing-type paired-end hg38.fa.gz
 {% endhighlight %}
 
 Alternatively, you may customize several parameters for simulation:
@@ -32,7 +44,7 @@ $ sandy genome \
     --quality-profile poisson \    #set sequencing quality profile
     --fragment-mean 300 \    #set fragment mean size
     --fragment-stdd 50 \    #set standard deviation of fragment size
-    my_genome.fa
+    hg38.fa.gz
 {% endhighlight %}
 
 **Output files**
@@ -56,7 +68,7 @@ Alternatively, **Sandy** may generate `fastq` quality entries that mimic the [Il
  `--quality-profile` option:
 
 {% highlight shell_session %}
-$ sandy genome --verbose --quality-profile miseq_150 my_transcripts.fa
+$ sandy genome --verbose --quality-profile miseq_150 hg38.fa.gz
 {% endhighlight %}
 
 Which will output the *phred-scores* according to the *MySeq* sequencer with a read length of 150
@@ -70,16 +82,15 @@ $ sandy quality
 
 ### Simulate DNA sequencing with genomic variations
 
-The user can also tune the reference genome (e.g. [GRCh38.p13.genome.fa.gz](https://www.gencodegenes.org/human/)),
-adding homozygous or heterozygous **genomic variations** such as SNVs, Indels, gene fusions and other
-types of structural variations (e.g. CNVs, retroCNVs). **Sandy** provides several bult-in **genomic variations**
-obtained from the [1KGP](https://www.internationalgenome.org/) and from
+The user can also tune the reference genome, adding homozygous or heterozygous **genomic variations** such as SNVs, 
+Indels, gene fusions and other types of structural variations (e.g. CNVs, retroCNVs). **Sandy** provides several 
+bult-in **genomic variations** obtained from the [1KGP](https://www.internationalgenome.org/) and from
 [COSMIC](https://cancer.sanger.ac.uk/cosmic).
 
 So, let's simulate a genome which includes the fusion between the genes *NPM1* and *ALK*:
 
 {% highlight shell_session %}
-$ sandy genome --genomic-variation fusion_hg38_NPM1-ALK my_genome.fa
+$ sandy genome --genomic-variation fusion_hg38_NPM1-ALK hg38.fa.gz
 {% endhighlight %}
 
 To see all available genomic variations, run:
@@ -90,10 +101,23 @@ $ sandy variation
 
 ## Simulate RNA sequencing
 
-To simulate a RNA sequencing with **paired-end** reads, you just need a reference transcriptome file in `FASTA` format for the desired species:
+To simulate a RNA sequencing, you just need a reference transcriptome file in `FASTA`
+format for the desired species. If you don’t have one, you can follow this step:
 
 {% highlight shell_session %}
-$ sandy transcriptome --sequencing-type paired-end my_transcripts.fa
+$ wget http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.transcripts.fa.gz;
+{% endhighlight %}
+
+or
+
+{% highlight shell_session %}
+$ curl http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_40/gencode.v40.transcripts.fa.gz;
+{% endhighlight %}
+
+Then, to simulate a RNA sequencing with **paired-end** reads, simply run:
+
+{% highlight shell_session %}
+$ sandy transcriptome --sequencing-type paired-end gencode.v40.transcripts.fa.gz
 {% endhighlight %}
 
 Alternatively, you may customize several parameters for simulation:
@@ -110,7 +134,7 @@ $ sandy transcriptome \
     --fragment-stdd 50 \    #set standard deviation of fragment size
     --number-of-reads 1000000 \    #set the number of reads
     --expression-matrix liver \    #set an expression matrix
-    my_genome.fa
+    gencode.v40.transcripts.fa.gz
 {% endhighlight %}
 
 **Output files**
@@ -139,7 +163,7 @@ You can select an expression profile with the `--expression-matrix` option. For 
 simulate an RNA-Seq for liver tissue:
 
 {% highlight shell_session %}
-$ sandy transcriptome --expression-matrix liver my_transcripts.fa
+$ sandy transcriptome --expression-matrix liver gencode.v40.transcripts.fa.gz
 {% endhighlight %}
 
 To see all available expression profiles, run:
