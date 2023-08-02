@@ -13,3 +13,12 @@ github_username:  galantelab
 theme: minima
 plugins:
   - jekyll-feed
+
+# Menubar entries
+header_pages:
+  - install.markdown
+  - gstarted.markdown
+  - tutorial.markdown
+  - manual.markdown
+  - releases.markdown
+  - about.markdown
