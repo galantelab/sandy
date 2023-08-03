@@ -246,6 +246,19 @@ sub _build_strand {
 	return $strand_sub;
 }
 
+sub _clean_fasta_id {
+	my ($self, $id_ref) = @_;
+
+	# Remove '>'
+	$$id_ref =~ s/^>//;
+
+	# Chomp
+	$$id_ref =~ s/^\s+|\s+$//g;
+
+	# Remove id version
+	$$id_ref =~ s/\.\d+$//;
+}
+
 sub _index_fasta {
 	my $self = shift;
 	my $fasta = $self->fasta_file;
@@ -265,8 +278,9 @@ sub _index_fasta {
 		if (/^>/) {
 			my @fields = split /\|/;
 			$id = $fields[0];
-			$id =~ s/^>//;
-			$id =~ s/^\s+|\s+$//g;
+
+			# Remove '>', chomp and remove id version
+			$self->_clean_fasta_id(\$id);
 
 			# Seq ID standardization in order to manage comparations
 			# between chr1, Chr1, CHR1, 1 etc;
@@ -280,7 +294,10 @@ sub _index_fasta {
 			# # TODO: Make a hash tarit for indexed fasta
 			if (defined $fields[1]) {
 				my $pid = $fields[1];
-				$pid =~ s/^\s+|\s+$//g;
+
+				# Chomp and remove id version
+				$self->_clean_fasta_id(\$pid);
+
 				$fasta_rtree{$id} = $pid;
 			}
 		} else {
@@ -445,8 +462,19 @@ sub _build_fasta_blacklist {
 
 sub _retrieve_expression_matrix {
 	my $self = shift;
+
 	my $expression = App::Sandy::DB::Handle::Expression->new;
-	return $expression->retrievedb($self->expression_matrix);
+	my $indexed_file = $expression->retrievedb($self->expression_matrix);
+
+	# Remove transcript id version
+	for my $id (keys %$indexed_file) {
+		my $old_id = $id;
+		$self->_clean_fasta_id(\$id);
+		$indexed_file->{$id} = delete $indexed_file->{$old_id}
+			if $old_id ne $id;
+	}
+
+	return $indexed_file;
 }
 
 sub _build_seqid_raffle {
@@ -948,9 +976,6 @@ sub run_simulation {
 
 	# Function that returns seqid by seqid_weight
 	my $seqid = $self->_seqid_raffle;
-
-	# genome or transcriptome?
-	my $simulation = $self->argv->[0];
 
 	# Count file to be generated
 	my %count_file = (
