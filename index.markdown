@@ -3,7 +3,9 @@ layout: home
 ---
 
 {% include title.html
-  title="A straightforward and complete next-generation sequencing read simulator"
+  title=""
+  img_path="assets/images/sandy_logo.jpg"
+  img_alt="Sandy logo"
   button_name="View on GitHub"
   button_url="https://github.com/galantelab/sandy"
 %}
