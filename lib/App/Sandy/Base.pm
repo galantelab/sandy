@@ -85,7 +85,6 @@ sub import {
 			Moose->import({into=>$caller});
 			MooseX::StrictConstructor->import({into=>$caller});
 			MooseX::UndefTolerant->import({into=>$caller});
-			App::Sandy::Types->import({into=>$caller});
 			after_runtime {
 				$caller->meta->make_immutable;
 			}
@@ -93,7 +92,6 @@ sub import {
 			require Moose::Role;
 			require App::Sandy::Types;
 			Moose::Role->import({into=>$caller});
-			App::Sandy::Types->import({into=>$caller});
 		} elsif ($opt eq 'test') {
 			use_module('Test::Most')->import::into($caller);
 			if ($opt_args) {
