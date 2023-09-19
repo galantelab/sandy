@@ -21,8 +21,11 @@ Alternatively, if your CPAN shell is set up, you should just be able to do:
 
 ## Manual installation
 
-As a last resort, you can manually install it. Download the tarball, untar it,
-install configure prerequisites (see below), then build it:
+As a last resort, you can manually install it. If you have not already
+downloaded the release tarball, you can find the download link on the module's
+MetaCPAN page: https://metacpan.org/pod/App::Sandy
+
+Untar the tarball, install configure prerequisites (see below), then build it:
 
     % perl Makefile.PL
     % make && make test
@@ -47,6 +50,19 @@ This distribution requires other modules to be installed before this
 distribution's installer can be run.  They can be found under the
 "configure_requires" key of META.yml or the
 "{prereqs}{configure}{requires}" key of META.json.
+
+## Other Prerequisites
+
+This distribution may require additional modules to be installed after running
+Makefile.PL.
+Look for prerequisites in the following phases:
+
+* to run make, PHASE = build
+* to use the module code itself, PHASE = runtime
+* to run tests, PHASE = test
+
+They can all be found in the "PHASE_requires" key of MYMETA.yml or the
+"{prereqs}{PHASE}{requires}" key of MYMETA.json.
 
 ## Documentation
 

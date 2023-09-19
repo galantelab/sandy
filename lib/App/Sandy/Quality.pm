@@ -2,11 +2,10 @@ package App::Sandy::Quality;
 # ABSTRACT: Class to simulate quality entries
 
 use App::Sandy::Base 'class';
-use App::Sandy::DB::Handle::Quality;
 
 with 'App::Sandy::Role::Counter';
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 has 'quality_profile' => (
 	is         => 'ro',
@@ -108,7 +107,7 @@ sub _build_quality_by_system {
 }
 
 sub _gen_quality_by_system {
-	my ($self, $read_size) = @_;
+	my ($self, $read_size, $rng) = @_;
 
 	my ($matrix, $deepth, $partil) = $self->_get_quality_by_system(
 		qw/matrix deepth partil/
@@ -128,14 +127,14 @@ sub _gen_quality_by_system {
 		$left = $read_size % $partil;
 	}
 
-	my $pick_again = $self->with_make_counter($read_size - $left, $left);
+	my $pick_again = $self->with_make_counter($read_size - $left, $left, $rng);
 	my $quality;
 
 	for (my $i = 0; $i < $partil; $i++) {
 		for (my $j = 0; $j < $bin; $j++) {
-			$quality .= $matrix->[$i][int(rand($deepth))];
+			$quality .= $matrix->[$i][$rng->get_n($deepth)];
 			if ($pick_again->()) {
-				$quality .= $matrix->[$i][int(rand($deepth))];
+				$quality .= $matrix->[$i][$rng->get_n($deepth)];
 			}
 		}
 	}
@@ -144,23 +143,23 @@ sub _gen_quality_by_system {
 }
 
 sub _gen_quality_by_poisson_dist {
-	my ($self, $read_size) = @_;
+	my ($self, $read_size, $rng) = @_;
 	my $quality;
-	return $self->_poisson_dist(\$quality, $read_size, $self->_count_phred_score);
+	return $self->_poisson_dist(\$quality, $read_size, $self->_count_phred_score, $rng);
 }
 
 sub _poisson_dist {
-	my ($self, $quality_ref, $size, $countdown) = @_;
+	my ($self, $quality_ref, $size, $countdown, $rng) = @_;
 	return $quality_ref if not $countdown;
 
 	my $phred_score = $self->_get_phred_score($self->_count_phred_score - $countdown);
 	my $part = int($size / $phred_score->{ratio}) + ($size % $phred_score->{ratio});
 
 	for (my $i = 0; $i < $part; $i++) {
-		$$quality_ref .= $phred_score->{score}[int(rand($phred_score->{size}))];
+		$$quality_ref .= $phred_score->{score}[$rng->get_n($phred_score->{size})];
 	}
 
-	return $self->_poisson_dist($quality_ref, $size - $part, $countdown - 1);
+	return $self->_poisson_dist($quality_ref, $size - $part, $countdown - 1, $rng);
 }
 
 __END__
@@ -175,7 +174,7 @@ App::Sandy::Quality - Class to simulate quality entries
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 AUTHORS
 
@@ -211,13 +210,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

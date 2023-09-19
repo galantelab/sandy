@@ -3,7 +3,7 @@ package App::Sandy::Role::RunTimeTemplate;
 
 use App::Sandy::Base 'role';
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 sub with_compile_template {
 	my ($self, $template, $input_name, $sym_table) = @_;
@@ -38,7 +38,7 @@ App::Sandy::Role::RunTimeTemplate - Extends class with runtime printf like funct
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 AUTHORS
 
@@ -74,13 +74,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

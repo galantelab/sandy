@@ -10,10 +10,9 @@ with qw{
 	App::Sandy::Role::RunTimeTemplate
 	App::Sandy::Role::Template::Fastq
 	App::Sandy::Role::Template::Sam
-	App::Sandy::Role::RNorm
 };
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 has 'format' => (
 	is         => 'ro',
@@ -190,14 +189,14 @@ sub _build_read_size {
 		$fun = sub { $self->read_mean };
 	} else {
 		$fun = sub {
+			my $rng = shift;
 			my $size = 0;
 			my $random_tries = 0;
 			until ($size > 0) {
 				if (++$random_tries > NUM_TRIES) {
 					croak "So many tries to calculate a seq size greater than zero ...";
 				}
-				$size = $self->with_random_half_normal($self->read_mean,
-					$self->read_stdd)
+				$size = $rng->get_norm($self->read_mean, $self->read_stdd);
 			}
 			return $size;
 		};
@@ -256,7 +255,7 @@ App::Sandy::Seq - Base class to simulate seq entries
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 AUTHORS
 
@@ -292,13 +291,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

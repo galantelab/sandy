@@ -8,6 +8,7 @@ use IO::Uncompress::Gunzip 'gunzip';
 use Storable qw/nfreeze thaw/;
 
 use constant {
+	SEED            => 1717,
 	PARTIL          => 10,
 	DEFAULT_PROFILE => {
 		poisson => {
@@ -28,7 +29,7 @@ with qw{
 	App::Sandy::Role::Counter
 };
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 sub insertdb {
 	my ($self, $file, $name, $source, $is_user_provided, $error, $single_molecule, $type) = @_;
@@ -77,7 +78,7 @@ sub insertdb {
 }
 
 sub _index_quality {
-	my ($self, $quality_ref) = @_;
+	my ($self, $quality_ref, $rng) = @_;
 	my (@partil, @sizes);
 
 	for my $entry (@$quality_ref) {
@@ -90,7 +91,7 @@ sub _index_quality {
 		my $left = $size % PARTIL;
 
 		my $pos = 0;
-		my $skip = $self->with_make_counter($size - $left, $left);
+		my $skip = $self->with_make_counter($size - $left, $left, $rng);
 
 		for (my $i = 0; $i < PARTIL; $i++) {
 			for (my $j = 0; $j < $bin; $j++) {
@@ -176,8 +177,9 @@ sub _index_quality_type {
 	my $picks = $num_left < 1000 ? $num_left : 1000;
 	my $picks_left = $picks;
 
+	my $rng = App::Sandy::RNG->new(SEED);
+	my $do_pick = $self->with_make_counter($num_left, $picks, $rng);
 	my @quality;
-	my $do_pick = $self->with_make_counter($num_left, $picks);
 
 	log_msg ":: Picking $picks entries in '$file' ...";
 	while (my $entry = $getter->()) {
@@ -199,7 +201,7 @@ sub _index_quality_type {
 	$fh->close
 		or die "Cannot close file '$file'\n";
 
-	return $self->_index_quality(\@quality);
+	return $self->_index_quality(\@quality, $rng);
 }
 
 sub _wcl {
@@ -329,7 +331,7 @@ App::Sandy::DB::Handle::Quality - Class to handle quality database schemas.
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 AUTHORS
 
@@ -365,13 +367,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

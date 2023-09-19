@@ -5,10 +5,10 @@ use App::Sandy::Base 'class';
 
 extends 'App::Sandy::Read';
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 sub gen_read {
-	my ($self, $ptable, $ptable_size, $read_size, $is_leader) = @_;
+	my ($self, $ptable, $ptable_size, $read_size, $is_leader, $rng, $blacklist) = @_;
 
 	if ($ptable_size < $read_size) {
 		croak sprintf "ptable_size (%d) must be greater or equal to read_size (%d)"
@@ -16,13 +16,13 @@ sub gen_read {
 	}
 
 	my ($read_ref, $attr) = $self->subseq_rand_ptable($ptable,
-		$ptable_size, $read_size, $read_size);
+		$ptable_size, $read_size, $read_size, $rng, $blacklist);
 
 	unless ($is_leader) {
 		$self->reverse_complement($read_ref);
 	}
 
-	$attr->{error} = $self->insert_sequencing_error($read_ref, $read_size);
+	$attr->{error} = $self->insert_sequencing_error($read_ref, $read_size, $rng);
 
 	return ($read_ref, $attr);
 }
@@ -39,7 +39,7 @@ App::Sandy::Read::SingleEnd - App::Sandy::Read subclass for simulate single-end 
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 AUTHORS
 
@@ -75,13 +75,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

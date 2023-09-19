@@ -5,6 +5,7 @@ use App::Sandy::Base 'class';
 use App::Sandy::Seq::SingleEnd;
 use App::Sandy::Seq::PairedEnd;
 use App::Sandy::InterlaceProcesses;
+use App::Sandy::RNG;
 use App::Sandy::WeightedRaffle;
 use App::Sandy::PieceTable;
 use App::Sandy::DB::Handle::Expression;
@@ -15,7 +16,7 @@ use Parallel::ForkManager;
 
 with qw/App::Sandy::Role::IO App::Sandy::Role::SeqID/;
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 has 'argv' => (
 	is       => 'ro',
@@ -163,6 +164,13 @@ has '_fasta_rtree' => (
 	}
 );
 
+has '_fasta_blacklist' => (
+	is         => 'ro',
+	isa        => 'My:FastaBlackList',
+	builder    => '_build_fasta_blacklist',
+	lazy_build => 1
+);
+
 has '_seqname' => (
 	traits     => ['Hash'],
 	is         => 'ro',
@@ -215,6 +223,7 @@ sub BUILD {
 	$self->_piece_table;
 	$self->_seqid_raffle;
 	$self->_fasta;
+	$self->_fasta_blacklist;
 	$self->_strand;
 }
 
@@ -227,13 +236,27 @@ sub _build_strand {
 	} elsif ($self->strand_bias eq 'minus') {
 		$strand_sub = sub {0};
 	} elsif ($self->strand_bias eq 'random') {
-		$strand_sub = sub { int(rand(2)) };
+		# Use App::Sandy::RNG
+		$strand_sub = sub { $_[0]->get_n(2) };
 	} else {
 		croak sprintf "Unknown option '%s' for strand bias\n",
 			$self->strand_bias;
 	}
 
 	return $strand_sub;
+}
+
+sub _clean_fasta_id {
+	my ($self, $id_ref) = @_;
+
+	# Remove '>'
+	$$id_ref =~ s/^>//;
+
+	# Chomp
+	$$id_ref =~ s/^\s+|\s+$//g;
+
+	# Remove id version
+	$$id_ref =~ s/\.\d+$//;
 }
 
 sub _index_fasta {
@@ -255,8 +278,9 @@ sub _index_fasta {
 		if (/^>/) {
 			my @fields = split /\|/;
 			$id = $fields[0];
-			$id =~ s/^>//;
-			$id =~ s/^\s+|\s+$//g;
+
+			# Remove '>', chomp and remove id version
+			$self->_clean_fasta_id(\$id);
 
 			# Seq ID standardization in order to manage comparations
 			# between chr1, Chr1, CHR1, 1 etc;
@@ -270,13 +294,16 @@ sub _index_fasta {
 			# # TODO: Make a hash tarit for indexed fasta
 			if (defined $fields[1]) {
 				my $pid = $fields[1];
-				$pid =~ s/^\s+|\s+$//g;
+
+				# Chomp and remove id version
+				$self->_clean_fasta_id(\$pid);
+
 				$fasta_rtree{$id} = $pid;
 			}
 		} else {
 			die "Error reading fasta file '$fasta': Not defined id"
 				unless defined $id;
-			$indexed_fasta{$id}{seq} .= $_;
+			$indexed_fasta{$id}{seq} .= uc($_);
 		}
 	}
 
@@ -363,10 +390,91 @@ sub _populate_fasta_tree {
 	}
 }
 
+sub _build_fasta_blacklist {
+	my $self = shift;
+
+	log_msg ":: Index unidentified (NNN..) regions";
+
+	my $indexed_fasta = $self->_fasta;
+	my $class = ref $self->seq;
+
+	my %fasta_blacklist;
+	my @blacklist_id;
+
+	for my $id (keys %$indexed_fasta) {
+		my $seq = $indexed_fasta->{$id}{seq};
+		my $seq_len = $indexed_fasta->{$id}{size};
+
+		my $offset = 0;
+		my ($st, $en) = (0, 0);
+		my $pos = 0;
+		my $init = 0;
+		my $len = 0;
+		my @stack;
+
+		while (($pos = index $seq, "N", $offset) != -1) {
+			unless ($init) {
+				$st = $pos;
+				$en = $pos;
+				$init = 1;
+			}
+
+			if ($en < ($pos - 1)) {
+				push @stack => [$st, $en];
+				$len += $en - $st + 1;
+				$st = $pos;
+			}
+
+			$en = $pos;
+			$offset = $pos + 1;
+		}
+
+		if ($init) {
+			push @stack => [$st, $en];
+			$len += $en - $st + 1;
+		}
+
+		my $read_len = $class eq 'App::Sandy::Seq::SingleEnd'
+			? $self->seq->read_mean
+			: $self->seq->fragment_mean;
+
+		if ($len > ($seq_len - $read_len)) {
+			log_msg ":: Seqid '$id' has too much NNN and will not be used";
+			delete $indexed_fasta->{$id};
+			push @blacklist_id => $id;
+		} else {
+			$fasta_blacklist{$id} = \@stack;
+		}
+	}
+
+	unless (%$indexed_fasta) {
+		die sprintf "Fasta file '%s' has too much NNN regions\n" => $self->fasta_file;
+	}
+
+	# If fasta_rtree has entries
+	unless ($self->_has_no_fasta_rtree) {
+		# Remove no valid entries from id -> pid relation
+		$self->_delete_fasta_rtree(@blacklist_id) if @blacklist_id;
+	}
+
+	return \%fasta_blacklist;
+}
+
 sub _retrieve_expression_matrix {
 	my $self = shift;
+
 	my $expression = App::Sandy::DB::Handle::Expression->new;
-	return $expression->retrievedb($self->expression_matrix);
+	my $indexed_file = $expression->retrievedb($self->expression_matrix);
+
+	# Remove transcript id version
+	for my $id (keys %$indexed_file) {
+		my $old_id = $id;
+		$self->_clean_fasta_id(\$id);
+		$indexed_file->{$id} = delete $indexed_file->{$old_id}
+			if $old_id ne $id;
+	}
+
+	return $indexed_file;
 }
 
 sub _build_seqid_raffle {
@@ -392,7 +500,8 @@ sub _build_seqid_raffle {
 		}
 
 		my $keys_size = scalar @$keys;
-		$seqid_sub = sub { $keys->[int(rand($keys_size))] };
+		# Use App::Sandy::RNG
+		$seqid_sub = sub { $keys->[$_[0]->get_n($keys_size)] };
 	} elsif ($self->seqid_weight eq 'count') {
 		# Catch expression-matrix entry from database
 		my $indexed_file = $self->_retrieve_expression_matrix;
@@ -520,7 +629,8 @@ sub _build_seqid_raffle {
 			'keys'    => $keys
 		);
 
-		$seqid_sub = sub { $raffler->weighted_raffle };
+		# Use App::Sandy::Rand
+		$seqid_sub = sub { $raffler->weighted_raffle($_[0]) };
 	} elsif ($self->seqid_weight eq 'length') {
 		my $calc_weight = sub {
 			my ($seq_id, $type) = @_;
@@ -538,7 +648,8 @@ sub _build_seqid_raffle {
 			keys    => $keys
 		);
 
-		$seqid_sub = sub { $raffler->weighted_raffle };
+		# Use App::Sandy::Rand
+		$seqid_sub = sub { $raffler->weighted_raffle($_[0]) };
 	} else {
 		croak sprintf "Unknown option '%s' for seqid_weight\n",
 			$self->seqid_weight;
@@ -839,14 +950,6 @@ sub _calculate_number_of_reads {
 	return $number_of_reads;
 }
 
-sub _set_seed {
-	my ($self, $inc) = @_;
-	my $seed = defined $inc ? $self->seed + $inc : $self->seed;
-	srand($seed);
-	require Math::Random;
-	Math::Random::random_set_seed_from_phrase($seed);
-}
-
 sub _calculate_parent_count {
 	my ($self, $counter_ref) = @_;
 	return if $self->_has_no_fasta_rtree;
@@ -874,13 +977,12 @@ sub run_simulation {
 	# Function that returns seqid by seqid_weight
 	my $seqid = $self->_seqid_raffle;
 
-	# genome or transcriptome?
-	my $simulation = $self->argv->[0];
-
 	# Count file to be generated
-	my $count_file = $simulation eq 'transcriptome'
-		? $self->prefix . '_abundance.tsv'
-		: $self->prefix . '_coverage.tsv';
+	my %count_file = (
+		transcripts => $self->prefix . '_abundance_transcripts.tsv',
+		genes       => $self->prefix . '_abundance_genes.tsv',
+		coverage    => $self->prefix . '_coverage.tsv'
+	);
 
 	# Main files
 	my %files = (
@@ -988,8 +1090,11 @@ sub run_simulation {
 		# Intelace child/parent processes
 		my $sig = App::Sandy::InterlaceProcesses->new(foreign_pid => [$parent_pid]);
 
-		# Set child seed
-		$self->_set_seed($tid);
+		# Get the FASTA blacklist regions ID => @{ TUPLE }
+		my $fasta_blacklist = $self->_fasta_blacklist;
+
+		# Set child RNG
+		my $rng = App::Sandy::RNG->new($self->seed + $tid);
 
 		# Calculate the number of reads to this job and correct this local index
 		# to the global index
@@ -1041,12 +1146,13 @@ sub run_simulation {
 
 		# Run simulation in child
 		for (my $i = $idx; $i <= $last_read_idx and not $sig->signal_catched; $i++) {
-			my $id = $seqid->();
+			my $id = $seqid->($rng);
+			my $blacklist = $fasta_blacklist->{$id->{seq_id}};
 			my $ptable = $piece_table->{$id->{seq_id}}{$id->{type}};
 			my @seq_entry;
 			try {
 				@seq_entry = $self->sprint_seq($tid, $i, $id->{seq_id}, $id->{type},
-					$ptable->{table}, $ptable->{size}, $strand->());
+					$ptable->{table}, $ptable->{size}, $strand->($rng), $rng, $blacklist);
 			} catch {
 				die "Not defined entry for seqid '>$id->{seq_id}' at job $tid: $_";
 			} finally {
@@ -1124,36 +1230,62 @@ sub run_simulation {
 			or die "Cannot write file $files{$file_class}[$fh_idx]: $!\n";
 	}
 
-	# Save counts
-	log_msg ":: Saving count file";
-	my $count_fh = $self->with_open_w($count_file, 0);
+	if ($self->count_loops_by eq 'number-of-reads') {
+		# It is necessary to correct the abundance according to
+		# fragment sequencing end
+		my $count_factor = ref($self->seq) eq 'App::Sandy::Seq::PairedEnd'
+			? 2
+			: 1;
 
-	# It is necessary to correct the abundance according to
-	# fragment sequencing end
-	my $count_factor = 1;
-	if ($self->count_loops_by eq 'number-of-reads'
-		&& ref($self->seq) eq 'App::Sandy::Seq::PairedEnd') {
-		$count_factor = 2;
+		# Save transcripts
+		log_msg ":: Saving transcripts count";
+		my $fh = $self->with_open_w($count_file{transcripts}, 0);
+
+		log_msg "  => Writing counts to $count_file{transcripts} ...";
+		for my $id (sort keys %counters) {
+			printf {$fh} "%s\t%d\n" => $id,
+				int($counters{$id} / $count_factor);
+		}
+
+		# Close transcripts file
+		log_msg ":; Writing and closing $count_file{transcripts} ...";
+		close $fh
+			or die "Cannot write file $count_file{transcripts}: $!\n";
+
+		# Calculate 'gene' like expression
+		my $parent_count = $self->_calculate_parent_count(\%counters);
+
+		if (%$parent_count) {
+			# Save genes
+			log_msg ":: Saving genes count";
+			my $fh = $self->with_open_w($count_file{genes}, 0);
+
+			log_msg "  => Writing counts to $count_file{genes} ...";
+			for my $id (sort keys %$parent_count) {
+				printf {$fh} "%s\t%d\n" => $id,
+					int($parent_count->{$id} / $count_factor);
+			}
+
+			# Close genes file
+			log_msg ":; Writing and closing $count_file{genes} ...";
+			close $fh
+				or die "Cannot write file $count_file{genes}: $!\n";
+		}
+	} else {
+		# Save coverage
+		log_msg ":: Saving coverage count";
+		my $fh = $self->with_open_w($count_file{coverage}, 0);
+
+		log_msg "  => Writing counts to $count_file{coverage} ...";
+		for my $id (sort keys %counters) {
+			printf {$fh} "%s\t%d\n" => $id, $counters{$id};
+		}
+
+		# Close coverage file
+		log_msg ":; Writing and closing $count_file{coverage} ...";
+		close $fh
+			or die "Cannot write file $count_file{coverage}: $!\n";
 	}
-
-	log_msg "  => Writing counts to $count_file ...";
-	for my $id (sort keys %counters) {
-		printf {$count_fh} "%s\t%d\n" => $id,
-			int($counters{$id} / $count_factor);
-	}
-
-	# Just in case, calculate 'gene' like expression
-	my $parent_count = $self->_calculate_parent_count(\%counters);
-
-	for my $id (sort keys %$parent_count) {
-		printf {$count_fh} "%s\t%d\n" => $id,
-			int($parent_count->{$id} / $count_factor);
-	}
-
-	# Close $count_file
-	log_msg ":; Writing and closing $count_file ...";
-	close $count_fh
-		or die "Cannot write file $count_file: $!\n";
 }
 
 __END__
@@ -1168,7 +1300,7 @@ App::Sandy::Simulator - Class responsible to make the simulation
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 AUTHORS
 
@@ -1204,13 +1336,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

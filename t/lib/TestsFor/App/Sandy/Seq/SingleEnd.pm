@@ -51,10 +51,12 @@ sub sprint_fastq : Tests(3) {
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
 	my $table = $test->table_read;
+	my $rng = $test->rng;
+	my $blacklist = [];
 
 	my $id = "sr0001";
 	my $seq_name = "Chr1";
-	my $read_ref = $fastq->sprint_seq($id, 1, $seq_name, 'ref', $table, $table->logical_len, 1);
+	my $read_ref = $fastq->sprint_seq($id, 1, $seq_name, 'ref', $table, $table->logical_len, 1, $rng, $blacklist);
 	my $read_size = $fastq->read_mean;
 
 	my $header = qr/simulation_read length=$read_size position=${seq_name}:\d+-\d+/;
@@ -71,7 +73,7 @@ sub sprint_fastq : Tests(3) {
 	is $pos, $pos_t,
 		"The seq_name:start-end inside fastq header should be the correct relative position";
 
-	my $read2_ref = $fastq->sprint_seq($id, 1, $seq_name, 'ref', $table, $table->logical_len, 0);
+	my $read2_ref = $fastq->sprint_seq($id, 1, $seq_name, 'ref', $table, $table->logical_len, 0, $rng, $blacklist);
 
 	my @lines2 = split /\n/ => $$read2_ref;
 	$fastq->_read->reverse_complement(\$lines2[1]);

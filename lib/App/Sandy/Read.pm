@@ -4,7 +4,11 @@ package App::Sandy::Read;
 use App::Sandy::Base 'class';
 use List::Util 'first';
 
-our $VERSION = '0.23'; # VERSION
+use constant NUM_TRIES => 1000;
+
+with 'App::Sandy::Role::BSearch';
+
+our $VERSION = '0.25'; # VERSION
 
 has 'sequencing_error' => (
 	is         => 'ro',
@@ -59,17 +63,49 @@ sub subseq {
 }
 
 sub subseq_rand {
-	my ($self, $seq_ref, $seq_len, $slice_len) = @_;
+	my ($self, $seq_ref, $seq_len, $slice_len, $rng) = @_;
 	my $usable_len = $seq_len - $slice_len;
-	my $pos = int(rand($usable_len + 1));
+	# Use App::Sandy::Rand
+	my $pos = $rng->get_n($usable_len + 1);
 	my $read = substr $$seq_ref, $pos, $slice_len;
 	return (\$read, $pos);
 }
 
 sub subseq_rand_ptable {
-	my ($self, $ptable, $ptable_size, $slice_len, $sub_slice_len) = @_;
+	my ($self, $ptable, $ptable_size, $slice_len, $sub_slice_len, $rng, $blacklist) = @_;
 	my $usable_len = $ptable_size - $slice_len;
-	my $pos = int(rand($usable_len + 1));
+
+	state $cmp_func = sub {
+		my ($key1, $key2) = @_;
+		if ($key1->[1] >= $key2->[0] && $key1->[0] <= $key2->[1]) {
+			return 0;
+		}
+		elsif ($key1->[0] > $key2->[0]) {
+			return 1;
+		} else {
+			return -1;
+		}
+	};
+
+	my $is_inside_blacklist;
+	my $pos = 0;
+	my $random_tries = 0;
+
+	do {
+		if (++$random_tries > NUM_TRIES) {
+			croak sprintf
+				"Too many tries to calculate a valid random position\n" .
+				"Your FASTA file may be full of NNN regions\n"
+		}
+
+		# Use App::Sandy::Rand
+		$pos = $rng->get_n($usable_len + 1);
+
+		$is_inside_blacklist = $self->with_bsearch([$pos, $pos + $slice_len - 1],
+			$blacklist, scalar @$blacklist, $cmp_func);
+
+	} while (defined $is_inside_blacklist);
+
 	my $pieces = $ptable->lookup($pos, $slice_len);
 	return $self->_build_subseq($pieces, $pos, $slice_len, $sub_slice_len);
 }
@@ -135,7 +171,7 @@ sub _is_pos_inside_piece {
 }
 
 sub insert_sequencing_error {
-	my ($self, $seq_ref, $read_size) = @_;
+	my ($self, $seq_ref, $read_size, $rng) = @_;
 	my @errors;
 
 	if ($self->sequencing_error) {
@@ -146,7 +182,7 @@ sub insert_sequencing_error {
 		for (my $i = 0; $i < $num_err; $i++) {
 			my $pos = $i * $self->_base + $self->_base - $self->_count_base - 1;
 			my $b = substr($$seq_ref, $pos, 1);
-			my $not_b = $self->_randb($b);
+			my $not_b = $self->_randb($b, $rng);
 			substr($$seq_ref, $pos, 1) = $not_b;
 			push @errors => sprintf("%d:%s/%s", $pos + 1, $b, $not_b);
 		}
@@ -164,8 +200,8 @@ sub reverse_complement {
 }
 
 sub _randb {
-	my ($self, $base) = @_;
-	return $self->_not_base->{$base}[int(rand(3))] || $base;
+	my ($self, $base, $rng) = @_;
+	return $self->_not_base->{$base}[$rng->get_n(3)] || $base;
 }
 
 __END__
@@ -180,7 +216,7 @@ App::Sandy::Read - Base class to simulate reads
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 AUTHORS
 
@@ -216,13 +252,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

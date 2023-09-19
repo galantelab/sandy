@@ -3,7 +3,7 @@ package App::Sandy::Types;
 
 use Moose::Util::TypeConstraints;
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 subtype 'My:IntGt0'
 	=> as      'Int'
@@ -110,6 +110,20 @@ subtype 'My:Level'
 	=> where   { /^[1-9]$/ }
 	=> message { "Invalid compression level: '$_': 1-9"};
 
+
+subtype 'My:TupleElem'
+	=> as      'ArrayRef[Int]'
+	=> where   { @$_ == 2 }
+	=> message { "Invalid tuple element" };
+
+subtype 'My:Tuple'
+	=> as      'ArrayRef[My:TupleElem]'
+	=> message { "Invalid tuple" };
+
+subtype 'My:FastaBlackList'
+	=> as      'HashRef[My:Tuple]'
+	=> message { "Fasta blacklist is chr => Tuple" };
+
 1; ## --- end class App::Sandy::Types
 
 __END__
@@ -124,7 +138,7 @@ App::Sandy::Types - Moose type constraints for App::Sandy project
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 AUTHORS
 
@@ -160,13 +174,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

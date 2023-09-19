@@ -10,7 +10,7 @@ extends 'App::Sandy::CLI';
 
 with 'App::Sandy::Role::ParseArgv';
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 has 'command_stack' => (
 	traits  => ['Array'],
@@ -240,7 +240,7 @@ App::Sandy::CLI::App - App::Sandy::CLI subclass for command line application int
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 SYNOPSIS
 
@@ -351,13 +351,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

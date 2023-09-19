@@ -8,19 +8,23 @@ author:
   - 'Rodrigo Barreiro <rbarreiro@mochsl.org.br>'
   - 'Gabriela Guardia <gguardia@mochsl.org.br>'
   - 'Fernanda Orpinelli <forpinelli@mochsl.org.br>'
+  - 'Rafael Mercuri <rmercuri@mochsl.org.br>'
+  - 'Rodrigo Barreiro <rbarreiro@mochsl.org.br>'
   - 'Pedro A. F. Galante <pgalante@mochsl.org.br>'
 build_requires:
   Class::Data::Inheritable: '0.08'
+  LWP::Simple: '0'
   Test::Class: '0.50'
   Test::Most: '0.35'
   Test::UseAllModules: '0'
   autodie: '0'
-  perl: '5.014'
+  perl: '5.018000'
 configure_requires:
   ExtUtils::MakeMaker: '0'
+  File::ShareDir::Install: '0'
   perl: '5.004'
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 6.012, CPAN::Meta::Converter version 2.150010'
+generated_by: 'Dist::Zilla version 6.030, CPAN::Meta::Converter version 2.150010'
 license: gpl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -32,6 +36,7 @@ requires:
   DBIx::Class::Core: '0'
   DBIx::Class::Schema: '0'
   Data::OptList: '0'
+  Exporter: '0'
   File::Cat: '0'
   File::Path: '0'
   Getopt::Long: '0'
@@ -41,7 +46,6 @@ requires:
   IO::Uncompress::Gunzip: '0'
   Import::Into: '0'
   List::Util: '1.44'
-  Math::Random: '0.72'
   Module::Runtime: '0'
   Moose: '0'
   Moose::Role: '0'
@@ -57,11 +61,12 @@ requires:
   Storable: '2.51'
   Text::ASCIITable: '0'
   Try::Tiny: '0'
+  XSLoader: '0'
   base: '0'
   constant: '0'
   feature: '0'
   namespace::autoclean: '0'
-  perl: '5.014'
+  perl: '5.018000'
   strict: '0'
   'true': '0'
   utf8: '0'
@@ -70,6 +75,7 @@ resources:
   bugtracker: https://github.com/galantelab/sandy/issues
   homepage: https://galantelab.github.io/sandy/
   repository: git://github.com/galantelab/sandy.git
-version: '0.23'
-x_generated_by_perl: v5.28.0
-x_serialization_backend: 'YAML::Tiny version 1.73'
+version: '0.25'
+x_generated_by_perl: v5.38.0
+x_serialization_backend: 'YAML::Tiny version 1.74'
+x_spdx_expression: GPL-3.0-only

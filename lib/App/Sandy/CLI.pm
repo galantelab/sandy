@@ -4,7 +4,7 @@ package App::Sandy::CLI;
 use App::Sandy::Base 'class';
 use Path::Class 'file';
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 has 'argv' => (
 	is      => 'ro',
@@ -20,7 +20,7 @@ has 'progname' => (
 
 sub opt_spec {
 	'help|h',
-	'man|u'
+	'man|H'
 }
 
 __END__
@@ -35,7 +35,7 @@ App::Sandy::CLI - Base class for command line interface.
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 SYNOPSIS
 
@@ -108,13 +108,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

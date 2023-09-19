@@ -2,12 +2,14 @@ package TestsFor::App::Sandy::Seq;
 # ABSTRACT: Tests for 'App::Sandy::Seq' class
 
 use App::Sandy::Base 'test';
+use App::Sandy::RNG;
 use base 'TestsFor';
 use autodie;
 
 use constant {
 	SEQ_SYS       => 'poisson',
 	QUALITY_SIZE  => 10,
+	SEED          => 17
 };
 
 sub startup : Tests(startup) {
@@ -18,6 +20,7 @@ sub startup : Tests(startup) {
 	$class->mk_classdata('default_attr');
 	$class->mk_classdata('seq');
 	$class->mk_classdata('seq_len');
+	$class->mk_classdata('rng');
 }
 
 sub setup : Tests(setup) {
@@ -41,6 +44,7 @@ sub setup : Tests(setup) {
 	my $seq = 'TGACCCGCTAACCTCAGTTCTGCAGCAGTAACAACTGCCGTATCTGGACTTTCCTAATACCTCGCATAGTCCGTCCCCTCGCGCGGCAAGAGGTGCGGCG';
 	$test->seq($seq);
 	$test->seq_len(length $seq);
+	$test->rng(App::Sandy::RNG->new(SEED));
 }
 
 sub constructor : Tests(12) {

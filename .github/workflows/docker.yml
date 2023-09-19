@@ -1,0 +1,51 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*.*.*'
+
+jobs:
+  docker:
+    runs-on: ubuntu-20.04
+    name: Build and deploy docker image
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+
+      - name: Checkout LFS objects
+        run: git lfs checkout
+
+      - name: Get release tag
+        id: tag
+        run: |
+          case ${{ github.ref_name }} in
+          master)
+          echo name=latest >> $GITHUB_OUTPUT ;;
+          *.*.*)
+          echo name=release-${{ github.ref_name }} >> $GITHUB_OUTPUT ;;
+          *)
+          echo name=${{ github.ref_name }} >> $GITHUB_OUTPUT ;;
+          esac
+
+      - name: Login to Dockerhub
+        run: >
+          docker login
+          -u ${{ secrets.DOCKERHUB_USERNAME }}
+          -p ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image
+        run: >
+          docker build
+          -t galantelab/sandy:${{ steps.tag.outputs.name }}
+          -f docker/Dockerfile ./
+
+      - name: Push image to Dockerhub
+        run: docker push galantelab/sandy:${{ steps.tag.outputs.name }}
+
+      - name: Logout
+        run: docker logout
+

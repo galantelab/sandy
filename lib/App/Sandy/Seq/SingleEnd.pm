@@ -6,7 +6,7 @@ use App::Sandy::Read::SingleEnd;
 
 extends 'App::Sandy::Seq';
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 has '_read' => (
 	is         => 'ro',
@@ -30,9 +30,9 @@ sub _build_read {
 }
 
 sub sprint_seq {
-	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader) = @_;
+	my ($self, $id, $num, $seq_id, $seq_id_type, $ptable, $ptable_size, $is_leader, $rng, $blacklist) = @_;
 
-	my $read_size = $self->_get_read_size;
+	my $read_size = $self->_get_read_size($rng);
 
 	# In order to work third gen sequencing
 	# simulator, it is necessary to truncate
@@ -41,7 +41,7 @@ sub sprint_seq {
 		$read_size = $ptable_size;
 	}
 
-	my ($read_ref, $attr) = $self->gen_read($ptable, $ptable_size, $read_size, $is_leader);
+	my ($read_ref, $attr) = $self->gen_read($ptable, $ptable_size, $read_size, $is_leader, $rng, $blacklist);
 
 	my $error_a = $attr->{error};
 	my $error = @$error_a
@@ -78,7 +78,7 @@ sub sprint_seq {
 	);
 
 	my $seqid = $self->_gen_id($self->_info);
-	my $quality_ref = $self->gen_quality($read_size);
+	my $quality_ref = $self->gen_quality($read_size, $rng);
 
 	return $self->_gen_seq(\$seqid, $read_ref, $quality_ref, 0, $read_size);
 }
@@ -95,7 +95,7 @@ App::Sandy::Seq::SingleEnd - App::Sandy::Seq subclass for simulate single-end en
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 AUTHORS
 
@@ -131,13 +131,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

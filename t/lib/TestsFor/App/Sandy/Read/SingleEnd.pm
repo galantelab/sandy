@@ -26,9 +26,11 @@ sub gen_read : Tests(50) {
 	my $seq = $test->seq;
 	my $table = $test->table_read;
 	my $read_size = $test->slice_len;
+	my $rng = $test->rng;
+	my $blacklist = [];
 
 	for my $i (0..9) {
-		my ($r1_ref, $attr) = $read->gen_read($table, $table->logical_len, $read_size, 1);
+		my ($r1_ref, $attr) = $read->gen_read($table, $table->logical_len, $read_size, 1, $rng, $blacklist);
 		ok index($seq, $$r1_ref) < 0,
 			"Sequence with error must be outside seq in gen_read (SingleEnd). Try $i";
 		my $seq_t1 = substr $$r1_ref, 0, $read_size - 1;
@@ -37,7 +39,7 @@ sub gen_read : Tests(50) {
 		is index($seq, $seq_t1), $attr->{start} - 1,
 			"Position returned must be equal to index in gen_read (SingleEnd). Try $i";
 
-		my ($r2_ref, $attr2) = $read->gen_read($table, $table->logical_len, $read_size, 0);
+		my ($r2_ref, $attr2) = $read->gen_read($table, $table->logical_len, $read_size, 0, $rng, $blacklist);
 		my $seq_t2 = substr $$r2_ref, 0, $read_size - 1;
 		$read->reverse_complement(\$seq_t2);
 		ok index($seq, $seq_t2) >= 0,

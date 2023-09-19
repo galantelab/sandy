@@ -1,126 +1,141 @@
 Revision history for App-Sandy
 
+0.25      2023-09-19 14:55:24-03:00 America/Sao_Paulo
+
+  - Remove version from transcript_id, example:
+    ENST00006666.9 will become ENST00006666
+
+0.24      2023-07-31 12:53:42-03:00 America/Sao_Paulo
+
+  - When running 'sandy transcriptome' save transcript counts
+    and gene counts into separated files
+  - Use GNU/GSL RNG and Randist for randlux algorithm
+  - Update db.sqlite3 with GTEXv8 expression patterns
+  - Enable persistent storage of sandy db in docker
+  - Uppercase all FASTA bases
+  - Apply NNN blacklist filter
+
 0.23      2019-03-10 17:20:19-03:00 America/Sao_Paulo
 
-	- Fix database permissions
-	- Improve README.md and docker/README.md
+  - Fix database permissions
+  - Improve README.md and docker/README.md
 
 0.22      2018-12-20 16:18:05-02:00 America/Sao_Paulo
 
-	- Change docker repository to the namespace galantelab
-	- Change genome command option '--structural-variation'
-	  to '--genomic-variation'
+  - Change docker repository to the namespace galantelab
+  - Change genome command option '--structural-variation'
+    to '--genomic-variation'
 
 0.21      2018-09-18 20:07:39-03:00 America/Sao_Paulo
 
-	- Set expression-matrix as optional
-	- Fix bash/zsh completion installation
-	- Distinguish count file between genome (coverage)
-	  and transcriptome (abundance)
-	- Add compression level option
-	- Set minimum perl version to 5.014
+  - Set expression-matrix as optional
+  - Fix bash/zsh completion installation
+  - Distinguish count file between genome (coverage)
+    and transcriptome (abundance)
+  - Add compression level option
+  - Set minimum perl version to 5.014
 
 0.20      2018-09-14 01:49:09-03:00 America/Sao_Paulo
 
-	- Add .travis.yml
-	- Fix count file names
-	- Testing compression level option
+  - Add .travis.yml
+  - Fix count file names
+  - Testing compression level option
 
 0.19      2018-08-10 21:10:27-03:00 America/Sao_Paulo
 
-	- Implement structural variation
-	- Add variation database
-	- Add bash/zsh completions
+  - Implement structural variation
+  - Add variation database
+  - Add bash/zsh completions
 
 0.18      2018-05-06 02:36:33-03:00 America/Sao_Paulo
 
-	- Add citation command
+  - Add citation command
 
 0.17      2018-05-05 22:44:51-03:00 America/Sao_Paulo
 
-	- Fix bug in fasta_tree and fasta_rtree
-	- Populate quality and expression databases
-	- Improve documentation
-	- Rename project from App-SimulateReads to App-Sandy
+  - Fix bug in fasta_tree and fasta_rtree
+  - Populate quality and expression databases
+  - Improve documentation
+  - Rename project from App-SimulateReads to App-Sandy
 
 0.16      2018-04-16 00:59:15-03:00 America/Sao_Paulo
 
-	- Update quality profile database in order to keep it simple
-	- Turn read-size option settable only when quality-profile="poisson".
-	  Otherwise, if quality-profile comes from database, it will override
-	  the default/user-provided value
+  - Update quality profile database in order to keep it simple
+  - Turn read-size option settable only when quality-profile="poisson".
+    Otherwise, if quality-profile comes from database, it will override
+    the default/user-provided value
 
 0.15      2018-04-15 02:15:43-03:00 America/Sao_Paulo
 
-	- Substitute expression-matrix for weight-file
-	- Add an expression-matrix database to provide vendor
-	  options for the users
-	- Change main commands to: genome, transcriptome, custom,
-	  quality and expression. The first three manage simulations
-	  and the last two manage databases
+  - Substitute expression-matrix for weight-file
+  - Add an expression-matrix database to provide vendor
+    options for the users
+  - Change main commands to: genome, transcriptome, custom,
+    quality and expression. The first three manage simulations
+    and the last two manage databases
 
 0.14      2018-03-29 03:29:43-03:00 America/Sao_Paulo
 
-	- Add seed option for reproducible simulations
-	- Change weighted raffle from 'role' to 'class'
+  - Add seed option for reproducible simulations
+  - Change weighted raffle from 'role' to 'class'
 
 0.13      2018-03-25 20:40:24-03:00 America/Sao_Paulo
 
-	- Add save counts
-	- SeqId is now case sensitive
+  - Add save counts
+  - SeqId is now case sensitive
 
 0.12      2018-03-24 13:38:37-03:00 America/Sao_Paulo
 
-	- Add sequence identifier template
+  - Add sequence identifier template
 
 0.11      2018-03-23 18:44:59-03:00 America/Sao_Paulo
 
-	- Fix bug when weight-file has just one entry and it is equal to "1"
-	- Split digest command into genome, transcriptome and custom
+  - Fix bug when weight-file has just one entry and it is equal to "1"
+  - Split digest command into genome, transcriptome and custom
 
 0.10      2017-12-03 04:27:18-02:00 America/Sao_Paulo
 
-	- Add version option
+  - Add version option
 
 0.09      2017-11-28 23:24:58-02:00 America/Sao_Paulo
 
-	- Fix bug concerning perl versions (5.010 and >=5.018) and
-	  experimental::smartmatch warnings
+  - Fix bug concerning perl versions (5.010 and >=5.018) and
+    experimental::smartmatch warnings
 
 0.08      2017-11-27 22:21:06-02:00 America/Sao_Paulo
 
-	- Fix indexed weight file. If an entry does not exist at the indexed
-	  fasta, then it is removed from the weight file hash
+  - Fix indexed weight file. If an entry does not exist at the indexed
+    fasta, then it is removed from the weight file hash
 
 0.07      2017-11-27 11:55:16-02:00 America/Sao_Paulo
 
-	- App no more dies if an indexed weighted file has not a valid seqid
-	  recorded at a validated indexed fasta
-	- Add Dockerfile for the project
+  - App no more dies if an indexed weighted file has not a valid seqid
+    recorded at a validated indexed fasta
+  - Add Dockerfile for the project
 
 0.06      2017-10-29 04:28:50-02:00 America/Sao_Paulo
 
-	- Corrected My::Types to App::SimulateReads::Types in Base class
-	- App no more dies if an indexed fasta sequence has not passed the
-	  length constraints. Instead, that sequence are deleted from the hash
+  - Corrected My::Types to App::SimulateReads::Types in Base class
+  - App no more dies if an indexed fasta sequence has not passed the
+    length constraints. Instead, that sequence are deleted from the hash
 
 0.05      2017-10-02 22:57:50-03:00 America/Sao_Paulo
 
-	- Remove Statistics::Basic
-	- Test::Perl::Critic and Test::UseAllModules were moved to [TestRecommends]
+  - Remove Statistics::Basic
+  - Test::Perl::Critic and Test::UseAllModules were moved to [TestRecommends]
 
 0.04      2017-09-25 19:16:51-03:00 America/Sao_Paulo
 
-	- Minimum perl version set to v5.10
+  - Minimum perl version set to v5.10
 
 0.03      2017-09-17 22:50:47-03:00 America/Sao_Paulo
 
-	- Split App::SimulateReads by creating a CLI::App, CLI::Command interface
+  - Split App::SimulateReads by creating a CLI::App, CLI::Command interface
 
 0.02      2017-09-16 02:18:05-03:00 America/Sao_Paulo
 
-	- Fix README.md issue with PodWeaver by using ReadmeAnyFromPod
+  - Fix README.md issue with PodWeaver by using ReadmeAnyFromPod
 
 0.01      2017-09-15 23:03:14-03:00 America/Sao_Paulo
 
-	- Initial version
+  - Initial version

@@ -7,7 +7,7 @@ extends 'App::Sandy::CLI::Command';
 
 with 'App::Sandy::Role::Digest';
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 sub default_opt {
 	'paired-end-id'     => '%i.%U:%c:%F:%X-%Z',
@@ -52,18 +52,18 @@ App::Sandy::Command::Genome - simulate command class. Simulate genome sequencing
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 SYNOPSIS
 
  sandy genome [options] <fasta-file>
 
  Arguments:
-  a fasta-file
+  a fasta file
 
- Options:
+ Input/Output options:
   -h, --help                         brief help message
-  -u, --man                          full documentation
+  -H, --man                          full documentation
   -v, --verbose                      print log messages
   -p, --prefix                       prefix output [default:"out"]
   -o, --output-dir                   output directory [default:"."]
@@ -71,14 +71,17 @@ version 0.23
   -1, --join-paired-ends             merge R1 and R2 outputs in one file
   -x, --compression-level            speed compression: "1" - compress faster,
                                      "9" - compress better [default:"6"; Integer]
-  -i, --append-id                    append to the defined template id [Format]
-  -I, --id                           overlap the default template id [Format]
+
+ Runtime options:
   -j, --jobs                         number of jobs [default:"1"; Integer]
   -s, --seed                         set the seed of the base generator
                                      [default:"time()"; Integer]
-  -c, --coverage                     genome coverage [default:"8", Number]
-  -t, --sequencing-type              single-end or paired-end reads
-                                     [default:"paired-end"]
+
+ Sequence identifier options:
+  -i, --append-id                    append to the defined template id [Format]
+  -I, --id                           overlap the default template id [Format]
+
+ Sequencing option:
   -q, --quality-profile              sequencing system profiles from quality
                                      database [default:"poisson"]
   -e, --sequencing-error             sequencing error rate for poisson
@@ -87,10 +90,15 @@ version 0.23
                                      [default:"100"; Integer]
   -d, --read-stdd                    read standard deviation size for poisson
                                      [default:"0"; Integer]
+  -t, --sequencing-type              single-end or paired-end reads
+                                     [default:"paired-end"]
   -M, --fragment-mean                the fragment mean size for paired-end reads
                                      [default:"300"; Integer]
   -D, --fragment-stdd                the fragment standard deviation size for
                                      paired-end reads [default:"50"; Integer]
+
+ Genome-specific options:
+  -c, --coverage                     genome coverage [default:"8", Number]
   -a, --genomic-variation            a list of genomic variation entries from
                                      variation database. This option may be passed
                                      multiple times [default:"none"]
@@ -101,7 +109,25 @@ version 0.23
 
 =head1 DESCRIPTION
 
-Simulate genome sequencing.
+This subcommand simulates genome sequencing reads taking into account the
+quality-profile and the genome-variation patterns, along with: raffle
+seed; coverage (depth); fragment mean and standard deviation; single-end
+(long and short fragments) and paired-end sequencing type; bam, sam,
+fastq.gz and fastq output formats and more.
+
+=head2 INPUT
+
+I<sandy genome> expects as argument a fasta file with chromosome sequences.
+For example, L<the GENCODE human genome|https://www.gencodegenes.org/human/>
+GRCh38.p13 fasta file.
+
+=head2 OUTPUT
+
+The output file generated will depend on the I<output-format> (fastq, bam),
+on the I<join-paired-ends> option (mate read pairs into a single file) and
+on the I<sequencing-type> (single-end, paired-end). A file with the simulated
+coverage (${prefix}_coverage.tsv) for each chromosome (read counts) also
+accompanies the output file.
 
 =head1 OPTIONS
 
@@ -296,6 +322,84 @@ entries
 
 =back
 
+=head1 EXAMPLES
+
+The following command will produce two fastq.gz files (paired-end), with a
+coverage of 20x and a ${prefix}_coverage.tsv file with the read counts.
+
+ $ sandy genome \
+ --verbose \
+ --jobs=10 \
+ --sequencing-type=paired-end \
+ --coverage=20 hg38.fa 2> sim.log
+
+or, equivalently:
+
+ $ sandy genome -v -j 10 -t paired-end -c 20 hg38.fa 2> sim.log
+
+Using a seed for reproducibility.
+
+ $ sandy genome --seed=1717 my_fasta.fa
+
+To simulate reads with a specific quality-profile other than the default
+poisson:
+
+ $ sandy genome --quality-profile=hiseq_101 hg19.fa
+
+To see the current list of available quality-profiles:
+
+ $ sandy quality
+
+And in order to learn how to add your custom quality-profile, see:
+
+ $ sandy quality add --help
+
+Sequence identifiers (first lines of fastq entries) may be customized in output using
+a format string passed by the user. This format is a combination of literal and escaped
+characters, in a similar fashion to that used in C programming language’s printf function.
+For example, let’s simulate a paired-end sequencing and add the read length, read position
+and mate position into all sequence identifiers:
+
+ $ sandy genome \
+ --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
+ hg38.fa
+
+In this case, results would be:
+
+ ==> Into R1
+ @SR.1 read=chr6:979-880 mate=chr6:736-835 length=100
+ ...
+ ==> Into R2
+ @SR.1 read=chr6:736-835 mate=chr6:979-880 length=100
+
+See B<Format> section for details.
+
+An important feature of B<Sandy> is to simulate a genome with genomic-variation.
+So to exemplify, let's simulate a genome which includes the fusion between the genes
+NPM1 and ALK:
+
+ $ sandy genome --genomic-variation=fusion_hg38_NPM1-ALK hg38.fa
+
+To see the current list of available genomic-variation
+
+ $ sandy variation
+
+And in order to learn how to add your custom genomic-variation, see:
+
+ $ sandy variation add --help
+
+Putting all together:
+
+ $ sandy genome \
+ --verbose \
+ --jobs=10 \
+ --sequencing-type=paired-end \
+ --seed=1717 \
+ --quality-profile=hiseq_101 \
+ --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
+ --genomic-variation=fusion_hg38_NPM1-ALK \
+ hg38.fa 2> sim.log
+
 =head1 AUTHORS
 
 =over 4
@@ -330,13 +434,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

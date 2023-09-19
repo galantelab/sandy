@@ -7,7 +7,7 @@ extends 'App::Sandy::CLI::Command';
 
 with 'App::Sandy::Role::Digest';
 
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 sub default_opt {
 	'paired-end-id'     => '%i.%U:%c %U',
@@ -52,18 +52,18 @@ App::Sandy::Command::Transcriptome - simulate command class. Simulate transcript
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 SYNOPSIS
 
  sandy transcriptome [options] <fasta-file>
 
  Arguments:
-  a fasta-file
+  a fasta file
 
- Options:
+ Input/Output options:
   -h, --help                     brief help message
-  -u, --man                      full documentation
+  -H, --man                      full documentation
   -v, --verbose                  print log messages
   -p, --prefix                   prefix output [default:"out"]	
   -o, --output-dir               output directory [default:"."]
@@ -71,15 +71,17 @@ version 0.23
   -1, --join-paired-ends         merge R1 and R2 outputs in one file
   -x, --compression-level        speed compression: "1" - compress faster,
                                  "9" - compress better [default:"6"; Integer]
-  -i, --append-id                append to the defined template id [Format]
-  -I, --id                       overlap the default template id [Format]
+
+ Runtime options:
   -j, --jobs                     number of jobs [default:"1"; Integer]
   -s, --seed                     set the seed of the base generator
                                  [default:"time()"; Integer]
-  -n, --number-of-reads          set the number of reads
-                                 [default:"1000000", Integer]
-  -t, --sequencing-type          single-end or paired-end reads
-                                 [default:"paired-end"]
+
+ Sequence identifier options:
+  -i, --append-id                append to the defined template id [Format]
+  -I, --id                       overlap the default template id [Format]
+
+ Sequencing option:
   -q, --quality-profile          sequencing system profiles from quality
                                  database [default:"poisson"]
   -e, --sequencing-error         sequencing error rate for poisson
@@ -88,15 +90,41 @@ version 0.23
                                  [default:"100"; Integer]
   -d, --read-stdd                read standard deviation size for poisson
                                  [default:"0"; Integer]
+  -t, --sequencing-type          single-end or paired-end reads
+                                 [default:"paired-end"]
   -M, --fragment-mean            the fragment mean size for paired-end reads
                                  [default:"300"; Integer]
   -D, --fragment-stdd            the fragment standard deviation size for
                                  paired-end reads [default:"50"; Integer]
+
+ Transcriptome-specific options:
+  -n, --number-of-reads          set the number of reads
+                                 [default:"1000000", Integer]
   -f, --expression-matrix        an expression-matrix entry from database
 
 =head1 DESCRIPTION
 
-Simulate transcriptome sequencing.
+This subcommand simulates transcriptome sequencing reads taking into account
+the quality-profile and the expression-matrix weights, along with: raffle
+seed; number of reads; fragment mean and standard deviation; single-end
+(long and short fragments) and paired-end sequencing type; bam, sam,
+fastq.gz and fastq output formats and more.
+
+=head2 INPUT
+
+I<sandy transcriptome> expects as argument a fasta file with transcript sequences.
+For example, L<the GENCODE human genome|https://www.gencodegenes.org/human/>
+transcript sequences and protein-coding transcript sequences.
+
+=head2 OUTPUT
+
+The output file generated will depend on the I<output-format> (fastq, bam),
+on the I<join-paired-ends> option (mate read pairs into a single file) and
+on the I<sequencing-type> (single-end, paired-end). One file with the simulated
+abundance (${prefix}_abundance_transcripts.tsv) per transcript and one file with
+the simulated abundance (${prefix}_abundance_genes.tsv) per gene (if the fasta
+file used has the relationship between gene and its transcripts at the header)
+will accompany the output file.
 
 =head1 OPTIONS
 
@@ -279,6 +307,89 @@ See B<expression> command for more details
 
 =back
 
+=head1 EXAMPLES
+
+The command:
+
+ $ sandy transcriptome \
+ --verbose \
+ --jobs=5 \
+ --number-of-reads=5000000 \
+ --output-dir=my_results/ \
+ gencode.v43.transcripts.fa.gz 2> sim.log
+
+or, equivalently:
+
+ $ sandy transcriptome \
+ -v -j 5 -n 5000000 -o my_results/ \
+ gencode.v43.transcripts.fa.gz 2> sim.log
+
+will both generate two paired-end fastq files (R1 and R2) into my_results/ directory
+with 5000000 reads and two abundance files, one per transcripts and the other per genes.
+
+By default the raffled bias is the transcript length, but the user can change this
+behavior by choosing an expression-matrix from the database:
+
+ $ sandy transcriptome -f brain_cortex gencode.v43.transcripts.fa.gz
+
+To see the current list of available expression matrices:
+
+ $ sandy expression
+
+And in order to learn how to add your custom expression-matrix, see:
+
+ $ sandy expression add --help
+
+For reproducibility, the user can set the seed option and guarantee the reliability of all
+the raffles in a later simulation:
+
+ $ sandy expression --seed=1717 my_transcripts.fa
+
+To simulate reads with a specific quality-profile other than the default
+poisson:
+
+ $ sandy expression --quality-profile=hiseq_150 my_transcripts.fa
+
+To see the current list of available quality-profiles:
+
+ $ sandy quality
+
+And in order to learn how to add your custom quality-profile, see:
+
+ $ sandy quality add --help
+
+Sequence identifiers (first lines of fastq entries) may be customized in output using
+a format string passed by the user. This format is a combination of literal and escaped
+characters, in a similar fashion to that used in C programming language’s printf function.
+For example, let’s simulate a paired-end sequencing and add the read length, read position
+and mate position into all sequence identifiers:
+
+ $ sandy expression --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" my_genes.fa.gz
+
+In this case, results would be:
+
+ ==> Into R1
+ @SR.1 read=BRAF:979-880 mate=BRAF:736-835 length=100
+ ...
+ ==> Into R2
+ @SR.1 read=BRAF:736-835 mate=BRAF:979-880 length=100
+ ...
+
+See B<Format> section for details.
+
+Putting all together:
+
+ $ sandy transcriptome \
+ --verbose \
+ --jobs=5 \
+ --number-of-reads=5000000 \
+ --output-dir=my_results/ \
+ --expression-matrix=brain_cortex \
+ --seed=1717 \
+ --quality-profile=hiseq_150 \
+ --id="%i.%U read=%c:%t-%n mate=%c:%T-%N length=%r" \
+ gencode.v43.transcripts.fa.gz 2> sim.log
+
 =head1 AUTHORS
 
 =over 4
@@ -313,13 +424,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

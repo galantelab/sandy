@@ -7,9 +7,7 @@ use constant NUM_TRIES => 1000;
 
 extends 'App::Sandy::Read';
 
-with 'App::Sandy::Role::RNorm';
-
-our $VERSION = '0.23'; # VERSION
+our $VERSION = '0.25'; # VERSION
 
 has 'fragment_mean' => (
 	is       => 'ro',
@@ -24,7 +22,7 @@ has 'fragment_stdd' => (
 );
 
 sub gen_read {
-	my ($self, $ptable, $ptable_size, $read_size, $is_leader) = @_;
+	my ($self, $ptable, $ptable_size, $read_size, $is_leader, $rng, $blacklist) = @_;
 
 	unless ($read_size <= $self->fragment_mean && $self->fragment_mean <= $ptable_size) {
 		croak sprintf
@@ -47,20 +45,19 @@ sub gen_read {
 					=> $ptable_size, $read_size;
 		}
 
-		$fragment_size = $self->with_random_half_normal($self->fragment_mean,
-			$self->fragment_stdd);
+		$fragment_size = $rng->get_norm($self->fragment_mean, $self->fragment_stdd);
 	}
 
 	# Build the fragment string
 	my ($fragment_ref, $attr) = $self->subseq_rand_ptable($ptable,
-		$ptable_size, $fragment_size, $read_size);
+		$ptable_size, $fragment_size, $read_size, $rng, $blacklist);
 
 	# Catch R1 substring
 	my $read1_ref = $self->subseq($fragment_ref, $fragment_size, $read_size, 0);
 	@$attr{qw/start1 end1/} = ($attr->{start}, $attr->{start} + $read_size - 1);
 
 	# Insert sequencing error
-	$attr->{error1} = $self->insert_sequencing_error($read1_ref, $read_size);
+	$attr->{error1} = $self->insert_sequencing_error($read1_ref, $read_size, $rng);
 
 	# Catch R2 substring
 	my $read2_ref = $self->subseq($fragment_ref, $fragment_size, $read_size,
@@ -71,7 +68,7 @@ sub gen_read {
 	$self->reverse_complement($read2_ref);
 
 	# Insert sequencing error
-	$attr->{error2} = $self->insert_sequencing_error($read2_ref, $read_size);
+	$attr->{error2} = $self->insert_sequencing_error($read2_ref, $read_size, $rng);
 
 	return ($read1_ref, $read2_ref, $attr);
 }
@@ -88,7 +85,7 @@ App::Sandy::Read::PairedEnd - App::Sandy::Read subclass for simulate paired-end 
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 AUTHORS
 
@@ -124,13 +121,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

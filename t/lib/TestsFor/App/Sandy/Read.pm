@@ -3,8 +3,13 @@ package TestsFor::App::Sandy::Read;
 
 use App::Sandy::Base 'test';
 use App::Sandy::PieceTable;
+use App::Sandy::RNG;
 #use Data::Dumper;
 use base 'TestsFor';
+
+use constant {
+	SEED => 17
+};
 
 sub startup : Tests(startup) {
 	my $test = shift;
@@ -17,6 +22,7 @@ sub startup : Tests(startup) {
 	$class->mk_classdata('table');
 	$class->mk_classdata('table_seq');
 	$class->mk_classdata('slice_len');
+	$class->mk_classdata('rng');
 }
 
 sub setup : Tests(setup) {
@@ -38,6 +44,7 @@ sub setup : Tests(setup) {
 	$test->seq_len(length $seq);
 	$test->slice_len(10);
 	$test->table(App::Sandy::PieceTable->new(orig => \$table_seq));
+	$test->rng(App::Sandy::RNG->new(SEED));
 }
 
 sub constructor : Tests(4) {
@@ -60,6 +67,7 @@ sub subseq_seq : Test(5) {
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
 	my $slice_len = $test->slice_len;
+	my $rng = $test->rng;
 
 	my ($read_seq1_ref, $pos1) = $read->subseq(\$seq, $seq_len, $slice_len, 0);
 
@@ -69,7 +77,7 @@ sub subseq_seq : Test(5) {
 	ok index($seq, $$read_seq1_ref) >= 0,
 		"Read sequence must be inside seq in subseq";
 
-	my ($read_seq2_ref, $pos2) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
+	my ($read_seq2_ref, $pos2) = $read->subseq_rand(\$seq, $seq_len, $slice_len, $rng);
 
 	is length($$read_seq2_ref), 10,
 		"Setting a slice_len ($slice_len) should return a seq ($slice_len) in subseq_rand";
@@ -77,7 +85,7 @@ sub subseq_seq : Test(5) {
 	ok index($seq, $$read_seq2_ref) >= 0,
 		"Read sequence must be inside seq in subseq";
 
-	my ($read_seq3_ref, $pos3) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
+	my ($read_seq3_ref, $pos3) = $read->subseq_rand(\$seq, $seq_len, $slice_len, $rng);
 	is index($seq, $$read_seq3_ref), $pos3,
 		"Position returned in subseq_rand ($pos3) should be equal to postion in index";
 }
@@ -89,10 +97,11 @@ sub subseq_err : Test(60) {
 	my $seq = $test->seq;
 	my $seq_len = $test->seq_len;
 	my $slice_len = $test->slice_len;
+	my $rng = $test->rng;
 
 	for my $i (0..9) {
-		my ($seq_t_ref, $pos) = $read->subseq_rand(\$seq, $seq_len, $slice_len);
-		$read->insert_sequencing_error($seq_t_ref, $slice_len);
+		my ($seq_t_ref, $pos) = $read->subseq_rand(\$seq, $seq_len, $slice_len, $rng);
+		$read->insert_sequencing_error($seq_t_ref, $slice_len, $rng);
 
 		ok index($seq, $$seq_t_ref) < 0,
 			"Sequence with error must be outside seq in subseq_rand Try $i";
@@ -103,7 +112,7 @@ sub subseq_err : Test(60) {
 
 	for my $i (0..9) {
 		my ($seq_t_ref, $pos) = $read->subseq(\$seq, $seq_len, $slice_len, $i * 10);
-		$read->insert_sequencing_error($seq_t_ref, $slice_len);
+		$read->insert_sequencing_error($seq_t_ref, $slice_len, $rng);
 
 		ok index($seq, $$seq_t_ref) < 0,
 			"Sequence with error must be outside seq in subseq Try $i";
@@ -118,15 +127,15 @@ sub subseq_err : Test(60) {
 	my $read2 = $test->class_to_test->new(%attr);
 
 	for my $i (0..9) {
-		my ($seq_t_ref, $pos) = $read2->subseq_rand(\$seq, $seq_len, $slice_len);
-		$read2->insert_sequencing_error($seq_t_ref, $slice_len);
+		my ($seq_t_ref, $pos) = $read2->subseq_rand(\$seq, $seq_len, $slice_len, $rng);
+		$read2->insert_sequencing_error($seq_t_ref, $slice_len, $rng);
 		ok index($seq, $$seq_t_ref) >= 0,
 			"Sequence with sequencing_error = 0 must be inside seq in subseq_rand Try $i";
 	}
 
 	for my $i (0..9) {
 		my ($seq_t_ref, $pos) = $read2->subseq(\$seq, $seq_len, $slice_len, $i * 10);
-		$read2->insert_sequencing_error($seq_t_ref, $slice_len);
+		$read2->insert_sequencing_error($seq_t_ref, $slice_len, $rng);
 		ok index($seq, $$seq_t_ref) >= 0,
 			"Sequence with sequencing_error = 0 must be inside seq in subseq Try $i";
 	}
@@ -156,6 +165,8 @@ sub subseq_rand_ptable : Test(20) {
 	my $table = $test->table;
 	my $seq = $test->table_seq;
 	my $alt_seq = "A span of English text";
+	my $rng = $test->rng;
+	my $blacklist = [];
 
 	# Try to remove large
 	$table->delete(2, 6, "large/-");
@@ -172,7 +183,7 @@ sub subseq_rand_ptable : Test(20) {
 
 	for my $i (1..10) {
 		my ($seq_ref, $attr) = $read->subseq_rand_ptable($table,
-			$table->logical_len, $len, $len);
+			$table->logical_len, $len, $len, $rng, $blacklist);
 		my $true_seq = substr $alt_seq, $attr->{start} - 1, $len;
 		ok $$seq_ref eq $true_seq,
 			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";
@@ -191,7 +202,7 @@ sub subseq_rand_ptable : Test(20) {
 
 	for my $i (1..10) {
 		my ($seq_ref, $attr) = $read->subseq_rand_ptable($table,
-			$table->logical_len, $len, $len);
+			$table->logical_len, $len, $len, $rng, $blacklist);
 		my $true_seq = substr $alt_seq2, $attr->{start} - 1, $len;
 		ok $$seq_ref eq $true_seq,
 			"Try $i: subseq_rand_ptable returned correct seq = '$$seq_ref'";

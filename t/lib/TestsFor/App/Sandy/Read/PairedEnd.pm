@@ -46,10 +46,12 @@ sub gen_read : Tests(61) {
 	my $seq = $test->seq;
 	my $read_size = $test->slice_len;
 	my $table = $test->table_read;
+	my $rng = $test->rng;
+	my $blacklist = [];
 
 	my $err = 0;
 	for (1..100) {
-		my ($r1_ref, $r2_ref, $attr) = $read->gen_read($table, $table->logical_len, $read_size, 1);
+		my ($r1_ref, $r2_ref, $attr) = $read->gen_read($table, $table->logical_len, $read_size, 1, $rng, $blacklist);
 		$err++ unless defined $$r1_ref && defined $$r2_ref;
 	}
 
@@ -57,7 +59,7 @@ sub gen_read : Tests(61) {
 
 	for my $i (0..9) {
 		#For leader strand
-		my ($r1_ref, $r2_ref, $attr) = $read->gen_read($table, $table->logical_len, $read_size, 1);
+		my ($r1_ref, $r2_ref, $attr) = $read->gen_read($table, $table->logical_len, $read_size, 1, $rng, $blacklist);
 		ok index($seq, $$r1_ref) < 0,
 			"Sequence with error must be outside seq in gen_read (PairEnd -> read1). Try $i";
 		my $r1_l1 = substr $$r1_ref, 0, $read_size - 1;

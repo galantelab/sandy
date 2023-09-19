@@ -1,15 +1,28 @@
-package App::Sandy::Role::RNorm;
-# ABSTRACT: Random normal distribution
+package App::Sandy::RNG;
+# ABSTRACT: Generates random numbers
 
-use App::Sandy::Base 'role';
-use Math::Random 'random_normal';
+use 5.018000;
+use strict;
+use warnings;
 
-our $VERSION = '0.23'; # VERSION
+require Exporter;
 
-sub with_random_half_normal {
-	my ($self, $mean, $stdd) = @_;
-	return abs(int(random_normal(1, $mean, $stdd)));
-}
+our $VERSION = '0.25'; # VERSION
+
+our @ISA = qw(Exporter);
+
+our %EXPORT_TAGS = ('all' => [ qw() ]);
+
+our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
+
+our @EXPORT = qw();
+
+require XSLoader;
+XSLoader::load('App::Sandy::RNG', $VERSION);
+
+# Preloaded methods go here.
+
+1;
 
 __END__
 
@@ -19,11 +32,11 @@ __END__
 
 =head1 NAME
 
-App::Sandy::Role::RNorm - Random normal distribution
+App::Sandy::RNG - Generates random numbers
 
 =head1 VERSION
 
-version 0.23
+version 0.25
 
 =head1 AUTHORS
 
@@ -59,13 +72,21 @@ Fernanda Orpinelli <forpinelli@mochsl.org.br>
 
 =item *
 
+Rafael Mercuri <rmercuri@mochsl.org.br>
+
+=item *
+
+Rodrigo Barreiro <rbarreiro@mochsl.org.br>
+
+=item *
+
 Pedro A. F. Galante <pgalante@mochsl.org.br>
 
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by Teaching and Research Institute from Sírio-Libanês Hospital.
+This software is Copyright (c) 2023 by Teaching and Research Institute from Sírio-Libanês Hospital.
 
 This is free software, licensed under:
 

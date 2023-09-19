@@ -2,12 +2,15 @@ package TestsFor::App::Sandy::Quality;
 # ABSTRACT: Tests for 'App::Sandy::Quality' class
 
 use App::Sandy::Base 'test';
+use App::Sandy::RNG;
+
 use autodie;
 use base 'TestsFor';
 
 use constant {
 	SEQ_SYS       => "poisson",
-	QUALITY_SIZE  => 10
+	QUALITY_SIZE  => 10,
+	SEED          => 17
 };
 
 sub startup : Tests(startup) {
@@ -16,6 +19,7 @@ sub startup : Tests(startup) {
 	my $class = ref $test;
 	$class->mk_classdata('default_quality');
 	$class->mk_classdata('default_attr');
+	$class->mk_classdata('rng');
 }
 
 sub setup : Tests(setup) {
@@ -30,6 +34,7 @@ sub setup : Tests(setup) {
 
 	$test->default_attr(\%default_attr);
 	$test->default_quality($test->class_to_test->new(%default_attr));
+	$test->rng(App::Sandy::RNG->new(SEED));
 }
 
 sub constructor : Tests(2) {
@@ -51,9 +56,10 @@ sub gen_quality : Test(10) {
 	my $size = QUALITY_SIZE;
 	my $class = $test->class_to_test;
 	my $quality = $test->default_quality;
+	my $rng = $test->rng;
 
 	for my $i (1..10) {
-		my $q = $quality->gen_quality($size);
+		my $q = $quality->gen_quality($size, $rng);
 		is length $$q, $size,
 			"quality length should be equal read_size. Try $i";
 	}
