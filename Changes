@@ -2,6 +2,11 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.25      2023-09-19 14:55:24-03:00 America/Sao_Paulo
+
+  - Remove version from transcript_id, example:
+    ENST00006666.9 will become ENST00006666
+
 0.24      2023-07-31 12:53:42-03:00 America/Sao_Paulo
 
   - When running 'sandy transcriptome' save transcript counts
