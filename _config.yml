@@ -19,6 +19,6 @@ header_pages:
   - install.markdown
   - gstarted.markdown
   - tutorial.markdown
-  - releases/v0.24.markdown
+  - releases/v0.25.markdown
   - releases.markdown
   - about.markdown

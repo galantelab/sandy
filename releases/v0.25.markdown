@@ -1,0 +1,10 @@
+---
+layout: page
+title: "Manual"
+version: "0.25"
+release_date: "2023-09-19"
+permalink: /releases/v0.25/
+---
+
+{% capture source %}{% include_relative v0.24.markdown %}{% endcapture %}
+{{ source | split: "---" | last | replace: "0.24", "0.25" }}

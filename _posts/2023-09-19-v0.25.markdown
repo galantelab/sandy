@@ -1,0 +1,12 @@
+---
+layout: release
+title: "Release v0.25"
+author: "Thiago L. A. Miller"
+version: "0.25"
+date: 2023-09-19 15:30:00 -03:00
+categories: jekyll update
+---
+
+This version implements these new features:
+
+- Remove version from transcript_id, example: ENST00006666.9 will become ENST00006666.
