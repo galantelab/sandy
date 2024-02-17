@@ -952,7 +952,7 @@ sub _calculate_number_of_reads {
 
 sub _calculate_parent_count {
 	my ($self, $counter_ref) = @_;
-	return if $self->_has_no_fasta_rtree;
+	return {} if $self->_has_no_fasta_rtree;
 
 	my %parent_count;
 
